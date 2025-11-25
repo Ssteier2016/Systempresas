@@ -574,7 +574,7 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                <!-- COLUMNA 'CÓDIGO' ELIMINADA -->
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Promedio ($)</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Venta ($)</th>
@@ -583,7 +583,7 @@
                         <tbody id="inventarioTablaContenido" class="bg-white divide-y divide-gray-100">
                             <!-- Los datos se cargarán aquí por JS desde Firestore -->
                             <tr>
-                                <td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando inventario...</td>
+                                <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando inventario...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1383,7 +1383,7 @@
                  console.error("Error de permisos: Asegúrese de que el usuario tenga permisos para leer la colección privada.");
                  // Opcionalmente, mostrar un mensaje más suave en el historial
                  document.getElementById('historialProductosLista').innerHTML = `<li class="text-red-500 text-center py-2">Error de permisos: No se pueden cargar los productos.</li>`;
-                 document.getElementById('inventarioTablaContenido').innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-red-500">Error de permisos: No se pueden cargar los productos.</td></tr>`;
+                 document.getElementById('inventarioTablaContenido').innerHTML = `<tr><td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-red-500">Error de permisos: No se pueden cargar los productos.</td></tr>`;
 
             } else {
                 console.error("Error listening to products collection:", error);
@@ -1411,7 +1411,9 @@
         }
 
         recentProducts.forEach(item => {
-            const price = item.priceRetail ? `$${parseFloat(item.priceRetail).toFixed(2)}` : 'N/A';
+            const priceValue = parseFloat(item.priceRetail);
+            const price = priceValue > 0 ? `$${priceValue.toFixed(2)}` : '-'; // Usar '-' si el precio es 0 o inválido
+            
             const li = document.createElement('li');
             li.className = 'flex justify-between items-center text-gray-600 border-b border-gray-200 pb-1 cursor-pointer hover:bg-gray-200 px-1 rounded-sm';
             li.innerHTML = `
@@ -1430,34 +1432,40 @@
         const tbody = document.getElementById('inventarioTablaContenido');
         if (!tbody) return;
 
+        // Se corrigió el colspan a 4 ya que se eliminó la columna "Código"
+        const colspan = 4;
+
         tbody.innerHTML = ''; 
         if (!userId) {
-             tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Inicie sesión para ver el inventario.</td></tr>`;
+             tbody.innerHTML = `<tr><td colspan="${colspan}" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Inicie sesión para ver el inventario.</td></tr>`;
              return;
         }
 
         if (productsData.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay productos en inventario.</td></tr>`;
+             tbody.innerHTML = `<tr><td colspan="${colspan}" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay productos en inventario.</td></tr>`;
              return;
         }
 
         productsData.forEach(item => {
             const stock = item.stock || 0;
             const cost = item.costPerUnit || 0;
-            const price = item.priceRetail || 0;
+            const priceValue = parseFloat(item.priceRetail);
+            
+            const priceDisplay = priceValue > 0 ? `$${priceValue.toFixed(2)}` : '-'; // Usar '-' si el precio es 0 o inválido
+            const priceColor = priceValue > 0 ? 'text-green-600 font-semibold' : 'text-gray-500';
 
             const stockColorClass = stock < 10 ? 'text-red-600 font-bold' : 'text-gray-800';
             
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${item.code || 'N/A'}</td>
+                <!-- COLUMNA 'CÓDIGO' ELIMINADA DE LA FILA -->
                 <td class="px-6 py-3 whitespace-nowrap text-right text-sm ${stockColorClass}">
                     ${stock.toLocaleString('es-ES')}
                     ${stock < 10 ? '<i class="fas fa-exclamation-triangle text-xs ml-1"></i>' : ''}
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-500">$${parseFloat(cost).toFixed(2)}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-semibold text-green-600">$${parseFloat(price).toFixed(2)}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm ${priceColor}">${priceDisplay}</td>
             `;
             tbody.appendChild(row);
         });
@@ -1497,9 +1505,10 @@
             return;
         }
         
+        // Se asegura de que los valores numéricos sean válidos o 0
         const priceRetail = parseFloat(priceRetailInput) || 0;
         const priceWholesale = parseFloat(priceWholesaleInput) || 0;
-        const stock = parseInt(stockInput) || 0; // Se guarda como número entero
+        const stock = parseInt(stockInput) || 0; 
 
         const productData = {
             name: name,
