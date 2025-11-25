@@ -179,13 +179,22 @@
             </button>
         </div>
 
-        <!-- Fila de Filtros (Noviembre, Dropdown) -->
+        <!-- Fila de Filtros (Mes y Año) -->
         <div class="flex justify-end mb-8 space-x-3">
             <div class="relative">
                 <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
-                    <option>Noviembre</option>
-                    <option>Octubre</option>
+                    <option>Enero</option>
+                    <option>Febrero</option>
+                    <option>Marzo</option>
+                    <option>Abril</option>
+                    <option>Mayo</option>
+                    <option>Junio</option>
+                    <option>Julio</option>
+                    <option>Agosto</option>
                     <option>Septiembre</option>
+                    <option>Octubre</option>
+                    <option>Noviembre</option>
+                    <option>Diciembre</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                     <i class="fas fa-chevron-down text-xs"></i>
@@ -193,9 +202,7 @@
             </div>
             <div class="relative">
                 <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
-                    <option>2024</option>
-                    <option>2023</option>
-                    <option>2022</option>
+                    <option>2025</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                     <i class="fas fa-chevron-down text-xs"></i>
@@ -233,7 +240,8 @@
             </div>
 
             <!-- Tarjeta 2: Ganancias - Métrica Protegida (REQUIERE PIN) -->
-            <button id="openGananciasModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-ganancias-border transition hover:shadow-xl text-left">
+            <!-- CAMBIO: Convertida a div para comportarse como la tarjeta de Ventas -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-ganancias-border transition hover:shadow-xl">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center space-x-3">
                         <div class="bg-green-100 text-green-600 p-3 rounded-xl">
@@ -255,9 +263,9 @@
                     </button>
                 </div>
                 <div class="h-4"></div> <!-- Espacio ajustado para alineación visual -->
-            </button>
+            </div>
 
-            <!-- Tarjeta 3: Finanzas (Sin cambios) -->
+            <!-- Tarjeta 3: Finanzas (Caja Protegida) -->
             <div class="bg-white rounded-xl shadow-lg p-6 card-finanzas-border transition hover:shadow-xl">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center space-x-3">
@@ -269,12 +277,22 @@
                     <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
                 </div>
                 <p class="text-sm text-gray-400 mb-2">DEUDAS Y CUENTAS</p>
-                <h4 class="text-lg font-medium text-gray-500">Saldo <i class="fas fa-circle text-xs text-green-500"></i></h4>
-                <p class="text-3xl font-bold text-yellow-600 mb-4">$0</p>
-                <div class="h-10"></div>
+                <!-- CAMBIO: Saldo -> Caja, y métrica protegida -->
+                <h4 class="text-lg font-medium text-gray-500">Caja <i class="fas fa-circle text-xs text-green-500"></i></h4>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-3xl font-bold text-yellow-600">
+                        <span id="cajaDisplayValue" class="hidden"></span> 
+                        <span id="cajaProtectedValue">******</span>
+                    </p>
+                    <button type="button" data-auth-for="revealCaja" class="text-yellow-500 text-sm font-semibold hover:text-yellow-700 transition">
+                        <i id="cajaEyeIcon" class="fas fa-eye"></i> Ver
+                    </button>
+                </div>
+                <div class="h-4"></div>
             </div>
 
-            <!-- Tarjeta 4: Inventario - Abre el historial de productos -->
+            <!-- Tarjeta 4: Inventario - Abre el historial de productos (Unidades) -->
+            <!-- CAMBIO: Etiquetas y valor numérico -->
             <button id="openInventarioModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-inventario-border transition hover:shadow-xl text-left">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center space-x-3">
@@ -285,10 +303,10 @@
                     </div>
                     <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
                 </div>
-                <p class="text-sm text-gray-400 mb-2">VALOR ACTUAL</p>
-                <h4 class="text-lg font-medium text-gray-500">Inventario Total</h4>
-                <p class="text-3xl font-bold text-orange-600 mb-4">$0</p>
-                <div class="h-10"></div>
+                <p class="text-sm text-gray-400 mb-2">UNIDADES</p>
+                <h4 class="text-lg font-medium text-gray-500">Stock Total</h4>
+                <p class="text-3xl font-bold text-orange-600 mb-2">450</p>
+                <p class="text-sm text-gray-500">Nacionales: 300 / Importados: 150</p>
             </button>
 
         </div>
@@ -1144,6 +1162,7 @@
     const SECURE_PIN = "1440"; 
     const SIMULATED_VENTAS_VALUE = "$14,400 / $72";
     const SIMULATED_GANANCIAS_VALUE = "$5,500";
+    const SIMULATED_CAJA_VALUE = "$12,000.00"; // Nuevo valor simulado para Caja
     let pendingAuthAction = null; 
 
     // Global variables provided by the environment
@@ -1646,7 +1665,6 @@
         const openProductoBtnTrigger = document.getElementById('openProductoModalTrigger');
         const openVerVentasLink = document.getElementById('openVerVentasLink'); 
         const openGastoBtn = document.getElementById('openGastoModal');
-        const openGananciasBtn = document.getElementById('openGananciasModalTrigger'); 
         const openGananciasBtnAction = document.getElementById('openGananciasModal');
         const openAnalisisModalBtn = document.getElementById('openAnalisisModalBtn');
         const openInventarioModalTrigger = document.getElementById('openInventarioModalTrigger');
@@ -1673,6 +1691,12 @@
         const ventasEyeIcon = document.getElementById('ventasEyeIcon');
         const gananciasProtectedValue = document.getElementById('gananciasProtectedValue');
         const gananciasEyeIcon = document.getElementById('gananciasEyeIcon');
+        
+        // Elementos para la Tarjeta de Caja (Finanzas)
+        const cajaDisplayValue = document.getElementById('cajaDisplayValue');
+        const cajaProtectedValue = document.getElementById('cajaProtectedValue');
+        const cajaEyeIcon = document.getElementById('cajaEyeIcon');
+
 
         const fechaVentaInput = document.getElementById('fechaVenta');
         const fechaGastoInput = document.getElementById('fechaGasto');
@@ -1693,6 +1717,7 @@
 
         if (ventasDisplayValue) ventasDisplayValue.textContent = SIMULATED_VENTAS_VALUE;
         if (gananciasDisplayValue) gananciasDisplayValue.textContent = SIMULATED_GANANCIAS_VALUE;
+        if (cajaDisplayValue) cajaDisplayValue.textContent = SIMULATED_CAJA_VALUE; // Establecer valor de Caja
 
         if (mesGastoSelect) { mesGastoSelect.value = currentMonthName; }
         if (añoGastoSelect) { 
@@ -1705,9 +1730,27 @@
         // --- Lógica de Autenticación y Revelación (Modo Ninja) ---
         const revealMetrics = (target, pinInput) => {
             const isVentas = target === 'revealVentas';
-            const displayEl = isVentas ? ventasDisplayValue : gananciasDisplayValue;
-            const protectedEl = isVentas ? ventasProtectedValue : gananciasProtectedValue;
-            const eyeIcon = isVentas ? ventasEyeIcon : gananciasEyeIcon;
+            const isGanancias = target === 'revealGanancias';
+            const isCaja = target === 'revealCaja';
+
+            // Determine elements based on target
+            let displayEl, protectedEl, eyeIcon;
+
+            if (isVentas) {
+                displayEl = ventasDisplayValue;
+                protectedEl = ventasProtectedValue;
+                eyeIcon = ventasEyeIcon;
+            } else if (isGanancias) {
+                displayEl = gananciasDisplayValue;
+                protectedEl = gananciasProtectedValue;
+                eyeIcon = gananciasEyeIcon;
+            } else if (isCaja) {
+                displayEl = cajaDisplayValue;
+                protectedEl = cajaProtectedValue;
+                eyeIcon = cajaEyeIcon;
+            } else {
+                return;
+            }
 
             if (pinInput.value === SECURE_PIN) {
                 displayEl.classList.remove('hidden');
@@ -1764,7 +1807,7 @@
         openProductoBtnTrigger.addEventListener('click', () => openModal(productoModal));
         openGastoBtn.addEventListener('click', () => openModal(gastoModal));
         openVerVentasLink.addEventListener('click', () => openModal(gananciasModal));
-        openGananciasBtn.addEventListener('click', () => openModal(gananciasModal));
+        // openGananciasBtn eliminado ya que la tarjeta ahora es un div estático
         openGananciasBtnAction.addEventListener('click', () => openModal(gananciasModal));
         
         openVentaModalDirect.addEventListener('click', () => openModal(ventaModal));
@@ -1807,9 +1850,12 @@
             button.addEventListener('click', (e) => {
                 const target = e.currentTarget.getAttribute('data-auth-for');
                 const isVentas = target === 'revealVentas';
-                const displayEl = isVentas ? ventasDisplayValue : gananciasDisplayValue;
-                const protectedEl = isVentas ? ventasProtectedValue : gananciasProtectedValue;
-                const eyeIcon = isVentas ? ventasEyeIcon : gananciasEyeIcon;
+                const isGanancias = target === 'revealGanancias';
+                const isCaja = target === 'revealCaja';
+
+                const displayEl = isVentas ? ventasDisplayValue : (isGanancias ? gananciasDisplayValue : cajaDisplayValue);
+                const protectedEl = isVentas ? ventasProtectedValue : (isGanancias ? gananciasProtectedValue : cajaProtectedValue);
+                const eyeIcon = isVentas ? ventasEyeIcon : (isGanancias ? gananciasEyeIcon : cajaEyeIcon);
                 
                 if (!displayEl.classList.contains('hidden')) {
                     displayEl.classList.add('hidden');
