@@ -292,7 +292,6 @@
             </div>
 
             <!-- Tarjeta 4: Inventario - Abre el historial de productos (Unidades) -->
-            <!-- CAMBIO: Etiquetas y valor numérico -->
             <button id="openInventarioModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-inventario-border transition hover:shadow-xl text-left">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center space-x-3">
@@ -305,7 +304,8 @@
                 </div>
                 <p class="text-sm text-gray-400 mb-2">UNIDADES</p>
                 <h4 class="text-lg font-medium text-gray-500">Stock Total</h4>
-                <p class="text-3xl font-bold text-orange-600 mb-2">450</p>
+                <!-- ID AÑADIDO PARA ACTUALIZAR CON EL STOCK REAL -->
+                <p class="text-3xl font-bold text-orange-600 mb-2" id="stockTotalDisplay">0</p>
                 <p class="text-sm text-gray-500">Nacionales: 300 / Importados: 150</p>
             </button>
 
@@ -678,6 +678,13 @@
                             <label for="descripcionProducto" class="block text-sm font-medium text-gray-700">Descripción - Optativo</label>
                             <textarea id="descripcionProducto" rows="3" placeholder="Describa aquí el producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
                         </div>
+
+                        <!-- Cantidad Inicial (Stock) - NUEVO CAMPO -->
+                        <div class="mb-4">
+                            <label for="stockProducto" class="block text-sm font-medium text-gray-700">Cantidad (Stock Inicial) *</label>
+                            <input type="number" id="stockProducto" required value="0" min="0" placeholder="Ej: 100" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border text-right">
+                        </div>
+                        <!-- FIN NUEVO CAMPO -->
 
                         <!-- Categoría -->
                         <div class="mb-6">
@@ -1353,6 +1360,18 @@
             document.getElementById('totalProductsCount').textContent = productsData.length;
             renderProductHistory();
             
+            // Calculo de Stock Total para el Dashboard
+            let totalStock = productsData.reduce((sum, product) => {
+                // Asegura que 'stock' es tratado como un número, usando 0 si es inválido
+                const stockValue = typeof product.stock === 'number' ? product.stock : (parseInt(product.stock) || 0);
+                return sum + stockValue;
+            }, 0);
+
+            const stockTotalDisplayEl = document.getElementById('stockTotalDisplay');
+            if (stockTotalDisplayEl) {
+                stockTotalDisplayEl.textContent = totalStock.toLocaleString('es-ES');
+            }
+
             // Only update the Inventory table if the modal is currently open
             if (document.getElementById('inventarioModal').classList.contains('hidden') === false) {
                  loadInventoryData();
@@ -1463,34 +1482,33 @@
         // Gather form data
         const name = document.getElementById('nombreProducto').value.trim();
         const description = document.getElementById('descripcionProducto').value.trim();
+        const stockInput = document.getElementById('stockProducto').value; // <-- CAPTURA DE NUEVO CAMPO
         const category = document.getElementById('categoriaProducto').value;
-        // const type = document.getElementById('tipoFisico').classList.contains('radio-chip-checked') ? 'Físico' : 'Servicio'; // REMOVIDO
         
         const priceRetailInput = document.getElementById('priceRetailInput').value;
         const priceWholesaleInput = document.getElementById('priceWholesaleInput').value;
         
         // PLACEHOLDER VALUES (Actualizar más adelante)
         const costPerUnit = 10.00; 
-        const stock = 100;
-
+        
         // Basic validation
-        if (!name) {
-            alertMessage('El nombre del producto es obligatorio.', 'error');
+        if (!name || stockInput === "") {
+            alertMessage('El nombre y la Cantidad (Stock Inicial) del producto son obligatorios.', 'error');
             return;
         }
         
         const priceRetail = parseFloat(priceRetailInput) || 0;
         const priceWholesale = parseFloat(priceWholesaleInput) || 0;
+        const stock = parseInt(stockInput) || 0; // Se guarda como número entero
 
         const productData = {
             name: name,
             description: description,
             category: category,
-            // type: type, // REMOVIDO
             costPerUnit: costPerUnit,
             priceRetail: priceRetail,
             priceWholesale: priceWholesale,
-            stock: stock,
+            stock: stock, // <-- VALOR REAL DEL FORMULARIO
             createdAt: new Date().toISOString()
         };
 
