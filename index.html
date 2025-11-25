@@ -54,7 +54,7 @@
             @apply bg-blue-50/70;
         }
         
-        /* Estilo para el input de producto físico/servicio */
+        /* Estilo para el input de producto físico/servicio (REMOVIDO DEL HTML, PERO SE MANTIENE EL CSS) */
         .radio-chip {
             @apply px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 transition cursor-pointer flex-1 text-center;
         }
@@ -689,6 +689,10 @@
                                     <option>Accesorios</option>
                                     <option>Calzado</option>
                                 </select>
+                                <!-- Botón para eliminar la categoría seleccionada (NUEVO) -->
+                                <button type="button" id="deleteCategoryBtn" disabled class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm disabled:bg-gray-400" title="Eliminar Categoría Seleccionada">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                                 <!-- Botón para cambiar a modo de ingreso manual -->
                                 <button type="button" id="addCustomCategoryBtn" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Categoría Personalizada">
                                     <i class="fas fa-plus"></i>
@@ -708,15 +712,9 @@
                                 </button>
                             </div>
                         </div>
-
-                        <!-- Tipo de Producto (Físico/Servicio) -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Producto <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
-                            <div class="flex space-x-4">
-                                <button type="button" id="tipoFisico" class="radio-chip radio-chip-checked">Físico</button>
-                                <button type="button" id="tipoServicio" class="radio-chip">Servicio</button>
-                            </div>
-                        </div>
+                        
+                        <!-- ELIMINADO: Tipo de Producto (Físico/Servicio) -->
+                        
                     </div>
 
                     <!-- Bloque 2: Costo y Precio de Venta (MANTENIDO) -->
@@ -1466,7 +1464,7 @@
         const name = document.getElementById('nombreProducto').value.trim();
         const description = document.getElementById('descripcionProducto').value.trim();
         const category = document.getElementById('categoriaProducto').value;
-        const type = document.getElementById('tipoFisico').classList.contains('radio-chip-checked') ? 'Físico' : 'Servicio';
+        // const type = document.getElementById('tipoFisico').classList.contains('radio-chip-checked') ? 'Físico' : 'Servicio'; // REMOVIDO
         
         const priceRetailInput = document.getElementById('priceRetailInput').value;
         const priceWholesaleInput = document.getElementById('priceWholesaleInput').value;
@@ -1488,7 +1486,7 @@
             name: name,
             description: description,
             category: category,
-            type: type,
+            // type: type, // REMOVIDO
             costPerUnit: costPerUnit,
             priceRetail: priceRetail,
             priceWholesale: priceWholesale,
@@ -1686,11 +1684,11 @@
         const installAppBtn = document.getElementById('installAppBtn'); 
         
         const productoForm = document.getElementById('productoForm');
-        const tipoFisicoBtn = document.getElementById('tipoFisico');
-        const tipoServicioBtn = document.getElementById('tipoServicio');
-        // Selectores de Categoría Personalizada (NUEVOS)
-        const addCustomCategoryBtn = document.getElementById('addCustomCategoryBtn'); 
+        
+        // Selectores de Categoría Personalizada (MODIFICADOS/AÑADIDOS)
         const categorySelect = document.getElementById('categoriaProducto');
+        const addCustomCategoryBtn = document.getElementById('addCustomCategoryBtn'); 
+        const deleteCategoryBtn = document.getElementById('deleteCategoryBtn'); // NUEVO
         const categorySelectGroup = document.getElementById('categorySelectGroup');
         const customCategoryInputGroup = document.getElementById('customCategoryInputGroup');
         const customCategoryInput = document.getElementById('customCategoryInput');
@@ -1899,20 +1897,17 @@
             }
         });
         
-        // Lógica de los chips de Tipo de Producto (Físico/Servicio)
-        if (tipoFisicoBtn && tipoServicioBtn) {
-            tipoFisicoBtn.addEventListener('click', () => {
-                tipoFisicoBtn.classList.add('radio-chip-checked');
-                tipoServicioBtn.classList.remove('radio-chip-checked');
-            });
-
-            tipoServicioBtn.addEventListener('click', () => {
-                tipoServicioBtn.classList.add('radio-chip-checked');
-                tipoFisicoBtn.classList.remove('radio-chip-checked');
-            });
-        }
         
-        // LÓGICA DE CATEGORÍA PERSONALIZADA (Actualizado)
+        // --- LÓGICA DE CATEGORÍA PERSONALIZADA Y ELIMINACIÓN ---
+        
+        // Función para habilitar/deshabilitar el botón de eliminar
+        const checkCategoryDeletable = () => {
+            if (categorySelect.value === 'Ninguna' || categorySelect.selectedIndex === 0) {
+                deleteCategoryBtn.disabled = true;
+            } else {
+                deleteCategoryBtn.disabled = false;
+            }
+        };
 
         // 1. Mostrar/Ocultar el campo de entrada manual
         if (addCustomCategoryBtn) {
@@ -1929,6 +1924,7 @@
             cancelCustomCategoryBtn.addEventListener('click', () => {
                 customCategoryInputGroup.classList.add('hidden');
                 categorySelectGroup.classList.remove('hidden');
+                checkCategoryDeletable(); // Asegurar estado inicial
             });
         }
 
@@ -1950,6 +1946,7 @@
                     // 3.3. Volver al select
                     customCategoryInputGroup.classList.add('hidden');
                     categorySelectGroup.classList.remove('hidden');
+                    checkCategoryDeletable(); 
                     alertMessage(`Categoría "${newCategoryName}" añadida y seleccionada.`, 'success');
                     
                 } else {
@@ -1957,6 +1954,36 @@
                 }
             });
         }
+        
+        // 4. Eliminar Categoría seleccionada (NUEVO)
+        if (deleteCategoryBtn) {
+            deleteCategoryBtn.addEventListener('click', () => {
+                const selectedIndex = categorySelect.selectedIndex;
+                
+                if (selectedIndex === 0) {
+                    alertMessage('No se puede eliminar la categoría "Ninguna".', 'error');
+                    return;
+                }
+                
+                const categoryToDelete = categorySelect.options[selectedIndex].textContent;
+                
+                // Simulación de confirmación y eliminación
+                categorySelect.remove(selectedIndex);
+                categorySelect.value = 'Ninguna'; // Restablecer la selección
+                
+                checkCategoryDeletable();
+                alertMessage(`Categoría "${categoryToDelete}" eliminada.`, 'success');
+            });
+            
+            // Listener para actualizar el estado del botón de eliminar al cambiar la selección
+            categorySelect.addEventListener('change', checkCategoryDeletable);
+            
+            // Inicializar el estado del botón al cargar
+            checkCategoryDeletable();
+        }
+        
+        // --- FIN LÓGICA DE CATEGORÍA PERSONALIZADA Y ELIMINACIÓN ---
+        
         
         // Lógica para simular "Ver todo historial"
         if (verTodoHistorialBtn) {
