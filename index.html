@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Negocios</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Configuración de fuente base */
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Colores personalizados para las tarjetas */
+        .card-ventas-border { border-left: 5px solid #3b82f6; } /* Azul */
+        .card-ganancias-border { border-left: 5px solid #10b981; } /* Verde Esmeralda */
+        .card-finanzas-border { border-left: 5px solid #f59e0b; } /* Amarillo/Ámbar */
+        .card-inventario-border { border-left: 5px solid #f97316; } /* Naranja */
+
+        /* Estilo para el gráfico de barras simulado (solo estético) */
+        .chart-placeholder {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 1rem;
+            padding-bottom: 1rem;
+        }
+        .bar {
+            width: 30px;
+            border-radius: 9999px 9999px 0 0;
+            transition: height 0.3s ease;
+        }
+
+        /* Estilos del modal (oculto por defecto) */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Estilo para los botones de tipo de gasto (como chips) */
+        .gasto-chip {
+            @apply px-4 py-2 text-sm font-medium rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition cursor-pointer;
+        }
+
+        /* Estilo para el input de Gasto Total que se ve resaltado */
+        .input-gasto-total {
+            @apply border-blue-400 focus:border-blue-600 focus:ring-blue-600;
+        }
+
+        /* Estilo para el background de inputs en modals */
+        .input-bg-blue {
+            @apply bg-blue-50/70;
+        }
+        
+        /* Estilo para el input de producto físico/servicio */
+        .radio-chip {
+            @apply px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 transition cursor-pointer flex-1 text-center;
+        }
+        .radio-chip-checked {
+            @apply bg-green-500 text-white border-green-500 shadow-md;
+        }
+
+        /* Estilo para el header de costo del producto */
+        .costo-header {
+            background-color: #3b3a4e;
+        }
+
+        /* Estilo para el botón de cálculo de precio */
+        .calculated-price {
+            background-color: #3b3a4e;
+        }
+
+        /* Estilo para los meses de la tabla de Ganancias */
+        .ganancias-mes-celda {
+            @apply px-3 py-3 text-sm font-medium text-blue-600 cursor-pointer hover:bg-gray-100 transition rounded-lg;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Navbar Superior -->
+    <nav class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Sección Izquierda (Logo/INICIO) -->
+                <div class="flex items-center space-x-6">
+                    <span class="text-xl font-bold text-gray-800">INICIO</span>
+                    <div class="flex items-center space-x-2 text-gray-500">
+                        <i class="fas fa-info-circle hover:text-blue-500 cursor-pointer text-lg"></i>
+                        <i class="fas fa-exclamation-circle hover:text-red-500 cursor-pointer text-lg"></i>
+                    </div>
+                </div>
+
+                <!-- Sección Derecha (Iconos de Usuario y Acciones) -->
+                <div class="flex items-center space-x-4 text-gray-500">
+                    <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <!-- Botón de Instalar App (NUEVO) -->
+                    <button id="installAppBtn" class="hover:text-gray-800 cursor-pointer text-lg transition" title="Instalar Aplicación">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <!-- Icono de Notificaciones -->
+                    <i class="fas fa-bell hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <!-- Botón de Perfil/Login -->
+                    <button id="openProfileModalBtn" class="relative group cursor-pointer p-1 -m-1">
+                        <i class="fas fa-user-circle text-2xl text-gray-500 hover:text-gray-800"></i>
+                        <i class="fas fa-caret-down text-sm absolute bottom-0 right-0"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal del Dashboard -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- CABECERA CON FECHA Y HORA ACTUAL -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+                <i class="fas fa-calendar-alt text-blue-500 mr-3"></i> Dashboard de Gestión
+            </h1>
+            <div class="text-right mt-2 sm:mt-0">
+                <p id="currentDateDisplay" class="text-lg font-medium text-blue-600">--/--/----</p>
+                <p id="currentTimeDisplay" class="text-sm text-gray-500">--:--:--</p>
+            </div>
+        </div>
+        <!-- FIN CABECERA CON FECHA Y HORA ACTUAL -->
+
+        <!-- Fila de Tarjetas de Acción Rápida (Ver...) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+            
+            <!-- Tarjetas de Enlace -->
+            <button id="openProductoModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-tshirt text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Productos</span>
+            </button>
+            <!-- Este botón ahora abre la lista de ventas (Estado Mensuales) sin PIN -->
+            <button id="openVerVentasLink" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-blue-100 text-blue-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Ventas</span>
+            </button>
+            <button id="openGananciasModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-green-100 text-green-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-calculator text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Gastos</span>
+            </button>
+            <button id="openInventarioModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-orange-100 text-orange-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-warehouse text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Inventario</span>
+            </button>
+             <!-- Espacio para mantener el diseño responsivo en 4-columnas MD+ -->
+             <div class="hidden lg:block"></div> 
+
+        </div>
+        
+        <!-- Fila de Botones de Acción (+ Producto, + Venta, + Gasto) -->
+        <div class="flex flex-wrap gap-3 mb-8">
+            <button id="openProductoModalTrigger" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                <i class="fas fa-plus mr-2"></i>
+                Producto
+            </button>
+            <!-- Botón de Venta que abre el modal directamente sin PIN (MODIFICADO) -->
+            <button id="openVentaModalDirect" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                <i class="fas fa-plus mr-2"></i>
+                Venta
+            </button>
+            <!-- Botón de Gasto que abre el modal -->
+            <button id="openGastoModal" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                <i class="fas fa-plus mr-2"></i>
+                Gasto
+            </button>
+        </div>
+
+        <!-- Fila de Filtros (Noviembre, Dropdown) -->
+        <div class="flex justify-end mb-8 space-x-3">
+            <div class="relative">
+                <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
+                    <option>Noviembre</option>
+                    <option>Octubre</option>
+                    <option>Septiembre</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+            <div class="relative">
+                <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
+                    <option>2024</option>
+                    <option>2023</option>
+                    <option>2022</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila de Tarjetas de Métricas Principales -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            
+            <!-- Tarjeta 1: Ventas - Métrica Protegida (REQUIERE PIN) -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-ventas-border transition hover:shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-blue-100 text-blue-600 p-3 rounded-xl">
+                            <i class="fas fa-cloud-download-alt text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ventas</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
+                <h4 class="text-lg font-medium text-gray-500">Ventas / Ticket Promedio</h4>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-3xl font-bold text-blue-600">
+                        <span id="ventasDisplayValue" class="hidden"></span>
+                        <span id="ventasProtectedValue">******</span>
+                    </p>
+                    <button type="button" data-auth-for="revealVentas" class="text-blue-500 text-sm font-semibold hover:text-blue-700 transition">
+                        <i id="ventasEyeIcon" class="fas fa-eye"></i> Ver
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500"><span id="totalProductsCount">0</span> productos en inventario</p>
+                <p class="text-sm text-gray-500">Ventas de hoy: $0</p>
+            </div>
+
+            <!-- Tarjeta 2: Ganancias - Métrica Protegida (REQUIERE PIN) -->
+            <button id="openGananciasModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-ganancias-border transition hover:shadow-xl text-left">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-green-100 text-green-600 p-3 rounded-xl">
+                            <i class="fas fa-chart-line text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ganancias</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
+                <h4 class="text-lg font-medium text-gray-500">Resultados Netos del mes</h4>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-3xl font-bold text-green-600">
+                        <span id="gananciasDisplayValue" class="hidden"></span>
+                        <span id="gananciasProtectedValue">******</span>
+                    </p>
+                    <button type="button" data-auth-for="revealGanancias" class="text-green-500 text-sm font-semibold hover:text-green-700 transition">
+                        <i id="gananciasEyeIcon" class="fas fa-eye"></i> Ver
+                    </button>
+                </div>
+                <div class="h-4"></div> <!-- Espacio ajustado para alineación visual -->
+            </button>
+
+            <!-- Tarjeta 3: Finanzas (Sin cambios) -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-finanzas-border transition hover:shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
+                            <i class="fas fa-dollar-sign text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Finanzas</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">DEUDAS Y CUENTAS</p>
+                <h4 class="text-lg font-medium text-gray-500">Saldo <i class="fas fa-circle text-xs text-green-500"></i></h4>
+                <p class="text-3xl font-bold text-yellow-600 mb-4">$0</p>
+                <div class="h-10"></div>
+            </div>
+
+            <!-- Tarjeta 4: Inventario - Abre el historial de productos -->
+            <button id="openInventarioModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-inventario-border transition hover:shadow-xl text-left">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-orange-100 text-orange-600 p-3 rounded-xl">
+                            <i class="fas fa-cube text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Inventario</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">VALOR ACTUAL</p>
+                <h4 class="text-lg font-medium text-gray-500">Inventario Total</h4>
+                <p class="text-3xl font-bold text-orange-600 mb-4">$0</p>
+                <div class="h-10"></div>
+            </button>
+
+        </div>
+        
+        <!-- Sección Inferior: Gráfico de Barras Simuladas -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Métricas del Periodo</h2>
+            <div class="chart-placeholder">
+                <div class="bar bg-yellow-400 h-1/4 shadow-md" style="height: 25%;"></div>
+                <div class="bar bg-amber-500 h-1/3 shadow-md" style="height: 33%;"></div>
+                <div class="bar bg-green-500 h-2/3 shadow-md" style="height: 66%;"></div>
+                <div class="bar bg-blue-500 h-1/2 shadow-md" style="height: 50%;"></div>
+                <div class="bar bg-cyan-400 h-4/5 shadow-md" style="height: 80%;"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Botón flotante de WhatsApp/Ayuda -->
+    <button class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-all">
+        <i class="fab fa-whatsapp text-2xl"></i>
+    </button>
+    
+    <!-- MODAL DE PERFIL Y AUTENTICACIÓN -->
+    <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-xl font-bold text-gray-800">Acceso / Perfil de Usuario</h2>
+                <button data-close-modal="profileModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Modal: Opciones de Login -->
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 font-semibold mb-3">ID de Sesión (para compartir):</p>
+                <p id="currentUserIdDisplay" class="text-xs text-gray-500 break-all bg-gray-100 p-2 rounded-lg">Cargando...</p>
+
+                <!-- Estado del Usuario (Real) -->
+                <div class="pt-4 border-t mt-4 space-y-3">
+                    <p class="text-sm font-medium text-gray-700">Estado Actual: <span id="userStatus" class="font-bold text-red-500">Desconectado</span></p>
+                    <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-xl shadow-sm text-white bg-red-500 hover:bg-red-600 transition disabled:opacity-50" disabled>
+                        <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL PERFIL Y AUTENTICACIÓN -->
+
+    <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles -->
+    <div id="authModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-xl font-bold text-gray-800">Acceso Restringido</h2>
+                <button data-close-modal="authModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Formulario de PIN -->
+            <div class="p-6 space-y-4 text-center">
+                <p class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos).</p>
+                <input type="password" id="ventaPinInput" maxlength="4" placeholder="••••" class="text-center text-2xl tracking-widest mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                <p id="pinError" class="text-sm text-red-500 hidden font-medium">PIN Incorrecto. Intente de nuevo.</p>
+            </div>
+
+            <!-- Pie de página del Modal (Acciones de Intentar) -->
+            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="authModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cancelar
+                </button>
+                <button id="checkVentaPinBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+                    Acceder
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL AUTENTICACIÓN -->
+
+    <!-- MODAL DE ESTADOS MENSUALES (Ganancias) - BOTÓN GEMINI AÑADIDO AQUÍ -->
+    <div id="gananciasModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <div class="flex items-center space-x-3">
+                    <h2 class="text-2xl font-bold text-gray-800">ESTADOS MENSUALES</h2>
+                    <i class="fas fa-info-circle text-xl text-green-500 cursor-pointer"></i>
+                </div>
+                <!-- NUEVO BOTÓN GEMINI -->
+                <button id="openAnalisisModalBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition shadow-md flex items-center">
+                    <i class="fas fa-magic mr-2"></i> Análisis Estratégico ✨
+                </button>
+                <!-- FIN NUEVO BOTÓN GEMINI -->
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <i class="fas fa-plus-circle hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <i class="fas fa-user-circle hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <i class="fas fa-caret-down hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <button data-close-modal="gananciasModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navegación de Pestañas y Contenido de la Tabla (Sin cambios) -->
+            <div class="px-6 border-b">
+                <nav class="flex space-x-8">
+                    <button class="py-4 border-b-2 border-blue-600 text-blue-600 font-medium text-sm transition">De Gestión</button>
+                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Financieros</button>
+                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Flujo de Caja</button>
+                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Finanzas de Socios</button>
+                </nav>
+            </div>
+            
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-6 max-w-4xl">
+                    Incluyen datos estadísticos dentro de los costos, cómo los % de impuestos registrados en Preferencias y en cada venta, costos financieros, comisiones de ventas y cobros registrados en las ventas para obtener una ganancia más representativa.
+                </p>
+
+                <div class="flex flex-wrap items-center space-x-4 mb-6">
+                    <div class="relative group">
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm hover:bg-gray-50 text-sm font-medium">
+                            Columnas <i class="fas fa-chevron-down text-xs ml-1"></i>
+                        </button>
+                        <div class="absolute z-20 w-56 mt-2 origin-top-left bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 hidden group-hover:block p-2">
+                            <div class="flex justify-between items-center p-2 text-sm font-semibold text-gray-800 border-b mb-1">
+                                <span>Mostrar/Ocultar columnas</span>
+                                <button class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Enero</span>
+                                </label>
+                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Febrero</span>
+                                </label>
+                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Total</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <label class="text-sm font-medium text-gray-700 mr-2">Canal de Venta:</label>
+                        <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
+                            <option>Todos</option>
+                            <option>Showroom</option>
+                            <option>Mi Tienda Online</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 top-1/2 transform -translate-y-1/2">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <label class="text-sm font-medium text-gray-700 mr-2">Año:</label>
+                        <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
+                            <option>2025</option>
+                            <option>2024</option>
+                            <option>2023</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 top-1/2 transform -translate-y-1/2">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50">Concepto <i class="fas fa-sort text-gray-300 ml-1"></i></th>
+                                <th data-month="Enero" class="ganancias-mes-celda">Enero</th>
+                                <th data-month="Febrero" class="ganancias-mes-celda">Febrero</th>
+                                <th data-month="Marzo" class="ganancias-mes-celda">Marzo</th>
+                                <th data-month="Abril" class="ganancias-mes-celda">Abril</th>
+                                <th data-month="Mayo" class="ganancias-mes-celda">Mayo</th>
+                                <th data-month="Junio" class="ganancias-mes-celda">Junio</th>
+                                <th data-month="Julio" class="ganancias-mes-celda">Julio</th>
+                                <th data-month="Agosto" class="ganancias-mes-celda">Agosto</th>
+                                <th data-month="Septiembre" class="ganancias-mes-celda">Septiembre</th>
+                                <th data-month="Octubre" class="ganancias-mes-celda">Octubre</th>
+                                <th data-month="Noviembre" class="ganancias-mes-celda">Noviembre</th>
+                                <th data-month="Diciembre" class="ganancias-mes-celda">Diciembre</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total <i class="fas fa-sort text-gray-300 ml-1"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="14" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Ningún dato disponible</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL ESTADOS MENSUALES -->
+
+    <!-- MODAL DE ANÁLISIS ESTRATÉGICO -->
+    <div id="analisisModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-purple-600 flex items-center">
+                    <i class="fas fa-chart-pie mr-3"></i> Diagnóstico y Estrategia AI
+                </h2>
+                <button data-close-modal="analisisModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Análisis -->
+            <div class="p-6">
+                <div id="analisisContent">
+                    <!-- Contenido se llenará aquí, incluyendo el spinner de carga -->
+                    <div class="flex justify-center items-center h-40">
+                        <div id="loadingSpinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mr-3"></div>
+                        <p class="text-lg font-medium text-gray-600">Analizando métricas y formulando estrategias...</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL ANÁLISIS ESTRATÉGICO -->
+
+    <!-- MODAL DE HISTORIAL DE INVENTARIO (Ahora con datos reales de Firestore) -->
+    <div id="inventarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-boxes-stacked mr-3 text-orange-600"></i> Historial y Stock de Productos
+                </h2>
+                <button data-close-modal="inventarioModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Inventario (Tabla de Firestore) -->
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                    <div class="relative">
+                        <input type="text" placeholder="Buscar producto o código..." class="block w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2 text-sm input-bg-blue border">
+                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <button class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-md flex items-center">
+                        <i class="fas fa-file-export mr-2"></i> Exportar
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Promedio ($)</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Venta ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventarioTablaContenido" class="bg-white divide-y divide-gray-100">
+                            <!-- Los datos se cargarán aquí por JS desde Firestore -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando inventario...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL HISTORIAL DE INVENTARIO -->
+
+    <!-- MODAL DE DETALLE DIARIO (Se abre al hacer clic en un mes de la tabla) -->
+    <div id="detalleDiarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 id="detalleDiarioTitulo" class="text-xl font-bold text-gray-800">Historial Diario de Ganancias (Mes)</h2>
+                <button data-close-modal="detalleDiarioModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Detalle Diario (Tabla Simulada) -->
+            <div class="p-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ganancia Neta ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detalleDiarioContenido" class="bg-white divide-y divide-gray-100">
+                            <!-- Los datos se cargarán aquí por JS -->
+                        </tbody>
+                        <tfoot class="bg-gray-100">
+                            <tr>
+                                <td class="px-6 py-3 text-left text-sm font-semibold text-gray-800">TOTAL MES</td>
+                                <td id="detalleDiarioTotal" class="px-6 py-3 text-right text-sm font-bold text-green-600">$1,500.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL DETALLE DIARIO -->
+
+    <!-- MODAL DE NUEVO PRODUCTO (Con envío de datos a Firestore) -->
+    <div id="productoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800">Nuevo Producto</h2>
+                <button data-close-modal="productoModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL DEL MODAL PRODUCTO (HISTORIAL Y FORMULARIO) -->
+            <div class="p-6 space-y-8">
+                
+                <!-- NUEVA SECCIÓN: Historial de Productos Agregados (Cargado por Firestore) -->
+                <div class="bg-gray-100 p-4 rounded-xl shadow-inner border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-700 mb-3 flex justify-between items-center">
+                        Historial de Últimos Productos
+                        <button id="verTodoHistorialBtn" class="text-blue-500 text-sm font-medium hover:underline">Ver todo</button>
+                    </h3>
+                    <ul id="historialProductosLista" class="text-sm space-y-2">
+                        <!-- Se llena con productos de Firestore en tiempo real -->
+                        <li class="text-gray-400 text-center py-2">Cargando historial...</li>
+                    </ul>
+                </div>
+                
+                <!-- FORMULARIO DE NUEVO PRODUCTO (CON EVENTO SUBMIT REAL) -->
+                <form id="productoForm" class="space-y-8">
+
+                    <!-- Bloque 1: Información Básica -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Información Básica</h3>
+
+                        <!-- Nombre -->
+                        <div class="mb-4">
+                            <label for="nombreProducto" class="block text-sm font-medium text-gray-700">Nombre *</label>
+                            <input type="text" id="nombreProducto" required placeholder="Nombre del Producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-4">
+                            <label for="descripcionProducto" class="block text-sm font-medium text-gray-700">Descripción - Optativo</label>
+                            <textarea id="descripcionProducto" rows="3" placeholder="Describa aquí el producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
+                        </div>
+
+                        <!-- Categoría -->
+                        <div class="mb-6">
+                            <label for="categoriaProducto" class="block text-sm font-medium text-gray-700">Categoría <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i> - Opt.</label>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <select id="categoriaProducto" class="block flex-1 rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
+                                    <option>Ninguna</option>
+                                    <option>Ropa</option>
+                                    <option>Accesorios</option>
+                                    <option>Calzado</option>
+                                </select>
+                                <!-- Botón de Agregar Categoría Personalizada -->
+                                <button type="button" id="addCustomCategoryBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Categoría Personalizada">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Producto (Físico/Servicio) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Producto <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                            <div class="flex space-x-4">
+                                <button type="button" id="tipoFisico" class="radio-chip radio-chip-checked">Físico</button>
+                                <button type="button" id="tipoServicio" class="radio-chip">Servicio</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 2: Costo y Precio de Venta (MANTENIDO) -->
+                    <div class="space-y-6">
+                        
+                        <!-- Header de Costo del Producto -->
+                        <div class="costo-header text-white p-4 rounded-xl text-center">
+                            <h4 class="text-lg font-light">COSTO DEL PRODUCTO</h4>
+                            <p id="costoProductoDisplay" class="text-3xl font-bold my-1">$0 <span class="text-base font-normal">(POR UNIDAD)</span></p>
+                        </div>
+
+                        <!-- Sección de Precio de Venta -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-2">Precio de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></h3>
+                            <p class="text-sm text-gray-500 mb-4">Elija precios para su producto. Puede usar las técnicas de marcación sobre costos o margen sobre precio para calcular el mismo.</p>
+                            
+                            <!-- Actualizar Precios Checkbox -->
+                            <div class="flex items-center mb-6">
+                                <input id="actualizarPrecios" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                <label for="actualizarPrecios" class="ml-2 text-sm text-gray-700">Actualizar Precios <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <!-- Tarjeta 1: Precio Minorista -->
+                                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
+                                    <h4 class="font-semibold text-gray-800">Precio Minorista</h4>
+                                    <div class="grid grid-cols-5 gap-3 items-center">
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Marcación %</label>
+                                            <input type="number" value="150.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Márgen %</label>
+                                            <input type="number" value="60" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                        </div>
+                                        <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+                                        <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
+                                            <p class="text-xs font-light">Calculado</p>
+                                            <p class="text-xl font-bold">$0</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Precio Minorista Elegido -->
+                                    <div class="pt-2">
+                                        <label class="block text-sm font-medium text-gray-700">Precio Minorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                        <div class="flex items-center mt-1 space-x-2">
+                                            <input type="number" id="priceRetailInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                                            <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
+                                                Actualizar %
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tarjeta 2: Precio Mayorista -->
+                                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
+                                    <h4 class="font-semibold text-gray-800">Precio Mayorista</h4>
+                                    <div class="grid grid-cols-5 gap-3 items-center">
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Marcación %</label>
+                                            <input type="number" value="50.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Márgen %</label>
+                                            <input type="number" value="33.33" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                        </div>
+                                        <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+                                        <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
+                                            <p class="text-xs font-light">Calculado</p>
+                                            <p class="text-xl font-bold">$0</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Precio Mayorista Elegido -->
+                                    <div class="pt-2">
+                                        <label class="block text-sm font-medium text-gray-700">Precio Mayorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                        <div class="flex items-center mt-1 space-x-2">
+                                            <input type="number" id="priceWholesaleInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                                            <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
+                                                Actualizar %
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Pie de página del Modal (Acciones de Guardar) -->
+            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="productoModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cancelar
+                </button>
+                <button form="productoForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    Guardar Producto
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL PRODUCTO -->
+
+    <!-- MODAL DE NUEVA VENTA (Sin cambios en contenido) -->
+    <div id="ventaModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800">Nueva Venta</h2>
+                <button data-close-modal="ventaModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Formulario de Venta -->
+            <form class="p-6 space-y-8">
+
+                <!-- Bloque 1: Información Principal (Fecha, Cliente, Canal, Estado, Entrega) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Tarjeta de Datos de la Venta (Fecha, Cliente, Canal) -->
+                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <!-- Fecha -->
+                            <div>
+                                <label for="fechaVenta" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input type="date" id="fechaVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                            </div>
+                            <!-- Cliente -->
+                            <div>
+                                <label for="clienteVenta" class="block text-sm font-medium text-gray-700">Cliente <i class="fas fa-pen-to-square text-xs text-blue-500 ml-1 cursor-pointer"></i></label>
+                                <div class="flex items-center mt-1">
+                                    <select id="clienteVenta" class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                        <option>Seleccione un cliente...</option>
+                                        <option>Cliente Frecuente A</option>
+                                        <option>Nuevo Cliente B</option>
+                                    </select>
+                                    <button type="button" class="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Canal de Venta -->
+                        <div>
+                            <label for="canalVenta" class="block text-sm font-medium text-gray-700 mb-1">Canal de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                            <select id="canalVenta" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Ninguno</option>
+                                <option>Showroom</option>
+                                <option>Feria Y Eventos</option>
+                                <option>Mi Local</option>
+                                <option>Mi Tienda Online</option>
+                                <option>Facebook / Instagram</option>
+                                <option>Mercadolibre</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de Descuentos/Lista de Precios -->
+                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <a href="#" class="text-blue-500 text-sm font-medium hover:underline block mb-3">Crear Lista de Precios</a>
+                        <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
+                        <input type="text" id="descuentoVenta" value="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
+                    </div>
+
+                    <!-- Tarjeta de Estado/Entrega -->
+                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <!-- Estado -->
+                        <div class="mb-4">
+                            <label for="estadoVenta" class="block text-sm font-medium text-gray-700">Estado - Optativo</label>
+                            <select id="estadoVenta" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Seleccione</option>
+                                <option>Sin Estado</option>
+                                <option>Pedido</option>
+                                <option>Compra Pendiente</option>
+                                <option>En Producción</option>
+                                <option>Para Entregar</option>
+                                <option>Despachado</option>
+                                <option>Entregado</option>
+                                <option>Cerrado</option>
+                            </select>
+                        </div>
+                        <!-- Fecha de Entrega -->
+                        <div>
+                            <label for="fechaEntrega" class="block text-sm font-medium text-gray-700">Fecha de Entrega - Optativo</label>
+                            <input type="date" id="fechaEntrega" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloque 2: Productos y Detalle (Simulado - Se mostraría una tabla aquí) -->
+                <div class="border-t pt-8">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Productos Vendidos</h3>
+                    <div class="bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300 flex justify-center items-center h-24">
+                        <button type="button" class="text-blue-500 font-medium hover:text-blue-600 transition">
+                            <i class="fas fa-plus-circle mr-2"></i> Añadir Producto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bloque 3: Cobros de la Venta -->
+                <div class="border-t pt-8">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Cobros de la Venta</h3>
+                    
+                    <!-- Fila de Cobro (Simulada) -->
+                    <div class="grid grid-cols-6 gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <button type="button" class="col-span-1 bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition w-full">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        
+                        <div class="col-span-1">
+                            <label for="fechaCobro" class="block text-sm font-medium text-gray-700">Fecha</label>
+                            <input type="date" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        </div>
+                        
+                        <div class="col-span-1">
+                            <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado</label>
+                            <input type="text" placeholder="NAN" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        </div>
+                        
+                        <div class="col-span-1">
+                            <label for="descripcionCobro" class="block text-sm font-medium text-gray-700">Descripción</label>
+                            <input type="text" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        </div>
+
+                        <div class="col-span-1">
+                            <label for="cuentaCobro" class="block text-sm font-medium text-gray-700">Cuenta - Optativo <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                            <select class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Efectivo</option>
+                                <option>Transferencia</option>
+                                <option>Tarjeta de Crédito</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" class="col-span-1 bg-orange-500 text-white p-2 rounded-xl hover:bg-orange-600 transition">
+                            Eliminar
+                        </button>
+                    </div>
+                    
+                    <!-- Opción de recordar cobro -->
+                    <div class="flex items-center mt-4">
+                        <input id="recordarCobrado" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="recordarCobrado" class="ml-2 text-sm text-gray-700">
+                            Recordar Cobrado <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i><br>
+                            <span class="text-xs text-gray-500">Para la próxima venta.</span>
+                        </label>
+                    </div>
+                </div>
+
+
+                <!-- Bloque 4: Otra Información (Tipo de Venta, Vendedor, Pago, Envío, Nota) -->
+                <div class="border-t pt-8">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Otra Información</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <!-- Tipo de Venta -->
+                        <div>
+                            <label for="tipoVenta" class="block text-sm font-medium text-gray-700">Tipo de Venta</label>
+                            <select id="tipoVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Venta Común</option>
+                                <option>Venta Mayorista</option>
+                            </select>
+                        </div>
+                        <!-- Vendedor -->
+                        <div>
+                            <label for="vendedorVenta" class="block text-sm font-medium text-gray-700">Vendedor - Optativo <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                            <select id="vendedorVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Seleccione</option>
+                                <option>Vendedor 1</option>
+                                <option>Vendedor 2</option>
+                            </select>
+                        </div>
+                        <!-- Forma de Pago -->
+                        <div>
+                            <label for="formaPago" class="block text-sm font-medium text-gray-700">Forma de Pago - Optativo</label>
+                            <select id="formaPago" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Seleccione</option>
+                                <option>Efectivo</option>
+                                <option>Tarjeta</option>
+                            </select>
+                        </div>
+                        <!-- Forma de Envío -->
+                        <div>
+                            <label for="formaEnvio" class="block text-sm font-medium text-gray-700">Forma de Envío - Optativo</label>
+                            <select id="formaEnvio" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Seleccione</option>
+                                <option>Retira en Tienda</option>
+                                <option>Correo Argentino</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Nro. de Factura -->
+                    <div class="mb-6">
+                        <label for="nroFactura" class="block text-sm font-medium text-gray-700">Nro. de Factura - Optativo</label>
+                        <input type="text" id="nroFactura" placeholder="X-XXXX-XXXXXXXX" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                    </div>
+
+                    <!-- Notas -->
+                    <div>
+                        <label for="notasVenta" class="block text-sm font-medium text-gray-700">Notas - Optativo</label>
+                        <textarea id="notasVenta" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border" placeholder="Escribe aquí cualquier nota importante sobre la venta."></textarea>
+                    </div>
+                </div>
+
+            </form>
+
+            <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
+            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="ventaModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+                    Guardar Venta
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL VENTA -->
+
+
+    <!-- MODAL DE AGREGAR GASTO (Sin cambios) -->
+    <div id="gastoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800">Agregar Gasto</h2>
+                <button data-close-modal="gastoModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Formulario de Gasto -->
+            <form class="p-6 space-y-6">
+
+                <!-- Fila de Fecha y Filtros Rápido -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <div class="mb-4 sm:mb-0">
+                        <label for="fechaGasto" class="block text-sm font-medium text-gray-700">Fecha (Opt.)</label>
+                        <input type="date" id="fechaGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="button" class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                            Hoy
+                        </button>
+                        <button type="button" class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                            Ayer
+                        </button>
+                        <button type="button" class="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 rounded-xl hover:bg-red-200 transition">
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mes y Año -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="mesGasto" class="block text-sm font-medium text-gray-700">Mes</label>
+                        <select id="mesGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
+                            <option>Noviembre</option>
+                            <option>Octubre</option>
+                            <option>Septiembre</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="añoGasto" class="block text-sm font-medium text-gray-700">Año</label>
+                        <select id="añoGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
+                            <option>2025</option>
+                            <option>2024</option>
+                            <option>2023</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Gasto Total y Descripción -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="gastoTotal" class="block text-sm font-medium text-gray-700">Gasto Total ($)</label>
+                        <input type="number" id="gastoTotal" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 p-3 border input-gasto-total">
+                    </div>
+                    <div>
+                        <label for="descripcionGasto" class="block text-sm font-medium text-gray-700">Descripción (Opt.)</label>
+                        <div class="relative">
+                            <input type="text" id="descripcionGasto" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded-xl hover:bg-gray-300 transition">
+                                Adicionales <i class="fas fa-chevron-down text-xs ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proveedor -->
+                <div>
+                    <label for="proveedorGasto" class="block text-sm font-medium text-gray-700">Proveedor</label>
+                    <select id="proveedorGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
+                        <option>No hay selección</option>
+                        <option>Proveedor A</option>
+                        <option>Proveedor B</option>
+                    </select>
+                </div>
+
+                <!-- Tipo de Gasto (Chips) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Gasto</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="gasto-chip">Administración</button>
+                        <button type="button" class="gasto-chip">Comercialización</button>
+                        <button type="button" class="gasto-chip">Impositivo</button>
+                        <button type="button" class="gasto-chip">Producto</button>
+                        <button type="button" class="gasto-chip">Inversión</button>
+                        <button type="button" class="gasto-chip">Personales</button>
+                    </div>
+                </div>
+
+                <!-- Pagado Checkbox -->
+                <div class="flex items-center pt-2">
+                    <input id="pagadoGasto" type="checkbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <label for="pagadoGasto" class="ml-2 text-base font-medium text-gray-800">
+                        Pagado
+                    </label>
+                </div>
+
+            </form>
+
+            <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
+            <div class="p-6 border-t flex justify-end flex-wrap gap-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button type="button" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    Guardar
+                </button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    Guardar y Agregar Otro
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL GASTO -->
+
+
+</body>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+    // Configuración de Seguridad y entorno
+    const SECURE_PIN = "1440"; 
+    const SIMULATED_VENTAS_VALUE = "$14,400 / $72";
+    const SIMULATED_GANANCIAS_VALUE = "$5,500";
+    let pendingAuthAction = null; 
+
+    // Global variables provided by the environment
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // Firebase Service instances
+    let app, auth, db;
+    let userId = null; 
+    let isAuthReady = false; 
+    let productsData = []; 
+    let unsubscribeProducts = null; // Variable para almacenar el unsubscriber del listener
+
+    // --- Funciones de Utilidad ---
+    
+    // Función para obtener y mostrar la fecha y hora actual (se actualiza cada segundo)
+    const updateClock = () => {
+        const now = new Date();
+        
+        // Formato de hora (12h con AM/PM)
+        const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        const formattedTime = now.toLocaleTimeString('es-ES', timeOptions);
+
+        // Formato de fecha (Día de la semana, Día/Mes/Año)
+        // Se usa toLocaleDateString con la opción 'long' para que se vea bien en el dashboard
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = now.toLocaleDateString('es-ES', dateOptions);
+
+        const dateEl = document.getElementById('currentDateDisplay');
+        const timeEl = document.getElementById('currentTimeDisplay');
+        
+        if (dateEl) {
+             // Capitalizar el primer caracter de la fecha (ej: "Martes, 25 de noviembre de 2025")
+             dateEl.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+        }
+        if (timeEl) {
+             timeEl.textContent = formattedTime;
+        }
+        
+        // Llamada recurrente para actualizar la hora cada 1 segundo (1000ms)
+        setTimeout(updateClock, 1000);
+    };
+
+    function getCurrentDate() {
+        // Función mantenida para establecer el valor ISO en los inputs de fecha (type="date")
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getCurrentMonthName() {
+        const date = new Date();
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        return monthNames[date.getMonth()];
+    }
+    
+    function generateDailyData(monthName) {
+        let total = 0;
+        const daysInMonth = (monthName === 'Febrero') ? 28 : (['Abril', 'Junio', 'Septiembre', 'Noviembre'].includes(monthName) ? 30 : 31);
+        const data = [];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const profit = Math.floor(Math.random() * 91 + 10);
+            total += profit;
+            data.push({ day, profit });
+        }
+
+        return { data, total: total.toFixed(2) };
+    }
+
+    const openModal = (modalElement) => {
+        modalElement.classList.remove('hidden');
+    };
+
+    const closeModal = (modalElement) => {
+        modalElement.classList.add('hidden');
+    };
+    
+    const alertMessage = (message, type = 'info') => {
+        const color = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-blue-500');
+        const alertBox = document.createElement('div');
+        alertBox.className = `fixed bottom-20 right-6 p-4 rounded-xl text-white font-semibold shadow-xl transition-all z-[60] ${color}`;
+        alertBox.textContent = message;
+        document.body.appendChild(alertBox);
+        setTimeout(() => {
+            alertBox.classList.add('opacity-0');
+            setTimeout(() => alertBox.remove(), 500);
+        }, 3000);
+    }
+    
+    // --- Firebase Initialization and Authentication ---
+    const initializeFirebase = async () => {
+        if (!firebaseConfig) {
+            console.error("Firebase config is missing. Cannot initialize Firestore.");
+            return;
+        }
+
+        try {
+            setLogLevel('debug'); // Enable Firestore debug logging
+
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            // Handle Authentication State Changes
+            onAuthStateChanged(auth, (user) => {
+                const currentUserIdDisplay = document.getElementById('currentUserIdDisplay');
+                
+                // 1. Unsubscribe previous listener if it exists
+                if (unsubscribeProducts) {
+                    unsubscribeProducts();
+                    unsubscribeProducts = null;
+                    console.log("Firestore: Previous listener successfully detached.");
+                }
+
+                if (user) {
+                    userId = user.uid;
+                    updateAuthStatus(true);
+                    if (currentUserIdDisplay) currentUserIdDisplay.textContent = userId;
+                    // 2. Set up new listener for the new user ID
+                    setupRealtimeListeners(); 
+                } else {
+                    userId = null;
+                    updateAuthStatus(false);
+                    if (currentUserIdDisplay) currentUserIdDisplay.textContent = 'N/A';
+                    // 3. Clear product data immediately for privacy/permissions
+                    productsData = [];
+                    renderProductHistory();
+                    loadInventoryData(); 
+                }
+                isAuthReady = true;
+                console.log("Firebase Auth State Changed. User ID:", userId);
+            });
+
+            // Initial sign-in logic
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            alertMessage(`Error de conexión Firebase: ${error.message}`, 'error');
+            isAuthReady = true; 
+        }
+    };
+    
+    // Path for private collections: /artifacts/{appId}/users/{userId}/products
+    const getProductsCollectionRef = () => {
+        if (!db || !userId) {
+            // Esto es normal si el usuario es anónimo y no tiene permisos
+            console.warn("DB or User ID not available for product collection (Permission expected to fail).");
+            return null;
+        }
+        return collection(db, 'artifacts', appId, 'users', userId, 'products');
+    };
+
+    // --- Real-Time Listener for Products (Only runs when userId is valid) ---
+    const setupRealtimeListeners = () => {
+        const productsRef = getProductsCollectionRef();
+        if (!productsRef) return; // Stop if no valid ref/user
+
+        // Attach the listener and store the unsubscribe function
+        unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
+            productsData = [];
+            snapshot.forEach((doc) => {
+                productsData.push({ id: doc.id, ...doc.data() });
+            });
+            console.log(`Products data updated in real-time. Total: ${productsData.length}`);
+            
+            // Update UI elements
+            document.getElementById('totalProductsCount').textContent = productsData.length;
+            renderProductHistory();
+            
+            // Only update the Inventory table if the modal is currently open
+            if (document.getElementById('inventarioModal').classList.contains('hidden') === false) {
+                 loadInventoryData();
+            }
+
+        }, (error) => {
+            // CRITICAL: Handle the permissions error explicitly
+            if (error.code === 'permission-denied') {
+                 console.error("Error de permisos: Asegúrese de que el usuario tenga permisos para leer la colección privada.");
+                 // Opcionalmente, mostrar un mensaje más suave en el historial
+                 document.getElementById('historialProductosLista').innerHTML = `<li class="text-red-500 text-center py-2">Error de permisos: No se pueden cargar los productos.</li>`;
+                 document.getElementById('inventarioTablaContenido').innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-red-500">Error de permisos: No se pueden cargar los productos.</td></tr>`;
+
+            } else {
+                console.error("Error listening to products collection:", error);
+            }
+        });
+    };
+    
+    // --- Data Rendering Functions (Updated to use productsData) ---
+
+    const renderProductHistory = () => {
+        const listEl = document.getElementById('historialProductosLista');
+        if (!listEl) return;
+
+        listEl.innerHTML = '';
+        if (!userId) {
+            listEl.innerHTML = `<li class="text-gray-400 text-center py-2">Inicie sesión para ver el historial.</li>`;
+            return;
+        }
+
+        const recentProducts = productsData.slice(-4).reverse(); // Last 4 products
+
+        if (recentProducts.length === 0) {
+             listEl.innerHTML = `<li class="text-gray-400 text-center py-2">No hay productos guardados.</li>`;
+             return;
+        }
+
+        recentProducts.forEach(item => {
+            const price = item.priceRetail ? `$${parseFloat(item.priceRetail).toFixed(2)}` : 'N/A';
+            const li = document.createElement('li');
+            li.className = 'flex justify-between items-center text-gray-600 border-b border-gray-200 pb-1 cursor-pointer hover:bg-gray-200 px-1 rounded-sm';
+            li.innerHTML = `
+                <span class="truncate">${item.name}</span>
+                <span class="text-xs text-green-600 font-semibold">${price}</span>
+            `;
+            listEl.appendChild(li);
+        });
+        
+        if (productsData.length > 4) {
+             listEl.innerHTML += `<li class="text-gray-400 text-center py-1">... (${productsData.length - 4} más)</li>`;
+        }
+    }
+
+    const loadInventoryData = () => {
+        const tbody = document.getElementById('inventarioTablaContenido');
+        if (!tbody) return;
+
+        tbody.innerHTML = ''; 
+        if (!userId) {
+             tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Inicie sesión para ver el inventario.</td></tr>`;
+             return;
+        }
+
+        if (productsData.length === 0) {
+             tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay productos en inventario.</td></tr>`;
+             return;
+        }
+
+        productsData.forEach(item => {
+            const stock = item.stock || 0;
+            const cost = item.costPerUnit || 0;
+            const price = item.priceRetail || 0;
+
+            const stockColorClass = stock < 10 ? 'text-red-600 font-bold' : 'text-gray-800';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${item.code || 'N/A'}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm ${stockColorClass}">
+                    ${stock.toLocaleString('es-ES')}
+                    ${stock < 10 ? '<i class="fas fa-exclamation-triangle text-xs ml-1"></i>' : ''}
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-500">$${parseFloat(cost).toFixed(2)}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-semibold text-green-600">$${parseFloat(price).toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
+
+
+    // --- Data Saving Functions (Firestore) ---
+    const saveProduct = async (event) => {
+        event.preventDefault();
+        
+        if (!isAuthReady || !userId) {
+            alertMessage('Error: Debe iniciar sesión para guardar productos.', 'error');
+            return;
+        }
+
+        const productsRef = getProductsCollectionRef();
+        if (!productsRef) {
+             alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
+             return;
+        }
+        
+        // Gather form data
+        const name = document.getElementById('nombreProducto').value.trim();
+        const description = document.getElementById('descripcionProducto').value.trim();
+        const category = document.getElementById('categoriaProducto').value;
+        const type = document.getElementById('tipoFisico').classList.contains('radio-chip-checked') ? 'Físico' : 'Servicio';
+        
+        const priceRetailInput = document.getElementById('priceRetailInput').value;
+        const priceWholesaleInput = document.getElementById('priceWholesaleInput').value;
+        
+        // PLACEHOLDER VALUES (Actualizar más adelante)
+        const costPerUnit = 10.00; 
+        const stock = 100;
+
+        // Basic validation
+        if (!name) {
+            alertMessage('El nombre del producto es obligatorio.', 'error');
+            return;
+        }
+        
+        const priceRetail = parseFloat(priceRetailInput) || 0;
+        const priceWholesale = parseFloat(priceWholesaleInput) || 0;
+
+        const productData = {
+            name: name,
+            description: description,
+            category: category,
+            type: type,
+            costPerUnit: costPerUnit,
+            priceRetail: priceRetail,
+            priceWholesale: priceWholesale,
+            stock: stock,
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            // Guardar en Firestore
+            const docRef = await addDoc(productsRef, productData);
+            console.log("Producto guardado con ID: ", docRef.id);
+            alertMessage('Producto guardado con éxito!', 'success');
+            
+            // Limpiar formulario y cerrar modal
+            document.getElementById('productoForm').reset();
+            closeModal(document.getElementById('productoModal'));
+
+        } catch (e) {
+            console.error("Error al añadir el producto: ", e);
+            alertMessage('Error al guardar el producto. ¿Tiene permisos? Ver consola.', 'error');
+        }
+    };
+
+
+    // --- Lógica del Gemini AI Analista (Mantenida) ---
+    const ANALISIS_CONTENT_ID = 'analisisContent';
+    const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+    const API_KEY = ""; 
+
+    const collectMockMetrics = () => {
+        const ventasString = SIMULATED_VENTAS_VALUE.split('/')[0].replace('$', '').replace(/,/g, '').trim();
+        const ventas = parseFloat(ventasString) || 0;
+        const ticketPromedio = parseFloat(SIMULATED_VENTAS_VALUE.split('/')[1].replace('$', '').trim()) || 0;
+        const gananciaNeta = parseFloat(SIMULATED_GANANCIAS_VALUE.replace('$', '').replace(/,/g, '').trim()) || 0;
+        
+        const costosFijos = 4500;
+        const cogs = ventas * 0.45; 
+        const margenBruto = ventas - cogs;
+        const unidadesVendidas = ventas / (ticketPromedio || 1);
+
+        return {
+            VentasMensuales: ventas.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            GananciaNeta: gananciaNeta.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            CostoDeBienesVendidos: cogs.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            MargenBruto: margenBruto.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            CostosOperacionalesFijos: costosFijos.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            UnidadesVendidas: Math.round(unidadesVendidas).toLocaleString('es-ES'),
+            TicketPromedio: ticketPromedio.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            MargenNetoPorcentual: ((gananciaNeta / ventas) * 100).toFixed(2) + '%'
+        };
+    };
+
+    const performAnalysis = async () => {
+        const analisisContentEl = document.getElementById(ANALISIS_CONTENT_ID);
+        const metrics = collectMockMetrics();
+        
+        analisisContentEl.innerHTML = `
+            <div class="flex justify-center items-center h-40">
+                <div id="loadingSpinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mr-3"></div>
+                <p class="text-lg font-medium text-gray-600">Analizando métricas y formulando estrategias...</p>
+            </div>
+        `;
+
+        const userQuery = `Analiza las siguientes métricas financieras simuladas de mi negocio (cifras en USD): 
+        Ventas Mensuales: ${metrics.VentasMensuales}, 
+        Ganancia Neta: ${metrics.GananciaNeta}, 
+        Costo de Bienes Vendidos (COGS): ${metrics.CostoDeBienesVendidos}, 
+        Margen Bruto: ${metrics.MargenBruto},
+        Costos Fijos: ${metrics.CostosOperacionalesFijos}, 
+        Unidades Vendidas: ${metrics.UnidadesVendidas}, 
+        Ticket Promedio: ${metrics.TicketPromedio},
+        Margen Neto Porcentual: ${metrics.MargenNetoPorcentual}.
+        
+        Actúa como un analista financiero experto. 
+        1. Proporciona un breve diagnóstico sobre la salud financiera de mi negocio.
+        2. Formula tres estrategias específicas y accionables para mejorar el Margen Neto. Usa formato de lista numerada para las estrategias.`;
+
+        const systemPrompt = "Eres un analista financiero experto. Tu respuesta debe ser concisa, profesional y formatada en Markdown, cubriendo el diagnóstico y las 3 estrategias solicitadas. El diagnóstico debe ser un párrafo breve y las estrategias una lista numerada con una breve explicación de cada una. Utiliza español de América Latina.";
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            tools: [{ "google_search": {} }], 
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+        };
+
+        const maxRetries = 3;
+        let lastError = null;
+
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const response = await fetch(API_URL + API_KEY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    let analysisText = candidate.content.parts[0].text;
+                    let sources = [];
+
+                    // 1. Mostrar el resultado
+                    analisisContentEl.innerHTML = `
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-gray-800">Métricas Analizadas:</h3>
+                            <ul class="grid grid-cols-2 gap-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl">
+                                <li><strong>Ventas:</strong> ${metrics.VentasMensuales}</li>
+                                <li><strong>Ticket Promedio:</strong> ${metrics.TicketPromedio}</li>
+                                <li><strong>Ganancia Neta:</strong> ${metrics.GananciaNeta}</li>
+                                <li><strong>Margen Neto:</strong> ${metrics.MargenNetoPorcentual}</li>
+                            </ul>
+                            <div class="prose max-w-none text-gray-800 border-t pt-4">
+                                ${analysisText.replace(/\n/g, '<br>')}
+                            </div>
+                            <div id="sourcesContainer" class="text-xs text-gray-500 mt-4 border-t pt-2"></div>
+                        </div>
+                    `;
+
+                    // 2. Extraer y mostrar fuentes (si existen)
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title);
+                    }
+                    
+                    if (sources.length > 0) {
+                        const sourcesContainer = document.getElementById('sourcesContainer');
+                        sourcesContainer.innerHTML = '<strong>Fuentes:</strong><br>' + 
+                            sources.map(s => `<a href="${s.uri}" target="_blank" class="text-blue-500 hover:underline">${s.title}</a>`).join(', ');
+                    }
+
+                    return; 
+                } else {
+                    throw new Error("Respuesta de la API incompleta o vacía.");
+                }
+            } catch (error) {
+                lastError = error;
+                if (i < maxRetries - 1) {
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        analisisContentEl.innerHTML = `
+            <div class="text-center p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl">
+                <p class="font-bold">Error al generar el análisis.</p>
+                <p class="text-sm">No pudimos conectar con el analista AI. Por favor, intente de nuevo más tarde.</p>
+                <p class="text-xs mt-2">Detalles: ${lastError ? lastError.message : 'Error de red desconocido'}</p>
+            </div>
+        `;
+    };
+
+
+    // --- Inicialización DOM ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Iniciar Firebase y el flujo de autenticación
+        initializeFirebase();
+
+        // ** INICIAR RELOJ Y CALENDARIO **
+        updateClock(); 
+        // ********************************
+
+        // --- Setup de Modales ---
+        const productoModal = document.getElementById('productoModal');
+        const ventaModal = document.getElementById('ventaModal');
+        const gastoModal = document.getElementById('gastoModal');
+        const gananciasModal = document.getElementById('gananciasModal');
+        const detalleDiarioModal = document.getElementById('detalleDiarioModal');
+        const authModal = document.getElementById('authModal');
+        const analisisModal = document.getElementById('analisisModal'); 
+        const inventarioModal = document.getElementById('inventarioModal');
+        const profileModal = document.getElementById('profileModal');
+
+        // --- Selectores de Botones y Elementos ---
+        const openProductoBtn = document.getElementById('openProductoModal');
+        const openProductoBtnTrigger = document.getElementById('openProductoModalTrigger');
+        const openVerVentasLink = document.getElementById('openVerVentasLink'); 
+        const openGastoBtn = document.getElementById('openGastoModal');
+        const openGananciasBtn = document.getElementById('openGananciasModalTrigger'); 
+        const openGananciasBtnAction = document.getElementById('openGananciasModal');
+        const openAnalisisModalBtn = document.getElementById('openAnalisisModalBtn');
+        const openInventarioModalTrigger = document.getElementById('openInventarioModalTrigger');
+        const openProfileModalBtn = document.getElementById('openProfileModalBtn'); 
+        const openVentaModalDirect = document.getElementById('openVentaModalDirect');
+        const installAppBtn = document.getElementById('installAppBtn'); 
+        
+        const productoForm = document.getElementById('productoForm');
+        const tipoFisicoBtn = document.getElementById('tipoFisico');
+        const tipoServicioBtn = document.getElementById('tipoServicio');
+        const addCustomCategoryBtn = document.getElementById('addCustomCategoryBtn');
+        const verTodoHistorialBtn = document.getElementById('verTodoHistorialBtn');
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userStatusEl = document.getElementById('userStatus');
+        
+        const ventaPinInput = document.getElementById('ventaPinInput');
+        const pinError = document.getElementById('pinError');
+        const checkVentaPinBtn = document.getElementById('checkVentaPinBtn');
+        
+        const ventasDisplayValue = document.getElementById('ventasDisplayValue');
+        const gananciasDisplayValue = document.getElementById('gananciasDisplayValue');
+        const ventasProtectedValue = document.getElementById('ventasProtectedValue');
+        const ventasEyeIcon = document.getElementById('ventasEyeIcon');
+        const gananciasProtectedValue = document.getElementById('gananciasProtectedValue');
+        const gananciasEyeIcon = document.getElementById('gananciasEyeIcon');
+
+        const fechaVentaInput = document.getElementById('fechaVenta');
+        const fechaGastoInput = document.getElementById('fechaGasto');
+        const mesGastoSelect = document.getElementById('mesGasto');
+        const añoGastoSelect = document.getElementById('añoGasto');
+        
+        const detalleDiarioTitulo = document.getElementById('detalleDiarioTitulo');
+        const detalleDiarioContenido = document.getElementById('detalleDiarioContenido');
+        const detalleDiarioTotal = document.getElementById('detalleDiarioTotal');
+
+        // Establecer la fecha y mes/año actual por defecto
+        const currentDate = getCurrentDate();
+        const currentYear = new Date().getFullYear().toString();
+        const currentMonthName = getCurrentMonthName();
+
+        if (fechaVentaInput) { fechaVentaInput.value = currentDate; }
+        if (fechaGastoInput) { fechaGastoInput.value = currentDate; }
+
+        if (ventasDisplayValue) ventasDisplayValue.textContent = SIMULATED_VENTAS_VALUE;
+        if (gananciasDisplayValue) gananciasDisplayValue.textContent = SIMULATED_GANANCIAS_VALUE;
+
+        if (mesGastoSelect) { mesGastoSelect.value = currentMonthName; }
+        if (añoGastoSelect) { 
+            const currentOption = Array.from(añoGastoSelect.options).find(opt => opt.value === currentYear);
+            if (currentOption) {
+                añoGastoSelect.value = currentYear;
+            }
+        }
+        
+        // --- Lógica de Autenticación y Revelación (Modo Ninja) ---
+        const revealMetrics = (target, pinInput) => {
+            const isVentas = target === 'revealVentas';
+            const displayEl = isVentas ? ventasDisplayValue : gananciasDisplayValue;
+            const protectedEl = isVentas ? ventasProtectedValue : gananciasProtectedValue;
+            const eyeIcon = isVentas ? ventasEyeIcon : gananciasEyeIcon;
+
+            if (pinInput.value === SECURE_PIN) {
+                displayEl.classList.remove('hidden');
+                protectedEl.classList.add('hidden');
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+                
+                pinInput.value = '';
+                closeModal(authModal);
+                pendingAuthAction = null;
+            } else {
+                pinError.classList.remove('hidden');
+                pinInput.value = '';
+                pinInput.focus();
+            }
+        };
+
+        const handlePinCheck = () => {
+            if (!pendingAuthAction) return;
+
+            if (pendingAuthAction.startsWith('reveal')) {
+                revealMetrics(pendingAuthAction, ventaPinInput);
+            }
+        };
+
+        const attemptAuth = (actionTarget) => {
+            pendingAuthAction = actionTarget;
+            openModal(authModal);
+            ventaPinInput.value = '';
+            pinError.classList.add('hidden');
+            ventaPinInput.focus();
+        };
+
+        // --- Lógica de Estado de Login (Usando Firebase Real) ---
+        window.updateAuthStatus = (loggedIn) => { 
+            if (loggedIn) {
+                userStatusEl.textContent = 'Conectado';
+                userStatusEl.classList.remove('text-red-500');
+                userStatusEl.classList.add('text-green-500');
+                logoutBtn.disabled = false;
+            } else {
+                userStatusEl.textContent = 'Desconectado';
+                userStatusEl.classList.remove('text-green-500');
+                userStatusEl.classList.add('text-red-500');
+                logoutBtn.disabled = true;
+            }
+        };
+
+
+        // --- Listeners de Eventos (Botones) ---
+
+        // Abrir modales sin PIN
+        openProductoBtn.addEventListener('click', () => openModal(productoModal));
+        openProductoBtnTrigger.addEventListener('click', () => openModal(productoModal));
+        openGastoBtn.addEventListener('click', () => openModal(gastoModal));
+        openVerVentasLink.addEventListener('click', () => openModal(gananciasModal));
+        openGananciasBtn.addEventListener('click', () => openModal(gananciasModal));
+        openGananciasBtnAction.addEventListener('click', () => openModal(gananciasModal));
+        
+        openVentaModalDirect.addEventListener('click', () => openModal(ventaModal));
+
+        // Botón de Perfil
+        openProfileModalBtn.addEventListener('click', () => openModal(profileModal));
+        
+        // Botones de Logout (Usando Firebase Real)
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                alertMessage('Sesión cerrada correctamente.', 'success');
+                closeModal(profileModal);
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+                alertMessage('Error al cerrar sesión.', 'error');
+            }
+        });
+        
+        // Producto: Lógica de Guardado (Firestore)
+        if (productoForm) {
+            productoForm.addEventListener('submit', saveProduct);
+        }
+
+        // Botón de la tarjeta Inventario: Abre el modal de historial
+        openInventarioModalTrigger.addEventListener('click', () => {
+            loadInventoryData();
+            openModal(inventarioModal);
+        });
+
+        // Botón Gemini: Abre el modal y ejecuta el análisis
+        openAnalisisModalBtn.addEventListener('click', () => {
+            closeModal(gananciasModal); 
+            openModal(analisisModal);
+            performAnalysis();
+        });
+
+        // Botones que requieren PIN (Solo MÉTICAS REVELADAS)
+        document.querySelectorAll('[data-auth-for^="reveal"]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const target = e.currentTarget.getAttribute('data-auth-for');
+                const isVentas = target === 'revealVentas';
+                const displayEl = isVentas ? ventasDisplayValue : gananciasDisplayValue;
+                const protectedEl = isVentas ? ventasProtectedValue : gananciasProtectedValue;
+                const eyeIcon = isVentas ? ventasEyeIcon : gananciasEyeIcon;
+                
+                if (!displayEl.classList.contains('hidden')) {
+                    displayEl.classList.add('hidden');
+                    protectedEl.classList.remove('hidden');
+                    eyeIcon.classList.remove('fa-eye-slash');
+                    eyeIcon.classList.add('fa-eye');
+                } else {
+                    attemptAuth(target);
+                }
+            });
+        });
+
+        // Listener del botón de Acceso en el modal de PIN
+        checkVentaPinBtn.addEventListener('click', handlePinCheck);
+
+        // Permitir Enter para enviar el PIN
+        ventaPinInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handlePinCheck();
+            }
+        });
+        
+        // Lógica de los chips de Tipo de Producto (Físico/Servicio)
+        if (tipoFisicoBtn && tipoServicioBtn) {
+            tipoFisicoBtn.addEventListener('click', () => {
+                tipoFisicoBtn.classList.add('radio-chip-checked');
+                tipoServicioBtn.classList.remove('radio-chip-checked');
+            });
+
+            tipoServicioBtn.addEventListener('click', () => {
+                tipoServicioBtn.classList.add('radio-chip-checked');
+                tipoFisicoBtn.classList.remove('radio-chip-checked');
+            });
+        }
+        
+        // NUEVA LÓGICA: Agregar Categoría Personalizada (Simulación de UX)
+        if (addCustomCategoryBtn) {
+            addCustomCategoryBtn.addEventListener('click', () => {
+                alertMessage("SIMULACIÓN: Se abriría un campo para ingresar una nueva categoría.", 'info');
+                const categorySelect = document.getElementById('categoriaProducto');
+                const newCategoryName = 'Personalizada - ' + Math.floor(Math.random() * 100);
+                
+                const newOption = document.createElement('option');
+                newOption.value = newCategoryName;
+                newOption.textContent = newCategoryName;
+                categorySelect.appendChild(newOption);
+                categorySelect.value = newCategoryName;
+                
+                const originalText = addCustomCategoryBtn.innerHTML;
+                addCustomCategoryBtn.innerHTML = '<i class="fas fa-check text-green-300"></i>';
+                setTimeout(() => {
+                    addCustomCategoryBtn.innerHTML = originalText;
+                }, 1500);
+            });
+        }
+        
+        // Lógica para simular "Ver todo historial"
+        if (verTodoHistorialBtn) {
+            verTodoHistorialBtn.addEventListener('click', () => {
+                alertMessage("SIMULACIÓN: Navegar a la pantalla de Historial Completo de Productos.", 'info');
+            });
+        }
+        
+        // --- Lógica del Historial Diario de Ganancias ---
+        document.querySelectorAll('.ganancias-mes-celda').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const monthName = e.currentTarget.getAttribute('data-month');
+                
+                const { data, total } = generateDailyData(monthName);
+                
+                detalleDiarioTitulo.textContent = `Historial Diario de Ganancias (${monthName})`;
+                
+                detalleDiarioContenido.innerHTML = '';
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">${item.day} de ${monthName}</td>
+                        <td class="px-6 py-2 whitespace-nowrap text-right text-sm font-medium text-green-600">$${item.profit.toFixed(2)}</td>
+                    `;
+                    detalleDiarioContenido.appendChild(row);
+                });
+
+                detalleDiarioTotal.textContent = `$${total}`;
+                
+                closeModal(gananciasModal); 
+                openModal(detalleDiarioModal);
+            });
+        });
+        
+        // Event Listeners para cerrar los modales (botón X y botón Cancelar)
+        document.querySelectorAll('[data-close-modal]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const modalId = e.currentTarget.getAttribute('data-close-modal');
+                const targetModal = document.getElementById(modalId);
+                if (targetModal) {
+                    closeModal(targetModal);
+                }
+            });
+        });
+        
+        // Cerrar modal al hacer clic fuera del contenido (en el overlay)
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-overlay')) {
+                    closeModal(e.target);
+                }
+            });
+        });
+    });
+</script>
