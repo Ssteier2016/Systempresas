@@ -1191,55 +1191,40 @@
             <!-- Cuerpo del Formulario de Gasto -->
             <form class="p-6 space-y-6">
 
-                <!-- Fila de Fecha (Botones Hoy/Ayer/Limpiar ELIMINADOS) -->
+                <!-- Fila de Fecha -->
                 <div class="flex flex-col sm:flex-row justify-start items-start sm:items-center">
                     <div class="mb-4 sm:mb-0">
                         <label for="fechaGasto" class="block text-sm font-medium text-gray-700">Fecha (Opt.)</label>
                         <input type="date" id="fechaGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
                     </div>
-                    <!-- REMOVED: Mes y Año y Botones de acceso rápido a fecha -->
                 </div>
 
-                <!-- Mes y Año (ELIMINADO) -->
-                <!-- Se eliminó el bloque de Mes y Año de aquí -->
-
-                <!-- Gasto Total y Categoría (MODIFICADO) -->
+                <!-- Gasto Total y Categoría (MODIFICADO CON DATALIST) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="gastoTotal" class="block text-sm font-medium text-gray-700">Gasto Total ($)</label>
                         <input type="number" id="gastoTotal" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 p-3 border input-gasto-total">
                     </div>
                     
-                    <!-- CAMBIO: DESCRIPCIÓN A SELECT CON CRUD (RENOMBRADO A CATEGORIA) -->
+                    <!-- CATEGORÍA CON DATALIST Y BOTÓN DE ADD (ESTILO VENTA) -->
                     <div>
-                        <label for="categoriaGastoSelect" class="block text-sm font-medium text-gray-700">Categoría</label> 
-                        <div id="categoriaGastoSelectGroup" class="flex items-center space-x-2 mt-1">
-                            <select id="categoriaGastoSelect" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
-                                <option>Seleccione Categoría</option>
-                            </select>
-                            <button type="button" id="deleteCategoriaGastoBtn" disabled class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm disabled:bg-gray-400" title="Eliminar Categoría Seleccionada">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            <button type="button" id="addCustomCategoriaGastoBtn" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Categoría Personalizada">
+                        <label for="categoriaGastoInput" class="block text-sm font-medium text-gray-700">Categoría</label> 
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="text" id="categoriaGastoInput" list="categoriaGastoListOptions" placeholder="Escriba o seleccione una categoría..." class="block flex-1 rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue">
+                            
+                            <datalist id="categoriaGastoListOptions">
+                                <!-- Las opciones se agregarán dinámicamente -->
+                            </datalist>
+
+                            <button type="button" id="addNewGastoCategoryBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nueva Categoría">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
-                        
-                        <!-- Nuevo campo para ingresar categoría personalizada (Inicialmente oculto) -->
-                        <div id="customCategoriaGastoInputGroup" class="mt-2 hidden flex items-center space-x-2">
-                            <input type="text" id="customCategoriaGastoInput" placeholder="Nombre de la nueva categoría" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 p-3 input-bg-blue border">
-                            <button type="button" id="saveCustomCategoriaGastoBtn" class="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition shadow-sm" title="Guardar Categoría">
-                                <i class="fas fa-save"></i>
-                            </button>
-                            <button type="button" id="cancelCustomCategoriaGastoBtn" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm" title="Cancelar">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
                     </div>
-                    <!-- FIN CAMBIO CATEGORIA -->
+                    <!-- FIN CATEGORÍA CON DATALIST -->
                 </div>
 
-                <!-- ENCARGADO DE TURNO (MODIFICADO DE PROVEEDOR) -->
+                <!-- ENCARGADO DE TURNO (MANTENIENDO EL CRUD DETALLADO) -->
                 <div>
                     <label for="encargadoSelect" class="block text-sm font-medium text-gray-700">Encargado de Turno</label>
                     <div id="encargadoSelectGroup" class="flex items-center space-x-2 mt-1">
@@ -1267,26 +1252,14 @@
                 </div>
                 <!-- FIN CAMBIO ENCARGADO DE TURNO -->
                 
-                <!-- NUEVO CAMPO DE DESCRIPCIÓN AL FINAL -->
+                <!-- CAMPO DE DESCRIPCIÓN -->
                 <div>
                     <label for="descripcionGastoTextArea" class="block text-sm font-medium text-gray-700">Descripción (Opt.)</label>
                     <textarea id="descripcionGastoTextArea" rows="3" placeholder="Detalles o notas adicionales sobre el gasto..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
                 </div>
 
 
-                <!-- Tipo de Gasto (Chips) -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Gasto (Etiquetas de Filtro)</label>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" class="gasto-chip">Administración</button>
-                        <button type="button" class="gasto-chip">Comercialización</button>
-                        <button type="button" class="gasto-chip">Impositivo</button>
-                        <button type="button" class="gasto-chip">Producto</button>
-                        <button type="button" class="gasto-chip">Inversión</button>
-                        <button type="button" class="gasto-chip">Personales</button>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">Nota: Para ver montos sumados por tipo, se requeriría guardar y procesar los datos del gasto en la base de datos.</p>
-                </div>
+                <!-- Tipo de Gasto (Chips) - ELIMINADO SEGÚN SOLICITUD DEL USUARIO -->
 
                 <!-- Pagado Checkbox -->
                 <div class="flex items-center pt-2">
@@ -2257,8 +2230,36 @@
         
         // Inicializar los selectores de CRUD
         setupCustomCategoryListeners();
-        setupCustomSelectListeners('CategoriaGasto', 'Seleccione Categoría');
+        // ** SE ELIMINA setupCustomSelectListeners('CategoriaGasto', 'Seleccione Categoría'); **
         setupCustomSelectListeners('Encargado', 'Seleccione Encargado');
+        
+        // --- NUEVA LÓGICA: Agregar Categoría de Gasto con Datalist (Estilo Venta) ---
+        const addNewGastoCategoryBtn = document.getElementById('addNewGastoCategoryBtn');
+        const categoriaGastoInput = document.getElementById('categoriaGastoInput');
+        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
+
+        if (addNewGastoCategoryBtn && categoriaGastoInput && categoriaGastoListOptions) {
+            addNewGastoCategoryBtn.addEventListener('click', () => {
+                const categoryName = categoriaGastoInput.value.trim();
+                
+                if (categoryName) {
+                    const existingOption = Array.from(categoriaGastoListOptions.options).some(opt => opt.value === categoryName);
+
+                    if (existingOption) {
+                        alertMessage(`La categoría "${categoryName}" ya existe en la lista.`, 'info');
+                    } else {
+                        const newOption = document.createElement('option');
+                        newOption.value = categoryName;
+                        categoriaGastoListOptions.appendChild(newOption);
+                        
+                        categoriaGastoInput.value = categoryName;
+                        alertMessage(`Categoría de Gasto "${categoryName}" agregada manualmente a la lista.`, 'success');
+                    }
+                } else {
+                    alertMessage('Por favor, escriba un nombre de categoría para agregar.', 'error');
+                }
+            });
+        }
         
         // --- Lógica del Historial Diario de Ganancias (MANTENIDA) ---
         document.querySelectorAll('.ganancias-mes-celda').forEach(cell => {
