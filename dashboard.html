@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Negocios</title>
+    <!-- VINCULACIÓN PWA: MANIFESTO -->
+    <link rel="manifest" href="/manifest.json">
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Font Awesome para iconos -->
@@ -14,7 +16,7 @@
             font-family: 'Inter', sans-serif;
         }
 
-  /* --------------------------------- */
+        /* --------------------------------- */
         /* ESTILOS DEL SPLASH SCREEN (NUEVO) */
         /* --------------------------------- */
         #splashScreen {
@@ -50,7 +52,7 @@
             pointer-events: all;
         }
         /* --------------------------------- */
-
+        
         /* Colores personalizados para las tarjetas */
         .card-ventas-border { border-left: 5px solid #3b82f6; } /* Azul */
         .card-ganancias-border { border-left: 5px solid #10b981; } /* Verde Esmeralda (Ganancias Positivas) */
@@ -114,1306 +116,1340 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    
+    <!-- SPLASH SCREEN (Pantalla de Carga/Logo Animado) - INICIA VISIBLE -->
+    <div id="splashScreen">
+        <!-- 
+            IMPORTANTE: Asegúrate de tener tu archivo de video llamado 'logo_animado.mp4' en la raíz.
+            Usa el atributo 'muted' y 'autoplay' para que inicie en todos los navegadores. 
+        -->
+        <video id="splashVideo" autoplay muted playsinline>
+            <source src="/logo_animado.mp4" type="video/mp4">
+            <!-- Texto de Fallback si el navegador no soporta video -->
+            Tu navegador no soporta el video del logo.
+        </video>
+    </div>
+    <!-- FIN SPLASH SCREEN -->
+    
+    <!-- CONTENIDO PRINCIPAL DEL DASHBOARD - INICIA OCULTO -->
+    <div id="mainContent">
 
-    <!-- Navbar Superior -->
-    <nav class="bg-white shadow-sm sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <!-- Sección Izquierda (Logo/INICIO) -->
-                <div class="flex items-center space-x-6">
-                    <span class="text-xl font-bold text-gray-800">INICIO</span>
-                    <div class="flex items-center space-x-2 text-gray-500">
-                        <i class="fas fa-info-circle hover:text-blue-500 cursor-pointer text-lg"></i>
-                        <i class="fas fa-exclamation-circle hover:text-red-500 cursor-pointer text-lg"></i>
-                    </div>
-                </div>
-
-                <!-- Sección Derecha (Iconos de Usuario y Acciones) -->
-                <div class="flex items-center space-x-4 text-gray-500">
-                    <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
-                    <!-- Botón de Instalar App (NUEVO) -->
-                    <button id="installAppBtn" class="hover:text-gray-800 cursor-pointer text-lg transition" title="Instalar Aplicación">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <!-- Icono de Notificaciones -->
-                    <i class="fas fa-bell hover:text-gray-800 cursor-pointer text-lg"></i>
-                    <!-- Botón de Perfil/Login -->
-                    <button id="openProfileModalBtn" class="relative group cursor-pointer p-1 -m-1">
-                        <i class="fas fa-user-circle text-2xl text-gray-500 hover:text-gray-800"></i>
-                        <i class="fas fa-caret-down text-sm absolute bottom-0 right-0"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Contenido Principal del Dashboard -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- CABECERA CON FECHA Y HORA ACTUAL -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
-                <i class="fas fa-calendar-alt text-blue-500 mr-3"></i> Dashboard de Gestión
-            </h1>
-            <div class="text-right mt-2 sm:mt-0">
-                <p id="currentDateDisplay" class="text-lg font-medium text-blue-600">--/--/----</p>
-                <p id="currentTimeDisplay" class="text-sm text-gray-500">--:--:--</p>
-            </div>
-        </div>
-        <!-- FIN CABECERA CON FECHA Y HORA ACTUAL -->
-
-        <!-- Fila de Tarjetas de Acción Rápida (Ver...) - 5 COLUMNAS EN LG -->
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
-            
-            <!-- Tarjeta 1: Ver Productos -->
-            <button id="openProductoModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
-                <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl mb-2">
-                    <i class="fas fa-tshirt text-xl"></i>
-                </div>
-                <span class="text-sm font-semibold text-gray-700">Ver Productos</span>
-            </button>
-            <!-- Tarjeta 2: Ver Ventas (AHORA ABRE EL HISTORIAL DE TRANSACCIONES) -->
-            <button id="openVerVentasLink" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
-                <div class="bg-blue-100 text-blue-600 p-3 rounded-xl mb-2">
-                    <i class="fas fa-shopping-cart text-xl"></i>
-                </div>
-                <span class="text-sm font-semibold text-gray-700">Ver Ventas</span>
-                <!-- NUEVO: Contador de Ventas Diarias -->
-                <p class="text-xs text-gray-500 mt-1">Hoy: <span id="totalDailySalesCount">$0.00</span></p>
-            </button>
-            <!-- Tarjeta 3: Ver Gastos (AHORA ABRE EL HISTORIAL DE GASTOS) -->
-            <button id="openGananciasModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
-                <div class="bg-green-100 text-green-600 p-3 rounded-xl mb-2">
-                    <i class="fas fa-calculator text-xl"></i>
-                </div>
-                <span class="text-sm font-semibold text-gray-700">Ver Gastos</span>
-                <!-- NUEVO: Contador de Gastos Diarios -->
-                <p class="text-xs text-gray-500 mt-1">Hoy: <span id="totalDailyExpensesCount">$0.00</span></p>
-            </button>
-            <!-- Tarjeta 4: Ver Inventario -->
-            <button id="openInventarioModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
-                <div class="bg-orange-100 text-orange-600 p-3 rounded-xl mb-2">
-                    <i class="fas fa-warehouse text-xl"></i>
-                </div>
-                <span class="text-sm font-semibold text-gray-700">Ver Inventario</span>
-            </button>
-            
-            <!-- Tarjeta 5: Ver Clientes -->
-            <button id="openClientesModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
-                <div class="bg-indigo-100 text-indigo-600 p-3 rounded-xl mb-2">
-                    <i class="fas fa-users text-xl"></i>
-                </div>
-                <span class="text-sm font-semibold text-gray-700">Ver Clientes</span>
-                <p class="text-xs text-gray-500 mt-1"><span id="totalClientsCount">0</span> clientes totales</p>
-            </button>
-        </div>
-        
-        <!-- Fila de Botones de Acción (+ Producto, + Venta, + Gasto) -->
-        <div class="flex flex-wrap gap-3 mb-8">
-            <button id="openProductoModalTrigger" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
-                <i class="fas fa-plus mr-2"></i>
-                Producto
-            </button>
-            <!-- Botón de Venta que abre el modal directamente sin PIN (MODIFICADO) -->
-            <button id="openVentaModalDirect" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
-                <i class="fas fa-plus mr-2"></i>
-                Venta
-            </button>
-            <!-- Botón de Gasto que abre el modal -->
-            <button id="openGastoModal" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
-                <i class="fas fa-plus mr-2"></i>
-                Gasto
-            </button>
-        </div>
-
-        <!-- Fila de Filtros (Mes y Año) -->
-        <div class="flex justify-end mb-8 space-x-3">
-            <div class="relative">
-                <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
-                    <option>Enero</option>
-                    <option>Febrero</option>
-                    <option>Marzo</option>
-                    <option>Abril</option>
-                    <option>Mayo</option>
-                    <option>Junio</option>
-                    <option>Julio</option>
-                    <option>Agosto</option>
-                    <option>Septiembre</option>
-                    <option>Octubre</option>
-                    <option>Noviembre</option>
-                    <option>Diciembre</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </div>
-            </div>
-            <div class="relative">
-                <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
-                    <option>2025</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fila de Tarjetas de Métricas Principales -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            
-            <!-- Tarjeta 1: Ventas - Métrica Protegida (REQUIERE PIN) -->
-            <div class="bg-white rounded-xl shadow-lg p-6 card-ventas-border transition hover:shadow-xl">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-blue-100 text-blue-600 p-3 rounded-xl">
-                            <i class="fas fa-cloud-download-alt text-xl"></i>
+        <!-- Navbar Superior -->
+        <nav class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <!-- Sección Izquierda (Logo/INICIO) -->
+                    <div class="flex items-center space-x-6">
+                        <span class="text-xl font-bold text-gray-800">INICIO</span>
+                        <div class="flex items-center space-x-2 text-gray-500">
+                            <i class="fas fa-info-circle hover:text-blue-500 cursor-pointer text-lg"></i>
+                            <i class="fas fa-exclamation-circle hover:text-red-500 cursor-pointer text-lg"></i>
                         </div>
-                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ventas</h3>
                     </div>
-                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+
+                    <!-- Sección Derecha (Iconos de Usuario y Acciones) -->
+                    <div class="flex items-center space-x-4 text-gray-500">
+                        <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
+                        <!-- Botón de Instalar App (NUEVO) -->
+                        <button id="installAppBtn" class="hover:text-gray-800 cursor-pointer text-lg transition" title="Instalar Aplicación">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <!-- Icono de Notificaciones -->
+                        <i class="fas fa-bell hover:text-gray-800 cursor-pointer text-lg"></i>
+                        <!-- Botón de Perfil/Login -->
+                        <button id="openProfileModalBtn" class="relative group cursor-pointer p-1 -m-1">
+                            <i class="fas fa-user-circle text-2xl text-gray-500 hover:text-gray-800"></i>
+                            <i class="fas fa-caret-down text-sm absolute bottom-0 right-0"></i>
+                        </button>
+                    </div>
                 </div>
-                <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
-                <h4 class="text-lg font-medium text-gray-500">Ventas / Ticket Promedio</h4>
-                <div class="flex justify-between items-center mb-4">
-                    <p class="text-3xl font-bold text-blue-600">
-                        <span id="ventasDisplayValue" class="hidden">$0.00 / $0.00</span>
-                        <span id="ventasProtectedValue">******</span>
-                    </p>
-                    <button type="button" data-auth-for="revealVentas" class="text-blue-500 text-sm font-semibold hover:text-blue-700 transition">
-                        <i id="ventasEyeIcon" class="fas fa-eye"></i> Ver
-                    </button>
-                </div>
-                <p class="text-sm text-gray-500"><span id="totalProductsCount">0</span> productos en inventario</p>
-                <p class="text-sm text-gray-500">Ventas de hoy: $<span id="dailySalesSummaryValue">0</span></p>
             </div>
+        </nav>
 
-            <!-- Tarjeta 2: Ganancias - Métrica Protegida (AHORA REAL: Ventas - Gastos) -->
-            <div id="gananciasCard" class="bg-white rounded-xl shadow-lg p-6 card-ganancias-border transition hover:shadow-xl">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-green-100 text-green-600 p-3 rounded-xl">
-                            <i class="fas fa-chart-line text-xl"></i>
-                        </div>
-                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ganancias</h3>
-                    </div>
-                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
-                </div>
-                <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
-                <h4 class="text-lg font-medium text-gray-500">Resultados Netos del mes</h4>
-                <div class="flex justify-between items-center mb-4">
-                    <p class="text-3xl font-bold text-green-600">
-                        <span id="gananciasDisplayValue" class="hidden">$0.00</span>
-                        <span id="gananciasProtectedValue">******</span>
-                    </p>
-                    <button type="button" data-auth-for="revealGanancias" class="text-green-500 text-sm font-semibold hover:text-green-700 transition">
-                        <i id="gananciasEyeIcon" class="fas fa-eye"></i> Ver
-                    </button>
-                </div>
-                <div class="h-4"></div> <!-- Espacio ajustado para alineación visual -->
-            </div>
-
-            <!-- Tarjeta 3: Finanzas (Caja Protegida) -->
-            <div class="bg-white rounded-xl shadow-lg p-6 card-finanzas-border transition hover:shadow-xl">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
-                            <i class="fas fa-dollar-sign text-xl"></i>
-                        </div>
-                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Finanzas</h3>
-                    </div>
-                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
-                </div>
-                <p class="text-sm text-gray-400 mb-2">DEUDAS Y CUENTAS</p>
-                <!-- CAMBIO: Saldo -> Caja, y métrica protegida -->
-                <h4 class="text-lg font-medium text-gray-500">Caja <i class="fas fa-circle text-xs text-green-500"></i></h4>
-                <div class="flex justify-between items-center mb-4">
-                    <p class="text-3xl font-bold text-yellow-600">
-                        <span id="cajaDisplayValue" class="hidden">$12,000.00</span> 
-                        <span id="cajaProtectedValue">******</span>
-                    </p>
-                    <button type="button" data-auth-for="revealCaja" class="text-yellow-500 text-sm font-semibold hover:text-yellow-700 transition">
-                        <i id="cajaEyeIcon" class="fas fa-eye"></i> Ver
-                    </button>
-                </div>
-                <div class="h-4"></div>
-            </div>
-
-            <!-- Tarjeta 4: Inventario - Abre el historial de productos (Unidades) -->
-            <button id="openInventarioModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-inventario-border transition hover:shadow-xl text-left">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-orange-100 text-orange-600 p-3 rounded-xl">
-                            <i class="fas fa-cube text-xl"></i>
-                        </div>
-                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Inventario</h3>
-                    </div>
-                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
-                </div>
-                <p class="text-sm text-gray-400 mb-2">UNIDADES</p>
-                <h4 class="text-lg font-medium text-gray-500">Stock Total</h4>
-                <!-- ID AÑADIDO PARA ACTUALIZAR CON EL STOCK REAL -->
-                <p class="text-3xl font-bold text-orange-600 mb-2" id="stockTotalDisplay">0</p>
-                <p class="text-sm text-gray-500">Nacionales: 300 / Importados: 150</p>
-            </button>
-
-        </div>
-        
-        <!-- Sección de Gráficos de Métricas de Negocios (NUEVO) -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
+        <!-- Contenido Principal del Dashboard -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-chart-area text-blue-500 mr-3"></i> Métrica de Desempeño vs Tiempo
-                </h2>
+            <!-- CABECERA CON FECHA Y HORA ACTUAL -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+                    <i class="fas fa-calendar-alt text-blue-500 mr-3"></i> Dashboard de Gestión
+                </h1>
+                <div class="text-right mt-2 sm:mt-0">
+                    <p id="currentDateDisplay" class="text-lg font-medium text-blue-600">--/--/----</p>
+                    <p id="currentTimeDisplay" class="text-sm text-gray-500">--:--:--</p>
+                </div>
+            </div>
+            <!-- FIN CABECERA CON FECHA Y HORA ACTUAL -->
+
+            <!-- Fila de Tarjetas de Acción Rápida (Ver...) - 5 COLUMNAS EN LG -->
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
                 
-                <!-- Menú Desplegable de Métricas (NUEVO) -->
-                <div class="relative mt-3 sm:mt-0">
-                    <label for="metricSelect" class="text-sm font-medium text-gray-700 mr-2 hidden sm:inline">Seleccionar Métrica:</label>
-                    <select id="metricSelect" class="block appearance-none bg-blue-50 border border-blue-300 text-gray-800 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm font-semibold">
-                        <option value="ventas">Ventas ($)</option>
-                        <option value="gastos">Gastos ($)</option>
-                        <option value="clientes">Clientes (Total)</option>
-                        <option value="inventario">Inventario (Unidades)</option>
-                        <option value="caja">Caja (Saldo)</option>
+                <!-- Tarjeta 1: Ver Productos -->
+                <button id="openProductoModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                    <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl mb-2">
+                        <i class="fas fa-tshirt text-xl"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700">Ver Productos</span>
+                </button>
+                <!-- Tarjeta 2: Ver Ventas (AHORA ABRE EL HISTORIAL DE TRANSACCIONES) -->
+                <button id="openVerVentasLink" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                    <div class="bg-blue-100 text-blue-600 p-3 rounded-xl mb-2">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700">Ver Ventas</span>
+                    <!-- NUEVO: Contador de Ventas Diarias -->
+                    <p class="text-xs text-gray-500 mt-1">Hoy: <span id="totalDailySalesCount">$0.00</span></p>
+                </button>
+                <!-- Tarjeta 3: Ver Gastos (AHORA ABRE EL HISTORIAL DE GASTOS) -->
+                <button id="openGananciasModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                    <div class="bg-green-100 text-green-600 p-3 rounded-xl mb-2">
+                        <i class="fas fa-calculator text-xl"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700">Ver Gastos</span>
+                    <!-- NUEVO: Contador de Gastos Diarios -->
+                    <p class="text-xs text-gray-500 mt-1">Hoy: <span id="totalDailyExpensesCount">$0.00</span></p>
+                </button>
+                <!-- Tarjeta 4: Ver Inventario -->
+                <button id="openInventarioModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                    <div class="bg-orange-100 text-orange-600 p-3 rounded-xl mb-2">
+                        <i class="fas fa-warehouse text-xl"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700">Ver Inventario</span>
+                </button>
+                
+                <!-- Tarjeta 5: Ver Clientes -->
+                <button id="openClientesModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                    <div class="bg-indigo-100 text-indigo-600 p-3 rounded-xl mb-2">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-700">Ver Clientes</span>
+                    <p class="text-xs text-gray-500 mt-1"><span id="totalClientsCount">0</span> clientes totales</p>
+                </button>
+            </div>
+            
+            <!-- Fila de Botones de Acción (+ Producto, + Venta, + Gasto) -->
+            <div class="flex flex-wrap gap-3 mb-8">
+                <button id="openProductoModalTrigger" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Producto
+                </button>
+                <!-- Botón de Venta que abre el modal directamente sin PIN (MODIFICADO) -->
+                <button id="openVentaModalDirect" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Venta
+                </button>
+                <!-- Botón de Gasto que abre el modal -->
+                <button id="openGastoModal" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Gasto
+                </button>
+            </div>
+
+            <!-- Fila de Filtros (Mes y Año) -->
+            <div class="flex justify-end mb-8 space-x-3">
+                <div class="relative">
+                    <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
+                        <option>Enero</option>
+                        <option>Febrero</option>
+                        <option>Marzo</option>
+                        <option>Abril</option>
+                        <option>Mayo</option>
+                        <option>Junio</option>
+                        <option>Julio</option>
+                        <option>Agosto</option>
+                        <option>Septiembre</option>
+                        <option>Octubre</option>
+                        <option>Noviembre</option>
+                        <option>Diciembre</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 top-1/2 transform -translate-y-1/2">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+                <div class="relative">
+                    <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
+                        <option>2025</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <i class="fas fa-chevron-down text-xs"></i>
                     </div>
                 </div>
             </div>
+
+            <!-- Fila de Tarjetas de Métricas Principales -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                
+                <!-- Tarjeta 1: Ventas - Métrica Protegida (REQUIERE PIN) -->
+                <div class="bg-white rounded-xl shadow-lg p-6 card-ventas-border transition hover:shadow-xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-blue-100 text-blue-600 p-3 rounded-xl">
+                                <i class="fas fa-cloud-download-alt text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ventas</h3>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
+                    <h4 class="text-lg font-medium text-gray-500">Ventas / Ticket Promedio</h4>
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-3xl font-bold text-blue-600">
+                            <span id="ventasDisplayValue" class="hidden">$0.00 / $0.00</span>
+                            <span id="ventasProtectedValue">******</span>
+                        </p>
+                        <button type="button" data-auth-for="revealVentas" class="text-blue-500 text-sm font-semibold hover:text-blue-700 transition">
+                            <i id="ventasEyeIcon" class="fas fa-eye"></i> Ver
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500"><span id="totalProductsCount">0</span> productos en inventario</p>
+                    <p class="text-sm text-gray-500">Ventas de hoy: $<span id="dailySalesSummaryValue">0</span></p>
+                </div>
+
+                <!-- Tarjeta 2: Ganancias - Métrica Protegida (AHORA REAL: Ventas - Gastos) -->
+                <div id="gananciasCard" class="bg-white rounded-xl shadow-lg p-6 card-ganancias-border transition hover:shadow-xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-green-100 text-green-600 p-3 rounded-xl">
+                                <i class="fas fa-chart-line text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ganancias</h3>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
+                    <h4 class="text-lg font-medium text-gray-500">Resultados Netos del mes</h4>
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-3xl font-bold text-green-600">
+                            <span id="gananciasDisplayValue" class="hidden">$0.00</span>
+                            <span id="gananciasProtectedValue">******</span>
+                        </p>
+                        <button type="button" data-auth-for="revealGanancias" class="text-green-500 text-sm font-semibold hover:text-green-700 transition">
+                            <i id="gananciasEyeIcon" class="fas fa-eye"></i> Ver
+                        </button>
+                    </div>
+                    <div class="h-4"></div> <!-- Espacio ajustado para alineación visual -->
+                </div>
+
+                <!-- Tarjeta 3: Finanzas (Caja Protegida) -->
+                <div class="bg-white rounded-xl shadow-lg p-6 card-finanzas-border transition hover:shadow-xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
+                                <i class="fas fa-dollar-sign text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Finanzas</h3>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-2">DEUDAS Y CUENTAS</p>
+                    <!-- CAMBIO: Saldo -> Caja, y métrica protegida -->
+                    <h4 class="text-lg font-medium text-gray-500">Caja <i class="fas fa-circle text-xs text-green-500"></i></h4>
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-3xl font-bold text-yellow-600">
+                            <span id="cajaDisplayValue" class="hidden">$12,000.00</span> 
+                            <span id="cajaProtectedValue">******</span>
+                        </p>
+                        <button type="button" data-auth-for="revealCaja" class="text-yellow-500 text-sm font-semibold hover:text-yellow-700 transition">
+                            <i id="cajaEyeIcon" class="fas fa-eye"></i> Ver
+                        </button>
+                    </div>
+                    <div class="h-4"></div>
+                </div>
+
+                <!-- Tarjeta 4: Inventario - Abre el historial de productos (Unidades) -->
+                <button id="openInventarioModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-inventario-border transition hover:shadow-xl text-left">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-orange-100 text-orange-600 p-3 rounded-xl">
+                                <i class="fas fa-cube text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Inventario</h3>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-2">UNIDADES</p>
+                    <!-- ID AÑADIDO PARA ACTUALIZAR CON EL STOCK REAL -->
+                    <p class="text-3xl font-bold text-orange-600 mb-2" id="stockTotalDisplay">0</p>
+                    <p class="text-sm text-gray-500">Nacionales: 300 / Importados: 150</p>
+                </button>
+
+            </div>
             
-            <!-- Placeholder del Gráfico (Ventas vs. Tiempo) -->
-            <div id="metricChartPlaceholder" class="h-64 flex justify-center items-center relative">
-                <div class="chart-placeholder w-full max-w-5xl px-4">
-                    <h3 class="text-lg font-bold text-gray-600 mb-4">Tendencia: Ventas vs. Últimos 6 Meses</h3>
-                    <div class="flex items-end h-48 gap-4 border-l border-b border-gray-300 w-full pl-2 pb-2">
-                        <!-- Barras simuladas de ejemplo -->
-                        <div class="flex-1 text-center text-xs text-gray-500">
-                            <div class="bar bg-blue-500 shadow-md" style="height: 40%;"><span class="block text-xs text-white">40%</span></div>
-                            Ago
+            <!-- Sección de Gráficos de Métricas de Negocios (NUEVO) -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-chart-area text-blue-500 mr-3"></i> Métrica de Desempeño vs Tiempo
+                    </h2>
+                    
+                    <!-- Menú Desplegable de Métricas (NUEVO) -->
+                    <div class="relative mt-3 sm:mt-0">
+                        <label for="metricSelect" class="text-sm font-medium text-gray-700 mr-2 hidden sm:inline">Seleccionar Métrica:</label>
+                        <select id="metricSelect" class="block appearance-none bg-blue-50 border border-blue-300 text-gray-800 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm font-semibold">
+                            <option value="ventas">Ventas ($)</option>
+                            <option value="gastos">Gastos ($)</option>
+                            <option value="clientes">Clientes (Total)</option>
+                            <option value="inventario">Inventario (Unidades)</option>
+                            <option value="caja">Caja (Saldo)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 top-1/2 transform -translate-y-1/2">
+                            <i class="fas fa-chevron-down text-xs"></i>
                         </div>
-                        <div class="flex-1 text-center text-xs text-gray-500">
-                            <div class="bar bg-blue-500 shadow-md" style="height: 55%;"><span class="block text-xs text-white">55%</span></div>
-                            Sep
-                        </div>
-                        <div class="flex-1 text-center text-xs text-gray-500">
-                            <div class="bar bg-blue-500 shadow-md" style="height: 70%;"><span class="block text-xs text-white">70%</span></div>
-                            Oct
-                        </div>
-                        <div class="flex-1 text-center text-xs text-gray-500">
-                            <div class="bar bg-blue-500 shadow-md" style="height: 90%;"><span class="block text-xs text-white">90%</span></div>
-                            Nov
-                        </div>
-                        <div class="flex-1 text-center text-xs text-gray-500">
-                            <div class="bar bg-blue-500 shadow-md" style="height: 60%;"><span class="block text-xs text-white">60%</span></div>
-                            Dic
-                        </div>
-                        <div class="flex-1 text-center text-xs text-gray-500">
-                            <div class="bar bg-blue-500 shadow-md" style="height: 75%;"><span class="block text-xs text-white">75%</span></div>
-                            Ene
+                    </div>
+                </div>
+                
+                <!-- Placeholder del Gráfico (Ventas vs. Tiempo) -->
+                <div id="metricChartPlaceholder" class="h-64 flex justify-center items-center relative">
+                    <div class="chart-placeholder w-full max-w-5xl px-4">
+                        <h3 class="text-lg font-bold text-gray-600 mb-4">Tendencia: Ventas vs. Últimos 6 Meses</h3>
+                        <div class="flex items-end h-48 gap-4 border-l border-b border-gray-300 w-full pl-2 pb-2">
+                            <!-- Barras simuladas de ejemplo -->
+                            <div class="flex-1 text-center text-xs text-gray-500">
+                                <div class="bar bg-blue-500 shadow-md" style="height: 40%;"><span class="block text-xs text-white">40%</span></div>
+                                Ago
+                            </div>
+                            <div class="flex-1 text-center text-xs text-gray-500">
+                                <div class="bar bg-blue-500 shadow-md" style="height: 55%;"><span class="block text-xs text-white">55%</span></div>
+                                Sep
+                            </div>
+                            <div class="flex-1 text-center text-xs text-gray-500">
+                                <div class="bar bg-blue-500 shadow-md" style="height: 70%;"><span class="block text-xs text-white">70%</span></div>
+                                Oct
+                            </div>
+                            <div class="flex-1 text-center text-xs text-gray-500">
+                                <div class="bar bg-blue-500 shadow-md" style="height: 90%;"><span class="block text-xs text-white">90%</span></div>
+                                Nov
+                            </div>
+                            <div class="flex-1 text-center text-xs text-gray-500">
+                                <div class="bar bg-blue-500 shadow-md" style="height: 60%;"><span class="block text-xs text-white">60%</span></div>
+                                Dic
+                            </div>
+                            <div class="flex-1 text-center text-xs text-gray-500">
+                                <div class="bar bg-blue-500 shadow-md" style="height: 75%;"><span class="block text-xs text-white">75%</span></div>
+                                Ene
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- FIN SECCIÓN DE GRÁFICOS -->
+            <!-- FIN SECCIÓN DE GRÁFICOS -->
 
-    </main>
+        </main>
 
-    <!-- Botón flotante de WhatsApp/Ayuda -->
-    <button class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-all">
-        <i class="fab fa-whatsapp text-2xl"></i>
-    </button>
-    
-    <!-- MODAL DE PERFIL Y AUTENTICACIÓN -->
-    <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-xl font-bold text-gray-800">Acceso / Perfil de Usuario</h2>
-                <button data-close-modal="profileModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Cuerpo del Modal: Opciones de Login -->
-            <div class="p-6 space-y-4">
-                <p class="text-sm text-gray-600 font-semibold mb-3">ID de Sesión (para compartir):</p>
-                <p id="currentUserIdDisplay" class="text-xs text-gray-500 break-all bg-gray-100 p-2 rounded-lg">Cargando...</p>
-
-                <!-- Estado del Usuario (Real) -->
-                <div class="pt-4 border-t mt-4 space-y-3">
-                    <p class="text-sm font-medium text-gray-700">Estado Actual: <span id="userStatus" class="font-bold text-red-500">Desconectado</span></p>
-                    <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-xl shadow-sm text-white bg-red-500 hover:bg-red-600 transition disabled:opacity-50" disabled>
-                        <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- FIN DEL MODAL PERFIL Y AUTENTICACIÓN -->
-
-    <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles y la eliminación de encargados/tipo de pago -->
-    <div id="authModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 id="authModalTitle" class="text-xl font-bold text-gray-800">Acceso Restringido</h2>
-                <button data-close-modal="authModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Cuerpo del Formulario de PIN -->
-            <div class="p-6 space-y-4 text-center">
-                <p id="authModalMessage" class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos).</p>
-                <input type="password" id="ventaPinInput" maxlength="4" placeholder="••••" class="text-center text-2xl tracking-widest mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
-                <p id="pinError" class="text-sm text-red-500 hidden font-medium">PIN Incorrecto. Intente de nuevo.</p>
-            </div>
-
-            <!-- Pie de página del Modal (Acciones de Intentar) -->
-            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
-                <button data-close-modal="authModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
-                    Cancelar
-                </button>
-                <button id="checkVentaPinBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
-                    Acceder
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- FIN DEL MODAL AUTENTICACIÓN -->
-
-    <!-- MODAL DE ESTADOS MENSUALES (Ganancias) - MANTENIDO COMO RESUMEN MENSUAL SIMULADO -->
-    <div id="gananciasModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <div class="flex items-center space-x-3">
-                    <h2 class="text-2xl font-bold text-gray-800">ESTADOS MENSUALES (Resumen)</h2>
-                    <i class="fas fa-info-circle text-xl text-green-500 cursor-pointer"></i>
-                </div>
-                <!-- NUEVO BOTÓN GEMINI -->
-                <button id="openAnalisisModalBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition shadow-md flex items-center">
-                    <i class="fas fa-magic mr-2"></i> Análisis Estratégico ✨
-                </button>
-                <!-- FIN NUEVO BOTÓN GEMINI -->
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
-                    <i class="fas fa-plus-circle hover:text-gray-800 cursor-pointer text-lg"></i>
-                    <i class="fas fa-user-circle hover:text-gray-800 cursor-pointer text-lg"></i>
-                    <i class="fas fa-caret-down hover:text-gray-800 cursor-pointer text-lg"></i>
-                    <button data-close-modal="gananciasModal" class="text-gray-400 hover:text-gray-600 transition">
+        <!-- Botón flotante de WhatsApp/Ayuda -->
+        <button class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-all">
+            <i class="fab fa-whatsapp text-2xl"></i>
+        </button>
+        
+        <!-- MODAL DE PERFIL Y AUTENTICACIÓN -->
+        <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-xl font-bold text-gray-800">Acceso / Perfil de Usuario</h2>
+                    <button data-close-modal="profileModal" class="text-gray-400 hover:text-gray-600 transition">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
-            </div>
 
-            <!-- Navegación de Pestañas y Contenido de la Tabla (Sin cambios) -->
-            <div class="px-6 border-b">
-                <nav class="flex space-x-8">
-                    <button class="py-4 border-b-2 border-blue-600 text-blue-600 font-medium text-sm transition">De Gestión</button>
-                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Financieros</button>
-                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Flujo de Caja</button>
-                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Finanzas de Socios</button>
-                </nav>
-            </div>
-            
-            <div class="p-6">
-                <p class="text-sm text-gray-600 mb-6 max-w-4xl">
-                    Incluyen datos estadísticos dentro de los costos, cómo los % de impuestos registrados en Preferencias y en cada venta, costos financieros, comisiones de ventas y cobros registrados en las ventas para obtener una ganancia más representativa.
-                </p>
+                <!-- Cuerpo del Modal: Opciones de Login -->
+                <div class="p-6 space-y-4">
+                    <p class="text-sm text-gray-600 font-semibold mb-3">ID de Sesión (para compartir):</p>
+                    <p id="currentUserIdDisplay" class="text-xs text-gray-500 break-all bg-gray-100 p-2 rounded-lg">Cargando...</p>
 
-                <div class="flex flex-wrap items-center space-x-4 mb-6">
-                    <div class="relative group">
-                        <button class="px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm hover:bg-gray-50 text-sm font-medium">
-                            Columnas <i class="fas fa-chevron-down text-xs ml-1"></i>
+                    <!-- Estado del Usuario (Real) -->
+                    <div class="pt-4 border-t mt-4 space-y-3">
+                        <p class="text-sm font-medium text-gray-700">Estado Actual: <span id="userStatus" class="font-bold text-red-500">Desconectado</span></p>
+                        <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-xl shadow-sm text-white bg-red-500 hover:bg-red-600 transition disabled:opacity-50" disabled>
+                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
                         </button>
-                        <div class="absolute z-20 w-56 mt-2 origin-top-left bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 hidden group-hover:block p-2">
-                            <div class="flex justify-between items-center p-2 text-sm font-semibold text-gray-800 border-b mb-1">
-                                <span>Mostrar/Ocultar columnas</span>
-                                <button class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
-                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Enero</span>
-                                </label>
-                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
-                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Febrero</span>
-                                </label>
-                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
-                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Total</span>
-                                </label>
-                            </div>
-                        </div>
                     </div>
-
-                    <div class="relative">
-                        <label class="text-sm font-medium text-gray-700 mr-2">Canal de Venta:</label>
-                        <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
-                            <option>Todos</option>
-                            <option>Showroom</option>
-                            <option>Mi Tienda Online</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </div>
-                    </div>
-
-                    <div class="relative">
-                        <label class="text-sm font-medium text-gray-700 mr-2">Año:</label>
-                        <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
-                            <option>2025</option>
-                            <option>2024</option>
-                            <option>2023</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50">Concepto <i class="fas fa-sort text-gray-300 ml-1"></i></th>
-                                <th data-month="Enero" class="ganancias-mes-celda">Enero</th>
-                                <th data-month="Febrero" class="ganancias-mes-celda">Febrero</th>
-                                <th data-month="Marzo" class="ganancias-mes-celda">Marzo</th>
-                                <th data-month="Abril" class="ganancias-mes-celda">Abril</th>
-                                <th data-month="Mayo" class="ganancias-mes-celda">Mayo</th>
-                                <th data-month="Junio" class="ganancias-mes-celda">Junio</th>
-                                <th data-month="Julio" class="ganancias-mes-celda">Julio</th>
-                                <th data-month="Agosto" class="ganancias-mes-celda">Agosto</th>
-                                <th data-month="Septiembre" class="ganancias-mes-celda">Septiembre</th>
-                                <th data-month="Octubre" class="ganancias-mes-celda">Octubre</th>
-                                <th data-month="Noviembre" class="ganancias-mes-celda">Noviembre</th>
-                                <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total <i class="fas fa-sort text-gray-300 ml-1"></i></th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td colspan="14" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Ningún dato disponible</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
-            
         </div>
-    </div>
-    <!-- FIN DEL MODAL ESTADOS MENSUALES -->
+        <!-- FIN DEL MODAL PERFIL Y AUTENTICACIÓN -->
 
-    <!-- MODAL DE ANÁLISIS ESTRATÉGICO -->
-    <div id="analisisModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-purple-600 flex items-center">
-                    <i class="fas fa-chart-pie mr-3"></i> Diagnóstico y Estrategia AI
-                </h2>
-                <button data-close-modal="analisisModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Cuerpo del Análisis -->
-            <div class="p-6">
-                <div id="analisisContent">
-                    <!-- Contenido se llenará aquí, incluyendo el spinner de carga -->
-                    <div class="flex justify-center items-center h-40">
-                        <div id="loadingSpinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mr-3"></div>
-                        <p class="text-lg font-medium text-gray-600">Analizando métricas y formulando estrategias...</p>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    </div>
-    <!-- FIN DEL MODAL ANÁLISIS ESTRATÉGICO -->
-
-    <!-- MODAL DE HISTORIAL DE VENTAS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO -->
-    <div id="salesDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-blue-600 flex items-center">
-                    <i class="fas fa-history mr-3"></i> Historial de Ventas
-                </h2>
-                <button data-close-modal="salesDetailModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <!-- Cuerpo del Historial de Ventas -->
-            <div class="p-6">
-                <p class="text-sm text-gray-600 mb-4">Detalle de todas las transacciones de ventas registradas, agrupadas por mes.</p>
+        <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles y la eliminación de encargados/tipo de pago -->
+        <div id="authModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
                 
-                <!-- NUEVOS CONTADORES DE VENTA (MES Y AÑO) -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50/70 rounded-xl border border-blue-200">
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Ventas del Mes:</p>
-                        <p id="totalMonthlySalesDisplay" class="text-xl font-bold text-blue-700">$0.00</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Ventas del Año:</p>
-                        <p id="totalYearlySalesDisplay" class="text-xl font-bold text-blue-700">$0.00</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Ventas Registradas:</p>
-                        <p class="text-xl font-bold text-gray-700" id="totalSalesCountValue">0</p>
-                    </div>
-                </div>
-                <!-- FIN NUEVOS CONTADORES -->
-
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente / Canal</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Cobrado ($)</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Pago</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="salesHistoryTableContent" class="bg-white divide-y divide-gray-100">
-                            <!-- Los datos se cargarán aquí por JS -->
-                            <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de ventas...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- Pie del Modal -->
-            <div class="p-6 border-t flex justify-end sticky bottom-0 bg-white z-10 rounded-b-xl">
-                <button data-close-modal="salesDetailModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
-                    Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- FIN DEL MODAL HISTORIAL DE VENTAS -->
-
-    <!-- MODAL DE HISTORIAL DE GASTOS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO -->
-    <div id="expensesDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-green-600 flex items-center">
-                    <i class="fas fa-receipt mr-3"></i> Historial de Gastos
-                </h2>
-                <button data-close-modal="expensesDetailModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <!-- Cuerpo del Historial de Gastos -->
-            <div class="p-6">
-                <p class="text-sm text-gray-600 mb-4">Detalle de todos los gastos registrados, agrupados por mes.</p>
-                
-                <!-- NUEVOS CONTADORES DE GASTO (MES Y AÑO) -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-green-50/70 rounded-xl border border-green-200">
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Gastos del Mes:</p>
-                        <p id="totalMonthlyExpensesDisplay" class="text-xl font-bold text-red-700">-$0.00</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Gastos del Año:</p>
-                        <p id="totalYearlyExpensesDisplay" class="text-xl font-bold text-red-700">-$0.00</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Gastos Registrados:</p>
-                        <p class="text-xl font-bold text-gray-700" id="totalExpensesCountValue">0</p>
-                    </div>
-                </div>
-                <!-- FIN NUEVOS CONTADORES -->
-
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría / Descripción</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Gasto ($)</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encargado</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expensesHistoryTableContent" class="bg-white divide-y divide-gray-100">
-                            <!-- Los datos se cargarán aquí por JS -->
-                            <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de gastos...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- Pie del Modal -->
-            <div class="p-6 border-t flex justify-end sticky bottom-0 bg-white z-10 rounded-b-xl">
-                <button data-close-modal="expensesDetailModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
-                    Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- FIN DEL MODAL HISTORIAL DE GASTOS -->
-
-    <!-- MODAL DE HISTORIAL DE INVENTARIO (Ahora con datos reales de Firestore) -->
-    <div id="inventarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <i class="fas fa-boxes-stacked mr-3 text-orange-600"></i> Historial y Stock de Productos
-                </h2>
-                <button data-close-modal="inventarioModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Cuerpo del Inventario (Tabla de Firestore) -->
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
-                    <div class="relative">
-                        <input type="text" placeholder="Buscar producto o código..." class="block w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2 text-sm input-bg-blue border">
-                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-                    <button class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-md flex items-center">
-                        <i class="fas fa-file-export mr-2"></i> Exportar
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 id="authModalTitle" class="text-xl font-bold text-gray-800">Acceso Restringido</h2>
+                    <button data-close-modal="authModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
-                
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
-                                <!-- COLUMNA 'CÓDIGO' ELIMINADA -->
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Promedio ($)</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Venta ($)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventarioTablaContenido" class="bg-white divide-y divide-gray-100">
-                            <!-- Los datos se cargarán aquí por JS desde Firestore -->
-                            <tr>
-                                <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando inventario...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                <!-- Cuerpo del Formulario de PIN -->
+                <div class="p-6 space-y-4 text-center">
+                    <p id="authModalMessage" class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos).</p>
+                    <input type="password" id="ventaPinInput" maxlength="4" placeholder="••••" class="text-center text-2xl tracking-widest mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                    <p id="pinError" class="text-sm text-red-500 hidden font-medium">PIN Incorrecto. Intente de nuevo.</p>
                 </div>
-            </div>
-            
-        </div>
-    </div>
-    <!-- FIN DEL MODAL HISTORIAL DE INVENTARIO -->
 
-    <!-- MODAL DE HISTORIAL DE CLIENTES (ACTUALIZADO: Ahora usa datos reales de Firestore) -->
-    <div id="clientesModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <i class="fas fa-users mr-3 text-indigo-600"></i> Historial y Listado de Clientes
-                </h2>
-                <button data-close-modal="clientesModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Cuerpo del Listado de Clientes (Tabla Real de Firestore) -->
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
-                    <div class="relative">
-                        <input type="text" placeholder="Buscar cliente por nombre..." class="block w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm input-bg-blue border">
-                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-                    <button class="px-4 py-2 text-sm font-medium text-white bg-indigo-500 rounded-xl hover:bg-indigo-600 transition shadow-md flex items-center">
-                        <i class="fas fa-file-export mr-2"></i> Exportar Clientes
+                <!-- Pie de página del Modal (Acciones de Intentar) -->
+                <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                    <button data-close-modal="authModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                        Cancelar
+                    </button>
+                    <button id="checkVentaPinBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+                        Acceder
                     </button>
                 </div>
-                
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Cliente</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Compras</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Última Venta</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="clientesTablaContenido" class="bg-white divide-y divide-gray-100">
-                            <!-- Los datos se cargarán aquí por JS desde Firestore -->
-                            <tr>
-                                <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">
-                                    Cargando clientes...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
-            
         </div>
-    </div>
-    <!-- FIN DEL MODAL HISTORIAL DE CLIENTES -->
+        <!-- FIN DEL MODAL AUTENTICACIÓN -->
 
-    <!-- MODAL DE DETALLE DIARIO (Se abre al hacer clic en un mes de la tabla) -->
-    <div id="detalleDiarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 id="detalleDiarioTitulo" class="text-xl font-bold text-gray-800">Historial Diario de Ganancias (Mes)</h2>
-                <button data-close-modal="detalleDiarioModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Cuerpo del Detalle Diario (Tabla Simulada) -->
-            <div class="p-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ganancia Neta ($)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detalleDiarioContenido" class="bg-white divide-y divide-gray-100">
-                            <!-- Los datos se cargarán aquí por JS -->
-                        </tbody>
-                        <tfoot class="bg-gray-100">
-                            <tr>
-                                <td class="px-6 py-3 text-left text-sm font-semibold text-gray-800">TOTAL MES</td>
-                                <td id="detalleDiarioTotal" class="px-6 py-3 text-right text-sm font-bold text-green-600">$1,500.00</td>
-                            </tr>
-                        </tfoot>
-                    </table>
+        <!-- MODAL DE ESTADOS MENSUALES (Ganancias) - MANTENIDO COMO RESUMEN MENSUAL SIMULADO -->
+        <div id="gananciasModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <div class="flex items-center space-x-3">
+                        <h2 class="text-2xl font-bold text-gray-800">ESTADOS MENSUALES (Resumen)</h2>
+                        <i class="fas fa-info-circle text-xl text-green-500 cursor-pointer"></i>
+                    </div>
+                    <!-- NUEVO BOTÓN GEMINI -->
+                    <button id="openAnalisisModalBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition shadow-md flex items-center">
+                        <i class="fas fa-magic mr-2"></i> Análisis Estratégico ✨
+                    </button>
+                    <!-- FIN NUEVO BOTÓN GEMINI -->
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
+                        <i class="fas fa-plus-circle hover:text-gray-800 cursor-pointer text-lg"></i>
+                        <i class="fas fa-user-circle hover:text-gray-800 cursor-pointer text-lg"></i>
+                        <i class="fas fa-caret-down hover:text-gray-800 cursor-pointer text-lg"></i>
+                        <button data-close-modal="gananciasModal" class="text-gray-400 hover:text-gray-600 transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Navegación de Pestañas y Contenido de la Tabla (Sin cambios) -->
+                <div class="px-6 border-b">
+                    <nav class="flex space-x-8">
+                        <button class="py-4 border-b-2 border-blue-600 text-blue-600 font-medium text-sm transition">De Gestión</button>
+                        <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Financieros</button>
+                        <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Flujo de Caja</button>
+                        <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Finanzas de Socios</button>
+                    </nav>
+                </div>
+                
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-6 max-w-4xl">
+                        Incluyen datos estadísticos dentro de los costos, cómo los % de impuestos registrados en Preferencias y en cada venta, costos financieros, comisiones de ventas y cobros registrados en las ventas para obtener una ganancia más representativa.
+                    </p>
+
+                    <div class="flex flex-wrap items-center space-x-4 mb-6">
+                        <div class="relative group">
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm hover:bg-gray-50 text-sm font-medium">
+                                Columnas <i class="fas fa-chevron-down text-xs ml-1"></i>
+                            </button>
+                            <div class="absolute z-20 w-56 mt-2 origin-top-left bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 hidden group-hover:block p-2">
+                                <div class="flex justify-between items-center p-2 text-sm font-semibold text-gray-800 border-b mb-1">
+                                    <span>Mostrar/Ocultar columnas</span>
+                                    <button class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                        <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Enero</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                        <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Febrero</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                        <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Total</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <label class="text-sm font-medium text-gray-700 mr-2">Canal de Venta:</label>
+                            <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
+                                <option>Todos</option>
+                                <option>Showroom</option>
+                                <option>Mi Tienda Online</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <label class="text-sm font-medium text-gray-700 mr-2">Año:</label>
+                            <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
+                                <option>2025</option>
+                                <option>2024</option>
+                                <option>2023</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50">Concepto <i class="fas fa-sort text-gray-300 ml-1"></i></th>
+                                    <th data-month="Enero" class="ganancias-mes-celda">Enero</th>
+                                    <th data-month="Febrero" class="ganancias-mes-celda">Febrero</th>
+                                    <th data-month="Marzo" class="ganancias-mes-celda">Marzo</th>
+                                    <th data-month="Abril" class="ganancias-mes-celda">Abril</th>
+                                    <th data-month="Mayo" class="ganancias-mes-celda">Mayo</th>
+                                    <th data-month="Junio" class="ganancias-mes-celda">Junio</th>
+                                    <th data-month="Julio" class="ganancias-mes-celda">Julio</th>
+                                    <th data-month="Agosto" class="ganancias-mes-celda">Agosto</th>
+                                    <th data-month="Septiembre" class="ganancias-mes-celda">Septiembre</th>
+                                    <th data-month="Octubre" class="ganancias-mes-celda">Octubre</th>
+                                    <th data-month="Noviembre" class="ganancias-mes-celda">Noviembre</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total <i class="fas fa-sort text-gray-300 ml-1"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="14" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Ningún dato disponible</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
             </div>
-            
         </div>
-    </div>
-    <!-- FIN DEL MODAL DETALLE DIARIO -->
+        <!-- FIN DEL MODAL ESTADOS MENSUALES -->
 
-    <!-- MODAL DE NUEVO PRODUCTO (Con despliegue opcional para precios) -->
-    <div id="productoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-gray-800">Nuevo Producto</h2>
-                <button data-close-modal="productoModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- CONTENIDO PRINCIPAL DEL MODAL PRODUCTO (HISTORIAL Y FORMULARIO) -->
-            <div class="p-6 space-y-8">
+        <!-- MODAL DE ANÁLISIS ESTRATÉGICO -->
+        <div id="analisisModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform transition-all">
                 
-                <!-- Historial de Productos Agregados -->
-                <div class="bg-gray-100 p-4 rounded-xl shadow-inner border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-700 mb-3 flex justify-between items-center">
-                        Historial de Últimos Productos
-                        <button id="verTodoHistorialBtn" class="text-blue-500 text-sm font-medium hover:underline">Ver todo</button>
-                    </h3>
-                    <ul id="historialProductosLista" class="text-sm space-y-2">
-                        <!-- Se llena con productos de Firestore en tiempo real -->
-                        <li class="text-gray-400 text-center py-2">Cargando historial...</li>
-                    </ul>
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-purple-600 flex items-center">
+                        <i class="fas fa-chart-pie mr-3"></i> Diagnóstico y Estrategia AI
+                    </h2>
+                    <button data-close-modal="analisisModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cuerpo del Análisis -->
+                <div class="p-6">
+                    <div id="analisisContent">
+                        <!-- Contenido se llenará aquí, incluyendo el spinner de carga -->
+                        <div class="flex justify-center items-center h-40">
+                            <div id="loadingSpinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mr-3"></div>
+                            <p class="text-lg font-medium text-gray-600">Analizando métricas y formulando estrategias...</p>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- FORMULARIO DE NUEVO PRODUCTO -->
-                <form id="productoForm" class="space-y-8">
+            </div>
+        </div>
+        <!-- FIN DEL MODAL ANÁLISIS ESTRATÉGICO -->
 
-                    <!-- Bloque 1: Información Básica -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Información Básica </h3>
+        <!-- MODAL DE HISTORIAL DE VENTAS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO -->
+        <div id="salesDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-blue-600 flex items-center">
+                        <i class="fas fa-history mr-3"></i> Historial de Ventas
+                    </h2>
+                    <button data-close-modal="salesDetailModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <!-- Cuerpo del Historial de Ventas -->
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">Detalle de todas las transacciones de ventas registradas, agrupadas por mes.</p>
+                    
+                    <!-- NUEVOS CONTADORES DE VENTA (MES Y AÑO) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50/70 rounded-xl border border-blue-200">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Ventas del Mes:</p>
+                            <p id="totalMonthlySalesDisplay" class="text-xl font-bold text-blue-700">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Ventas del Año:</p>
+                            <p id="totalYearlySalesDisplay" class="text-xl font-bold text-blue-700">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Ventas Registradas:</p>
+                            <p class="text-xl font-bold text-gray-700" id="totalSalesCountValue">0</p>
+                        </div>
+                    </div>
+                    <!-- FIN NUEVOS CONTADORES -->
 
-                        <!-- Nombre -->
-                        <div class="mb-4">
-                            <label for="nombreProducto" class="block text-sm font-medium text-gray-700">Nombre *</label>
-                            <input type="text" id="nombreProducto" required placeholder="Nombre del Producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente / Canal</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Cobrado ($)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Pago</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesHistoryTableContent" class="bg-white divide-y divide-gray-100">
+                                <!-- Los datos se cargarán aquí por JS -->
+                                <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de ventas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Pie del Modal -->
+                <div class="p-6 border-t flex justify-end sticky bottom-0 bg-white z-10 rounded-b-xl">
+                    <button data-close-modal="salesDetailModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- FIN DEL MODAL HISTORIAL DE VENTAS -->
+
+        <!-- MODAL DE HISTORIAL DE GASTOS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO -->
+        <div id="expensesDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-green-600 flex items-center">
+                        <i class="fas fa-receipt mr-3"></i> Historial de Gastos
+                    </h2>
+                    <button data-close-modal="expensesDetailModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <!-- Cuerpo del Historial de Gastos -->
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">Detalle de todos los gastos registrados, agrupados por mes.</p>
+                    
+                    <!-- NUEVOS CONTADORES DE GASTO (MES Y AÑO) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-green-50/70 rounded-xl border border-green-200">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Gastos del Mes:</p>
+                            <p id="totalMonthlyExpensesDisplay" class="text-xl font-bold text-red-700">-$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Gastos del Año:</p>
+                            <p id="totalYearlyExpensesDisplay" class="text-xl font-bold text-red-700">-$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Gastos Registrados:</p>
+                            <p class="text-xl font-bold text-gray-700" id="totalExpensesCountValue">0</p>
+                        </div>
+                    </div>
+                    <!-- FIN NUEVOS CONTADORES -->
+
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría / Descripción</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Gasto ($)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encargado</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesHistoryTableContent" class="bg-white divide-y divide-gray-100">
+                                <!-- Los datos se cargarán aquí por JS -->
+                                <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de gastos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Pie del Modal -->
+                <div class="p-6 border-t flex justify-end sticky bottom-0 bg-white z-10 rounded-b-xl">
+                    <button data-close-modal="expensesDetailModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- FIN DEL MODAL HISTORIAL DE GASTOS -->
+
+        <!-- MODAL DE HISTORIAL DE INVENTARIO (Ahora con datos reales de Firestore) -->
+        <div id="inventarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-boxes-stacked mr-3 text-orange-600"></i> Historial y Stock de Productos
+                    </h2>
+                    <button data-close-modal="inventarioModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cuerpo del Inventario (Tabla de Firestore) -->
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                        <div class="relative">
+                            <input type="text" placeholder="Buscar producto o código..." class="block w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2 text-sm input-bg-blue border">
+                            <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-md flex items-center">
+                            <i class="fas fa-file-export mr-2"></i> Exportar
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                    <!-- COLUMNA 'CÓDIGO' ELIMINADA -->
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Promedio ($)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Venta ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventarioTablaContenido" class="bg-white divide-y divide-gray-100">
+                                <!-- Los datos se cargarán aquí por JS desde Firestore -->
+                                <tr>
+                                    <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando inventario...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        <!-- FIN DEL MODAL HISTORIAL DE INVENTARIO -->
+
+        <!-- MODAL DE HISTORIAL DE CLIENTES (ACTUALIZADO: Ahora usa datos reales de Firestore) -->
+        <div id="clientesModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-users mr-3 text-indigo-600"></i> Historial y Listado de Clientes
+                    </h2>
+                    <button data-close-modal="clientesModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cuerpo del Listado de Clientes (Tabla Real de Firestore) -->
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                        <div class="relative">
+                            <input type="text" placeholder="Buscar cliente por nombre..." class="block w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm input-bg-blue border">
+                            <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-indigo-500 rounded-xl hover:bg-indigo-600 transition shadow-md flex items-center">
+                            <i class="fas fa-file-export mr-2"></i> Exportar Clientes
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Cliente</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Compras</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Última Venta</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientesTablaContenido" class="bg-white divide-y divide-gray-100">
+                                <!-- Los datos se cargarán aquí por JS desde Firestore -->
+                                <tr>
+                                    <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">
+                                        Cargando clientes...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        <!-- FIN DEL MODAL HISTORIAL DE CLIENTES -->
+
+        <!-- MODAL DE DETALLE DIARIO (Se abre al hacer clic en un mes de la tabla) -->
+        <div id="detalleDiarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 id="detalleDiarioTitulo" class="text-xl font-bold text-gray-800">Historial Diario de Ganancias (Mes)</h2>
+                    <button data-close-modal="detalleDiarioModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cuerpo del Detalle Diario (Tabla Simulada) -->
+                <div class="p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ganancia Neta ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detalleDiarioContenido" class="bg-white divide-y divide-gray-100">
+                                <!-- Los datos se cargarán aquí por JS -->
+                            </tbody>
+                            <tfoot class="bg-gray-100">
+                                <tr>
+                                    <td class="px-6 py-3 text-left text-sm font-semibold text-gray-800">TOTAL MES</td>
+                                    <td id="detalleDiarioTotal" class="px-6 py-3 text-right text-sm font-bold text-green-600">$1,500.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        <!-- FIN DEL MODAL DETALLE DIARIO -->
+
+        <!-- MODAL DE NUEVO PRODUCTO (Con despliegue opcional para precios) -->
+        <div id="productoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-gray-800">Nuevo Producto</h2>
+                    <button data-close-modal="productoModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- CONTENIDO PRINCIPAL DEL MODAL PRODUCTO (HISTORIAL Y FORMULARIO) -->
+                <div class="p-6 space-y-8">
+                    
+                    <!-- Historial de Productos Agregados -->
+                    <div class="bg-gray-100 p-4 rounded-xl shadow-inner border border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-700 mb-3 flex justify-between items-center">
+                            Historial de Últimos Productos
+                            <button id="verTodoHistorialBtn" class="text-blue-500 text-sm font-medium hover:underline">Ver todo</button>
+                        </h3>
+                        <ul id="historialProductosLista" class="text-sm space-y-2">
+                            <!-- Se llena con productos de Firestore en tiempo real -->
+                            <li class="text-gray-400 text-center py-2">Cargando historial...</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- FORMULARIO DE NUEVO PRODUCTO -->
+                    <form id="productoForm" class="space-y-8">
+
+                        <!-- Bloque 1: Información Básica -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Información Básica </h3>
+
+                            <!-- Nombre -->
+                            <div class="mb-4">
+                                <label for="nombreProducto" class="block text-sm font-medium text-gray-700">Nombre *</label>
+                                <input type="text" id="nombreProducto" required placeholder="Nombre del Producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="mb-4">
+                                <label for="descripcionProducto" class="block text-sm font-medium text-gray-700">Descripción - Optativo</label>
+                                <textarea id="descripcionProducto" rows="3" placeholder="Describa aquí el producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
+                            </div>
+
+                            <!-- Cantidad Inicial (Stock) -->
+                            <div class="mb-4">
+                                <label for="stockProducto" class="block text-sm font-medium text-gray-700">Cantidad (Stock Inicial) *</label>
+                                <input type="number" id="stockProducto" required value="0" min="0" placeholder="Ej: 100" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border text-right">
+                            </div>
+
+                            <!-- Categoría -->
+                            <div class="mb-6">
+                                <label for="categoriaProducto" class="block text-sm font-medium text-gray-700">Categoría <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i> - Opt.</label>
+                                <div id="categorySelectGroup" class="flex items-center space-x-2 mt-1">
+                                    <select id="categoriaProducto" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
+                                        <option>Ninguna</option>
+                                        <option>Ropa</option>
+                                        <option>Accesorios</option>
+                                        <option>Calzado</option>
+                                    </select>
+                                    <!-- Botón para eliminar la categoría seleccionada -->
+                                    <button type="button" id="deleteCategoryBtn" disabled class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm disabled:bg-gray-400" title="Eliminar Categoría Seleccionada">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <!-- Botón para cambiar a modo de ingreso manual -->
+                                    <button type="button" id="addCustomCategoryBtn" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Categoría Personalizada">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Nuevo campo para ingresar categoría personalizada (Inicialmente oculto) -->
+                                <div id="customCategoryInputGroup" class="mt-2 hidden flex items-center space-x-2">
+                                    <input type="text" id="customCategoryInput" placeholder="Nombre de la nueva categoría" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 p-3 input-bg-blue border">
+                                    <!-- Botón para guardar la categoría custom y seleccionarla -->
+                                    <button type="button" id="saveCustomCategoryBtn" class="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition shadow-sm" title="Guardar Categoría">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <!-- Botón para cancelar y volver a la selección -->
+                                    <button type="button" id="cancelCustomCategoryBtn" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm" title="Cancelar">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bloque 2: PRECIO DE VENTA OPCIONAL (Desplegable) -->
+                        <div class="space-y-6">
+                            
+                            <!-- Botón/Encabezado para Desplegar la Sección de Precios -->
+                            <button type="button" id="togglePriceSection" class="w-full text-center py-3 bg-gray-100 rounded-xl text-lg font-bold text-blue-600 hover:bg-gray-200 transition shadow-md">
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta
+                            </button>
+                            
+                            <!-- Contenido Oculto de Precio de Venta y Costo -->
+                            <div id="priceSectionContent" class="space-y-6 hidden">
+                                
+                                <!-- Header de Costo del Producto -->
+                                <div class="costo-header text-white p-4 rounded-xl text-center">
+                                    <h4 class="text-lg font-light">COSTO DEL PRODUCTO</h4>
+                                    <p id="costoProductoDisplay" class="text-3xl font-bold my-1">$0 <span class="text-base font-normal">(POR UNIDAD)</span></p>
+                                </div>
+
+                                <!-- Sección de Precio de Venta -->
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Precio de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></h3>
+                                    <p class="text-sm text-gray-500 mb-4">Elija precios para su producto. Puede usar las técnicas de marcación sobre costos o margen sobre precio para calcular el mismo.</p>
+                                    
+                                    <!-- Actualizar Precios Checkbox -->
+                                    <div class="flex items-center mb-6">
+                                        <input id="actualizarPrecios" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <label for="actualizarPrecios" class="ml-2 text-sm text-gray-700">Actualizar Precios <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <!-- Tarjeta 1: Precio Minorista -->
+                                        <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
+                                            <h4 class="font-semibold text-gray-800">Precio Minorista</h4>
+                                            <div class="grid grid-cols-5 gap-3 items-center">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500">Marcación %</label>
+                                                    <input type="number" value="150.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500">Márgen %</label>
+                                                    <input type="number" value="60" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                                </div>
+                                                <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </div>
+                                                <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
+                                                    <p class="text-xs font-light">Calculado</p>
+                                                    <p class="text-xl font-bold">$0</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Precio Minorista Elegido -->
+                                            <div class="pt-2">
+                                                <label class="block text-sm font-medium text-gray-700">Precio Minorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                                <div class="flex items-center mt-1 space-x-2">
+                                                    <input type="number" id="priceRetailInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                                                    <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
+                                                        Actualizar %
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Tarjeta 2: Precio Mayorista -->
+                                        <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
+                                            <h4 class="font-semibold text-gray-800">Precio Mayorista</h4>
+                                            <div class="grid grid-cols-5 gap-3 items-center">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500">Marcación %</label>
+                                                    <input type="number" value="50.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500">Márgen %</label>
+                                                    <input type="number" value="33.33" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                                </div>
+                                                <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </div>
+                                                <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
+                                                    <p class="text-xs font-light">Calculado</p>
+                                                    <p class="text-xl font-bold">$0</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Precio Mayorista Elegido -->
+                                            <div class="pt-2">
+                                                <label class="block text-sm font-medium text-gray-700">Precio Mayorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                                <div class="flex items-center mt-1 space-x-2">
+                                                    <input type="number" id="priceWholesaleInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                                                    <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
+                                                        Actualizar %
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Descripción -->
-                        <div class="mb-4">
-                            <label for="descripcionProducto" class="block text-sm font-medium text-gray-700">Descripción - Optativo</label>
-                            <textarea id="descripcionProducto" rows="3" placeholder="Describa aquí el producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
+                    </form>
+                </div>
+
+                <!-- Pie de página del Modal (Acciones de Guardar) -->
+                <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                    <button data-close-modal="productoModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                        Cancelar
+                    </button>
+                    <button form="productoForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                        Guardar Producto
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- FIN DEL MODAL PRODUCTO -->
+
+        <!-- MODAL DE NUEVA VENTA (Con despliegue para "Otra Información") -->
+        <div id="ventaModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-gray-800">Nueva Venta</h2>
+                    <button data-close-modal="ventaModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cuerpo del Formulario de Venta -->
+                <form id="ventaForm" class="p-6 space-y-8">
+
+                    <!-- Bloque 1: Información Principal (Fecha, Cliente, MONTO COBRADO) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        
+                        <!-- Tarjeta de Datos de la Venta (Fecha, Cliente, Monto Cobrado) -->
+                        <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <!-- Fecha -->
+                            <div class="mb-4">
+                                <label for="fechaVenta" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input type="date" id="fechaVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                            </div>
+                            <!-- Cliente (AHORA CON DATALIST REAL DE FIRESTORE) -->
+                            <div class="mb-4">
+                                <label for="clienteVentaInput" class="block text-sm font-medium text-gray-700">Cliente <i class="fas fa-pen-to-square text-xs text-blue-500 ml-1 cursor-pointer"></i></label>
+                                <div class="flex items-center mt-1">
+                                    <input type="text" id="clienteVentaInput" list="clientListOptions" placeholder="Escriba o seleccione un cliente..." class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
+                                    
+                                    <datalist id="clientListOptions">
+                                        <!-- Opciones cargadas desde Firestore por JS -->
+                                    </datalist>
+                                    
+                                    <!-- Botón para agregar (Eliminado: se agrega al guardar la venta si es nuevo) -->
+                                </div>
+                            </div>
+                            <!-- Monto Cobrado (MOVIDO AQUÍ) -->
+                            <div>
+                                <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
+                                <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right" required>
+                            </div>
                         </div>
 
-                        <!-- Cantidad Inicial (Stock) -->
-                        <div class="mb-4">
-                            <label for="stockProducto" class="block text-sm font-medium text-gray-700">Cantidad (Stock Inicial) *</label>
-                            <input type="number" id="stockProducto" required value="0" min="0" placeholder="Ej: 100" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border text-right">
+                        <!-- Tarjeta de Descuentos/Canal -->
+                        <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <!-- Descuento Gral -->
+                            <div class="mb-6">
+                                <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
+                                <input type="text" id="descuentoVenta" value="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
+                            </div>
+                            
+                            <!-- Canal de Venta (Manual Entry) -->
+                            <div>
+                                <label for="canalVentaInput" class="block text-sm font-medium text-gray-700">Canal de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                <div class="flex items-center mt-1">
+                                    <input type="text" id="canalVentaInput" list="canalListOptions" placeholder="Escriba o seleccione un canal..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
+                                    
+                                    <datalist id="canalListOptions">
+                                        <option value="Ninguno">
+                                        <option value="Showroom">
+                                        <option value="Feria Y Eventos">
+                                        <option value="Mi Local">
+                                        <option value="Mi Tienda Online">
+                                        <option value="Facebook / Instagram">
+                                        <option value="Mercadolibre">
+                                    </datalist>
+                                    
+                                    <button type="button" id="addNewCanalBtn" class="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition" title="Guardar como nuevo canal de venta (simulado)">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Categoría -->
-                        <div class="mb-6">
-                            <label for="categoriaProducto" class="block text-sm font-medium text-gray-700">Categoría <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i> - Opt.</label>
-                            <div id="categorySelectGroup" class="flex items-center space-x-2 mt-1">
-                                <select id="categoriaProducto" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
-                                    <option>Ninguna</option>
-                                    <option>Ropa</option>
-                                    <option>Accesorios</option>
-                                    <option>Calzado</option>
+                        <!-- Tarjeta de Estado/Entrega -->
+                        <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <!-- Estado -->
+                            <div class="mb-4">
+                                <label for="estadoVenta" class="block text-sm font-medium text-gray-700">Estado - Optativo</label>
+                                <select id="estadoVenta" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                    <option>Seleccione</option>
+                                    <option>Sin Estado</option>
+                                    <option>Pedido</option>
+                                    <option>Compra Pendiente</option>
+                                    <option>En Producción</option>
+                                    <option>Para Entregar</option>
+                                    <option>Despachado</option>
+                                    <option>Entregado</option>
+                                    <option>Cerrado</option>
                                 </select>
-                                <!-- Botón para eliminar la categoría seleccionada -->
-                                <button type="button" id="deleteCategoryBtn" disabled class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm disabled:bg-gray-400" title="Eliminar Categoría Seleccionada">
+                            </div>
+                            <!-- Fecha de Entrega -->
+                            <div>
+                                <label for="fechaEntrega" class="block text-sm font-medium text-gray-700">Fecha de Entrega - Optativo</label>
+                                <input type="date" id="fechaEntrega" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 2: Cobro y Tipo de Pago (RESTRUCTURADO) -->
+                    <div class="border-t pt-8 space-y-6">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalle de Cobro</h3>
+
+                        <!-- TIPO DE PAGO (NUEVO CRUD CON DATALIST) -->
+                        <div>
+                            <label for="tipoPagoVentaInput" class="block text-sm font-medium text-gray-700">Categoría de Tipo de Pago</label>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <input type="text" id="tipoPagoVentaInput" list="tipoPagoListOptions" placeholder="Escriba o seleccione un tipo de pago..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
+                                
+                                <datalist id="tipoPagoListOptions">
+                                    <!-- Las opciones se agregarán dinámicamente -->
+                                    <option value="Efectivo"></option>
+                                    <option value="Transferencia Bancaria"></option>
+                                    <option value="Tarjeta de Crédito"></option>
+                                </datalist>
+
+                                <!-- Botón para eliminar (Requiere PIN) -->
+                                <button type="button" id="deleteTipoPagoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Tipo de Pago (Requiere PIN)">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                                <!-- Botón para cambiar a modo de ingreso manual -->
-                                <button type="button" id="addCustomCategoryBtn" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Categoría Personalizada">
+                                
+                                <!-- Botón para agregar -->
+                                <button type="button" id="addNewTipoPagoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Tipo de Pago">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
-                            
-                            <!-- Nuevo campo para ingresar categoría personalizada (Inicialmente oculto) -->
-                            <div id="customCategoryInputGroup" class="mt-2 hidden flex items-center space-x-2">
-                                <input type="text" id="customCategoryInput" placeholder="Nombre de la nueva categoría" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 p-3 input-bg-blue border">
-                                <!-- Botón para guardar la categoría custom y seleccionarla -->
-                                <button type="button" id="saveCustomCategoryBtn" class="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition shadow-sm" title="Guardar Categoría">
-                                    <i class="fas fa-save"></i>
-                                </button>
-                                <!-- Botón para cancelar y volver a la selección -->
-                                <button type="button" id="cancelCustomCategoryBtn" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm" title="Cancelar">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                        </div>
+                        <!-- FIN TIPO DE PAGO -->
+                        
+                        <!-- Opción de recordar cobro (Mantener) -->
+                        <div class="flex items-center pt-2">
+                            <input id="recordarCobrado" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="recordarCobrado" class="ml-2 text-sm text-gray-700">
+                                Recordar Cobrado <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i><br>
+                                <span class="text-xs text-gray-500">Para la próxima venta.</span>
+                            </label>
                         </div>
                     </div>
-                    
-                    <!-- Bloque 2: PRECIO DE VENTA OPCIONAL (Desplegable) -->
-                    <div class="space-y-6">
-                        
-                        <!-- Botón/Encabezado para Desplegar la Sección de Precios -->
-                        <button type="button" id="togglePriceSection" class="w-full text-center py-3 bg-gray-100 rounded-xl text-lg font-bold text-blue-600 hover:bg-gray-200 transition shadow-md">
-                            <i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta
-                        </button>
-                        
-                        <!-- Contenido Oculto de Precio de Venta y Costo -->
-                        <div id="priceSectionContent" class="space-y-6 hidden">
+
+
+                    <!-- Bloque 3: Otra Información (Desplegable con flecha) -->
+                    <details id="otherInfoDetails" class="border-t pt-8">
+                        <!-- Resumen del Despliegue -->
+                        <summary class="details-summary text-xl font-semibold text-gray-700 mb-4 flex items-center justify-between">
+                            Otra Información
+                            <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
+                        </summary>
+
+                        <!-- Contenido del Despliegue -->
+                        <div class="pt-4">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                <!-- Tipo de Venta -->
+                                <div>
+                                    <label for="tipoVenta" class="block text-sm font-medium text-gray-700">Tipo de Venta</label>
+                                    <select id="tipoVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                        <option>Venta Común</option>
+                                        <option>Venta Mayorista</option>
+                                    </select>
+                                </div>
+                                <!-- Vendedor -->
+                                <div>
+                                    <label for="vendedorVenta" class="block text-sm font-medium text-gray-700">Vendedor - Optativo <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                    <select id="vendedorVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                        <option>Seleccione</option>
+                                        <option>Vendedor 1</option>
+                                        <option>Vendedor 2</option>
+                                    </select>
+                                </div>
+                                <!-- FORMA DE PAGO ORIGINAL ELIMINADA (REEMPLAZADA POR TIPO DE PAGO ARRIBA) -->
+                                <!-- Forma de Envío -->
+                                <div>
+                                    <label for="formaEnvio" class="block text-sm font-medium text-gray-700">Forma de Envío - Optativo</label>
+                                    <select id="formaEnvio" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                        <option>Seleccione</option>
+                                        <option>Retira en Tienda</option>
+                                        <option>Correo Argentino</option>
+                                    </select>
+                                </div>
+                            </div>
                             
-                            <!-- Header de Costo del Producto -->
-                            <div class="costo-header text-white p-4 rounded-xl text-center">
-                                <h4 class="text-lg font-light">COSTO DEL PRODUCTO</h4>
-                                <p id="costoProductoDisplay" class="text-3xl font-bold my-1">$0 <span class="text-base font-normal">(POR UNIDAD)</span></p>
+                            <!-- Nro. de Factura -->
+                            <div class="mb-6">
+                                <label for="nroFactura" class="block text-sm font-medium text-gray-700">Nro. de Factura - Optativo</label>
+                                <input type="text" id="nroFactura" placeholder="X-XXXX-XXXXXXXX" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
                             </div>
 
-                            <!-- Sección de Precio de Venta -->
+                            <!-- Notas (MOSTRADA EN EL HISTORIAL) -->
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Precio de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></h3>
-                                <p class="text-sm text-gray-500 mb-4">Elija precios para su producto. Puede usar las técnicas de marcación sobre costos o margen sobre precio para calcular el mismo.</p>
-                                
-                                <!-- Actualizar Precios Checkbox -->
-                                <div class="flex items-center mb-6">
-                                    <input id="actualizarPrecios" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                    <label for="actualizarPrecios" class="ml-2 text-sm text-gray-700">Actualizar Precios <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <!-- Tarjeta 1: Precio Minorista -->
-                                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
-                                        <h4 class="font-semibold text-gray-800">Precio Minorista</h4>
-                                        <div class="grid grid-cols-5 gap-3 items-center">
-                                            <div>
-                                                <label class="block text-xs text-gray-500">Marcación %</label>
-                                                <input type="number" value="150.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500">Márgen %</label>
-                                                <input type="number" value="60" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
-                                            </div>
-                                            <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
-                                                <i class="fas fa-arrow-right"></i>
-                                            </div>
-                                            <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
-                                                <p class="text-xs font-light">Calculado</p>
-                                                <p class="text-xl font-bold">$0</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Precio Minorista Elegido -->
-                                        <div class="pt-2">
-                                            <label class="block text-sm font-medium text-gray-700">Precio Minorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
-                                            <div class="flex items-center mt-1 space-x-2">
-                                                <input type="number" id="priceRetailInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
-                                                <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
-                                                    Actualizar %
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Tarjeta 2: Precio Mayorista -->
-                                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
-                                        <h4 class="font-semibold text-gray-800">Precio Mayorista</h4>
-                                        <div class="grid grid-cols-5 gap-3 items-center">
-                                            <div>
-                                                <label class="block text-xs text-gray-500">Marcación %</label>
-                                                <input type="number" value="50.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500">Márgen %</label>
-                                                <input type="number" value="33.33" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
-                                            </div>
-                                            <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
-                                                <i class="fas fa-arrow-right"></i>
-                                            </div>
-                                            <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
-                                                <p class="text-xs font-light">Calculado</p>
-                                                <p class="text-xl font-bold">$0</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Precio Mayorista Elegido -->
-                                        <div class="pt-2">
-                                            <label class="block text-sm font-medium text-gray-700">Precio Mayorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
-                                            <div class="flex items-center mt-1 space-x-2">
-                                                <input type="number" id="priceWholesaleInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
-                                                <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
-                                                    Actualizar %
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <label for="notasVenta" class="block text-sm font-medium text-gray-700">Notas - Optativo</label>
+                                <textarea id="notasVenta" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border" placeholder="Escribe aquí cualquier nota importante sobre la venta."></textarea>
                             </div>
                         </div>
-                    </div>
+                    </details>
 
                 </form>
-            </div>
 
-            <!-- Pie de página del Modal (Acciones de Guardar) -->
-            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
-                <button data-close-modal="productoModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
-                    Cancelar
-                </button>
-                <button form="productoForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
-                    Guardar Producto
-                </button>
+                <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
+                <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                    <button data-close-modal="ventaModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                        Cancelar
+                    </button>
+                    <button form="ventaForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+                        Guardar Venta
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-    <!-- FIN DEL MODAL PRODUCTO -->
+        <!-- FIN DEL MODAL VENTA -->
 
-    <!-- MODAL DE NUEVA VENTA (Con despliegue para "Otra Información") -->
-    <div id="ventaModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-gray-800">Nueva Venta</h2>
-                <button data-close-modal="ventaModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
 
-            <!-- Cuerpo del Formulario de Venta -->
-            <form id="ventaForm" class="p-6 space-y-8">
+        <!-- MODAL DE AGREGAR GASTO (MODIFICADO) -->
+        <div id="gastoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
+                
+                <!-- Encabezado del Modal -->
+                <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-gray-800">Agregar Gasto</h2>
+                    <button data-close-modal="gastoModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
 
-                <!-- Bloque 1: Información Principal (Fecha, Cliente, MONTO COBRADO) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    <!-- Tarjeta de Datos de la Venta (Fecha, Cliente, Monto Cobrado) -->
-                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <!-- Fecha -->
-                        <div class="mb-4">
-                            <label for="fechaVenta" class="block text-sm font-medium text-gray-700">Fecha</label>
-                            <input type="date" id="fechaVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
-                        </div>
-                        <!-- Cliente (AHORA CON DATALIST REAL DE FIRESTORE) -->
-                        <div class="mb-4">
-                            <label for="clienteVentaInput" class="block text-sm font-medium text-gray-700">Cliente <i class="fas fa-pen-to-square text-xs text-blue-500 ml-1 cursor-pointer"></i></label>
-                            <div class="flex items-center mt-1">
-                                <input type="text" id="clienteVentaInput" list="clientListOptions" placeholder="Escriba o seleccione un cliente..." class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
-                                
-                                <datalist id="clientListOptions">
-                                    <!-- Opciones cargadas desde Firestore por JS -->
-                                </datalist>
-                                
-                                <!-- Botón para agregar (Eliminado: se agrega al guardar la venta si es nuevo) -->
-                            </div>
-                        </div>
-                        <!-- Monto Cobrado (MOVIDO AQUÍ) -->
-                        <div>
-                            <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
-                            <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right" required>
+                <!-- Cuerpo del Formulario de Gasto (AÑADIDO ID) -->
+                <form id="gastoForm" class="p-6 space-y-6">
+
+                    <!-- Fila de Fecha -->
+                    <div class="flex flex-col sm:flex-row justify-start items-start sm:items-center">
+                        <div class="mb-4 sm:mb-0">
+                            <label for="fechaGasto" class="block text-sm font-medium text-gray-700">Fecha (Opt.)</label>
+                            <input type="date" id="fechaGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
                         </div>
                     </div>
 
-                    <!-- Tarjeta de Descuentos/Canal -->
-                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <!-- Descuento Gral -->
-                        <div class="mb-6">
-                            <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
-                            <input type="text" id="descuentoVenta" value="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
+                    <!-- Gasto Total y Categoría (MODIFICADO CON DATALIST) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="gastoTotal" class="block text-sm font-medium text-gray-700">Gasto Total ($)</label>
+                            <input type="number" id="gastoTotal" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 p-3 border input-gasto-total" required>
                         </div>
                         
-                        <!-- Canal de Venta (Manual Entry) -->
+                        <!-- CATEGORÍA CON DATALIST Y BOTÓN DE ADD (ESTILO VENTA) -->
                         <div>
-                            <label for="canalVentaInput" class="block text-sm font-medium text-gray-700">Canal de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
-                            <div class="flex items-center mt-1">
-                                <input type="text" id="canalVentaInput" list="canalListOptions" placeholder="Escriba o seleccione un canal..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
+                            <label for="categoriaGastoInput" class="block text-sm font-medium text-gray-700">Categoría</label> 
+                            <div class="flex items-center space-x-2 mt-1">
+                                <input type="text" id="categoriaGastoInput" list="categoriaGastoListOptions" placeholder="Escriba o seleccione una categoría..." class="block flex-1 rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue">
                                 
-                                <datalist id="canalListOptions">
-                                    <option value="Ninguno">
-                                    <option value="Showroom">
-                                    <option value="Feria Y Eventos">
-                                    <option value="Mi Local">
-                                    <option value="Mi Tienda Online">
-                                    <option value="Facebook / Instagram">
-                                    <option value="Mercadolibre">
+                                <datalist id="categoriaGastoListOptions">
+                                    <!-- Las opciones se agregarán dinámicamente -->
                                 </datalist>
-                                
-                                <button type="button" id="addNewCanalBtn" class="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition" title="Guardar como nuevo canal de venta (simulado)">
+
+                                <button type="button" id="addNewGastoCategoryBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nueva Categoría">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
                         </div>
+                        <!-- FIN CATEGORÍA CON DATALIST -->
                     </div>
 
-                    <!-- Tarjeta de Estado/Entrega -->
-                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <!-- Estado -->
-                        <div class="mb-4">
-                            <label for="estadoVenta" class="block text-sm font-medium text-gray-700">Estado - Optativo</label>
-                            <select id="estadoVenta" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                <option>Seleccione</option>
-                                <option>Sin Estado</option>
-                                <option>Pedido</option>
-                                <option>Compra Pendiente</option>
-                                <option>En Producción</option>
-                                <option>Para Entregar</option>
-                                <option>Despachado</option>
-                                <option>Entregado</option>
-                                <option>Cerrado</option>
-                            </select>
-                        </div>
-                        <!-- Fecha de Entrega -->
-                        <div>
-                            <label for="fechaEntrega" class="block text-sm font-medium text-gray-700">Fecha de Entrega - Optativo</label>
-                            <input type="date" id="fechaEntrega" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bloque 2: Cobro y Tipo de Pago (RESTRUCTURADO) -->
-                <div class="border-t pt-8 space-y-6">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalle de Cobro</h3>
-
-                    <!-- TIPO DE PAGO (NUEVO CRUD CON DATALIST) -->
+                    <!-- ENCARGADO DE TURNO (NUEVO DISEÑO CON DATALIST Y ELIMINAR CON PIN) -->
                     <div>
-                        <label for="tipoPagoVentaInput" class="block text-sm font-medium text-gray-700">Categoría de Tipo de Pago</label>
+                        <label for="encargadoInput" class="block text-sm font-medium text-gray-700">Encargado de Turno</label>
                         <div class="flex items-center space-x-2 mt-1">
-                            <input type="text" id="tipoPagoVentaInput" list="tipoPagoListOptions" placeholder="Escriba o seleccione un tipo de pago..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
+                            <input type="text" id="encargadoInput" list="encargadoListOptions" placeholder="Escriba o seleccione un encargado..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
                             
-                            <datalist id="tipoPagoListOptions">
+                            <datalist id="encargadoListOptions">
                                 <!-- Las opciones se agregarán dinámicamente -->
-                                <option value="Efectivo"></option>
-                                <option value="Transferencia Bancaria"></option>
-                                <option value="Tarjeta de Crédito"></option>
                             </datalist>
 
                             <!-- Botón para eliminar (Requiere PIN) -->
-                            <button type="button" id="deleteTipoPagoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Tipo de Pago (Requiere PIN)">
+                            <button type="button" id="deleteEncargadoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Encargado (Requiere PIN)">
                                 <i class="fas fa-trash"></i>
                             </button>
                             
                             <!-- Botón para agregar -->
-                            <button type="button" id="addNewTipoPagoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Tipo de Pago">
+                            <button type="button" id="addNewEncargadoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Encargado">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
-                    <!-- FIN TIPO DE PAGO -->
+                    <!-- FIN ENCARGADO DE TURNO -->
                     
-                    <!-- Opción de recordar cobro (Mantener) -->
+                    <!-- CAMPO DE DESCRIPCIÓN -->
+                    <div>
+                        <label for="descripcionGastoTextArea" class="block text-sm font-medium text-gray-700">Descripción (Opt.)</label>
+                        <textarea id="descripcionGastoTextArea" rows="3" placeholder="Detalles o notas adicionales sobre el gasto..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
+                    </div>
+
+                    <!-- Pagado Checkbox -->
                     <div class="flex items-center pt-2">
-                        <input id="recordarCobrado" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="recordarCobrado" class="ml-2 text-sm text-gray-700">
-                            Recordar Cobrado <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i><br>
-                            <span class="text-xs text-gray-500">Para la próxima venta.</span>
+                        <input id="pagadoGasto" type="checkbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                        <label for="pagadoGasto" class="ml-2 text-base font-medium text-gray-800">
+                            Pagado
                         </label>
                     </div>
+
+                </form>
+
+                <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
+                <div class="p-6 border-t flex justify-end flex-wrap gap-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                    <button form="gastoForm" type="submit" data-action="saveAndClose" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                        Guardar
+                    </button>
+                    <button form="gastoForm" type="submit" data-action="saveAndAddAnother" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                        Guardar y Agregar Otro
+                    </button>
                 </div>
-
-
-                <!-- Bloque 3: Otra Información (Desplegable con flecha) -->
-                <details id="otherInfoDetails" class="border-t pt-8">
-                    <!-- Resumen del Despliegue -->
-                    <summary class="details-summary text-xl font-semibold text-gray-700 mb-4 flex items-center justify-between">
-                        Otra Información
-                        <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
-                    </summary>
-
-                    <!-- Contenido del Despliegue -->
-                    <div class="pt-4">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <!-- Tipo de Venta -->
-                            <div>
-                                <label for="tipoVenta" class="block text-sm font-medium text-gray-700">Tipo de Venta</label>
-                                <select id="tipoVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                    <option>Venta Común</option>
-                                    <option>Venta Mayorista</option>
-                                </select>
-                            </div>
-                            <!-- Vendedor -->
-                            <div>
-                                <label for="vendedorVenta" class="block text-sm font-medium text-gray-700">Vendedor - Optativo <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
-                                <select id="vendedorVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                    <option>Seleccione</option>
-                                    <option>Vendedor 1</option>
-                                    <option>Vendedor 2</option>
-                                </select>
-                            </div>
-                            <!-- FORMA DE PAGO ORIGINAL ELIMINADA (REEMPLAZADA POR TIPO DE PAGO ARRIBA) -->
-                            <!-- Forma de Envío -->
-                            <div>
-                                <label for="formaEnvio" class="block text-sm font-medium text-gray-700">Forma de Envío - Optativo</label>
-                                <select id="formaEnvio" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                    <option>Seleccione</option>
-                                    <option>Retira en Tienda</option>
-                                    <option>Correo Argentino</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- Nro. de Factura -->
-                        <div class="mb-6">
-                            <label for="nroFactura" class="block text-sm font-medium text-gray-700">Nro. de Factura - Optativo</label>
-                            <input type="text" id="nroFactura" placeholder="X-XXXX-XXXXXXXX" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
-                        </div>
-
-                        <!-- Notas (MOSTRADA EN EL HISTORIAL) -->
-                        <div>
-                            <label for="notasVenta" class="block text-sm font-medium text-gray-700">Notas - Optativo</label>
-                            <textarea id="notasVenta" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border" placeholder="Escribe aquí cualquier nota importante sobre la venta."></textarea>
-                        </div>
-                    </div>
-                </details>
-
-            </form>
-
-            <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
-            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
-                <button data-close-modal="ventaModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
-                    Cancelar
-                </button>
-                <button form="ventaForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
-                    Guardar Venta
-                </button>
             </div>
         </div>
+        <!-- FIN DEL MODAL GASTO -->
+        
     </div>
-    <!-- FIN DEL MODAL VENTA -->
+    <!-- FIN CONTENIDO PRINCIPAL -->
 
-
-    <!-- MODAL DE AGREGAR GASTO (MODIFICADO) -->
-    <div id="gastoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
-            
-            <!-- Encabezado del Modal -->
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-2xl font-bold text-gray-800">Agregar Gasto</h2>
-                <button data-close-modal="gastoModal" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Cuerpo del Formulario de Gasto (AÑADIDO ID) -->
-            <form id="gastoForm" class="p-6 space-y-6">
-
-                <!-- Fila de Fecha -->
-                <div class="flex flex-col sm:flex-row justify-start items-start sm:items-center">
-                    <div class="mb-4 sm:mb-0">
-                        <label for="fechaGasto" class="block text-sm font-medium text-gray-700">Fecha (Opt.)</label>
-                        <input type="date" id="fechaGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
-                    </div>
-                </div>
-
-                <!-- Gasto Total y Categoría (MODIFICADO CON DATALIST) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="gastoTotal" class="block text-sm font-medium text-gray-700">Gasto Total ($)</label>
-                        <input type="number" id="gastoTotal" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 p-3 border input-gasto-total" required>
-                    </div>
-                    
-                    <!-- CATEGORÍA CON DATALIST Y BOTÓN DE ADD (ESTILO VENTA) -->
-                    <div>
-                        <label for="categoriaGastoInput" class="block text-sm font-medium text-gray-700">Categoría</label> 
-                        <div class="flex items-center space-x-2 mt-1">
-                            <input type="text" id="categoriaGastoInput" list="categoriaGastoListOptions" placeholder="Escriba o seleccione una categoría..." class="block flex-1 rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue">
-                            
-                            <datalist id="categoriaGastoListOptions">
-                                <!-- Las opciones se agregarán dinámicamente -->
-                            </datalist>
-
-                            <button type="button" id="addNewGastoCategoryBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nueva Categoría">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- FIN CATEGORÍA CON DATALIST -->
-                </div>
-
-                <!-- ENCARGADO DE TURNO (NUEVO DISEÑO CON DATALIST Y ELIMINAR CON PIN) -->
-                <div>
-                    <label for="encargadoInput" class="block text-sm font-medium text-gray-700">Encargado de Turno</label>
-                    <div class="flex items-center space-x-2 mt-1">
-                        <input type="text" id="encargadoInput" list="encargadoListOptions" placeholder="Escriba o seleccione un encargado..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
-                        
-                        <datalist id="encargadoListOptions">
-                            <!-- Las opciones se agregarán dinámicamente -->
-                        </datalist>
-
-                        <!-- Botón para eliminar (Requiere PIN) -->
-                        <button type="button" id="deleteEncargadoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Encargado (Requiere PIN)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        
-                        <!-- Botón para agregar -->
-                        <button type="button" id="addNewEncargadoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Encargado">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-                <!-- FIN ENCARGADO DE TURNO -->
-                
-                <!-- CAMPO DE DESCRIPCIÓN -->
-                <div>
-                    <label for="descripcionGastoTextArea" class="block text-sm font-medium text-gray-700">Descripción (Opt.)</label>
-                    <textarea id="descripcionGastoTextArea" rows="3" placeholder="Detalles o notas adicionales sobre el gasto..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
-                </div>
-
-                <!-- Pagado Checkbox -->
-                <div class="flex items-center pt-2">
-                    <input id="pagadoGasto" type="checkbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                    <label for="pagadoGasto" class="ml-2 text-base font-medium text-gray-800">
-                        Pagado
-                    </label>
-                </div>
-
-            </form>
-
-            <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
-            <div class="p-6 border-t flex justify-end flex-wrap gap-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
-                <button form="gastoForm" type="submit" data-action="saveAndClose" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
-                    Guardar
-                </button>
-                <button form="gastoForm" type="submit" data-action="saveAndAddAnother" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
-                    Guardar y Agregar Otro
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- FIN DEL MODAL GASTO -->
-
+    <!-- REGISTRO DEL SERVICE WORKER para PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado con éxito: ', registration);
+                    })
+                    .catch(error => {
+                        console.error('Fallo el registro del Service Worker: ', error);
+                    });
+            });
+        }
+    </script>
+    <!-- FIN REGISTRO DEL SERVICE WORKER -->
 
 </body>
 
@@ -1459,6 +1495,63 @@
 
     // --- Funciones de Utilidad ---
     
+    // Función para ocultar la pantalla de inicio y mostrar el contenido principal
+    const hideSplashScreen = () => {
+        const splashScreen = document.getElementById('splashScreen');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (splashScreen && mainContent) {
+            // 1. Iniciar fade out del splash
+            splashScreen.style.opacity = '0';
+            
+            // 2. Después del fade, ocultar y liberar la capa
+            setTimeout(() => {
+                splashScreen.classList.add('hidden');
+                splashScreen.remove(); // Opcional: remover del DOM para liberar recursos
+                
+                // 3. Mostrar el contenido principal
+                mainContent.classList.add('visible');
+            }, 500); // 500ms es la duración de la transición CSS
+        } else {
+             // Fallback rápido si los elementos no existen
+             if(mainContent) mainContent.classList.add('visible');
+        }
+    };
+    
+    // Controlar el video y el tiempo de espera del splash
+    const setupSplashControl = () => {
+        const video = document.getElementById('splashVideo');
+        let finishedLoading = false;
+        
+        // Función para asegurar que el splash se quite
+        const checkToHide = () => {
+            if (!finishedLoading) {
+                finishedLoading = true;
+                hideSplashScreen();
+            }
+        };
+
+        // 1. Escuchar cuando el video termina
+        if (video) {
+            video.addEventListener('ended', checkToHide);
+            // Fallback para videos que no terminan o si el evento 'ended' falla
+            video.addEventListener('error', checkToHide);
+            
+            // Intentar cargar y reproducir (por si el autoplay falla)
+            video.play().catch(error => {
+                console.warn("Video autoplay blocked or failed, using fallback timer.", error);
+            });
+        }
+        
+        // 2. Establecer un temporizador de seguridad de 3 segundos
+        // Esto garantiza que el usuario no se quede atascado si el video no se reproduce.
+        setTimeout(checkToHide, 3000); 
+    };
+    
+    // Ejecutar control de splash una vez que el DOM está listo
+    document.addEventListener('DOMContentLoaded', setupSplashControl);
+
+
     const updateAuthStatus = (loggedIn) => { 
         const userStatusEl = document.getElementById('userStatus');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -1469,6 +1562,7 @@
             userStatusEl.classList.add('text-green-500');
             logoutBtn.disabled = false;
         } else {
+            userId = null;
             userStatusEl.textContent = 'Desconectado';
             userStatusEl.classList.remove('text-green-500');
             userStatusEl.classList.add('text-red-500');
@@ -1585,7 +1679,8 @@
         const ganancias = totalVentasDelMes - totalGastosDelMes;
         const gananciasDisplayValueEl = document.getElementById('gananciasDisplayValue');
         const gananciasCard = document.getElementById('gananciasCard');
-        const dailySalesSummaryValueEl = document.getElementById('dailySalesSummaryValue'); // NEW SUMMARY
+        const dailySalesSummaryValueEl = document.getElementById('dailySalesSummaryValue'); 
+        const dailyExpensesDisplay = document.getElementById('totalDailyExpensesCount'); 
         
         if (gananciasDisplayValueEl) {
              gananciasDisplayValueEl.textContent = `$${ganancias.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
@@ -1608,6 +1703,11 @@
         // Actualizar el resumen de Ventas del día en la tarjeta de Ventas
         if (dailySalesSummaryValueEl) {
              dailySalesSummaryValueEl.textContent = totalVentasDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+        }
+        
+        // Actualizar el resumen de Gastos del día en la tarjeta de Gastos
+        if (dailyExpensesDisplay) {
+             dailyExpensesDisplay.textContent = `$${totalGastosDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         }
     };
     
@@ -2780,12 +2880,13 @@
 
     // --- Inicialización DOM ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Iniciar Firebase y el flujo de autenticación
-        initializeFirebase();
-
+        
         // ** INICIAR RELOJ Y CALENDARIO **
         updateClock(); 
         // ********************************
+
+        // Iniciar Firebase y el flujo de autenticación (DESPUÉS del splash si se usa un video largo, pero aquí lo haremos inmediatamente)
+        initializeFirebase();
 
         // --- Selectores de Modales y Botones ---
         const productoModal = document.getElementById('productoModal');
