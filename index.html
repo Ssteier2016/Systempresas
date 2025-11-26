@@ -732,7 +732,7 @@
     </div>
     <!-- FIN DEL MODAL HISTORIAL DE INVENTARIO -->
 
-    <!-- MODAL DE HISTORIAL DE CLIENTES (ACTUALIZADO: Contenido vacío para simulación) -->
+    <!-- MODAL DE HISTORIAL DE CLIENTES (ACTUALIZADO: Ahora usa datos reales de Firestore) -->
     <div id="clientesModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
             
@@ -746,7 +746,7 @@
                 </button>
             </div>
 
-            <!-- Cuerpo del Listado de Clientes (Tabla Simulada) -->
+            <!-- Cuerpo del Listado de Clientes (Tabla Real de Firestore) -->
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
                     <div class="relative">
@@ -763,17 +763,16 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Cliente</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Última Compra</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Gastado ($)</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Compras</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Última Venta</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="clientesTablaContenido" class="bg-white divide-y divide-gray-100">
-                            <!-- Los datos simulados se han eliminado. Solo queda el placeholder. -->
+                            <!-- Los datos se cargarán aquí por JS desde Firestore -->
                             <tr>
                                 <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">
-                                    Los datos de clientes se cargarán desde la base de datos (SIMULADO).
-                                    <p class="text-xs mt-2">Clientes registrados: <span id="totalClientsCountSimulated">0</span></p>
+                                    Cargando clientes...
                                 </td>
                             </tr>
                         </tbody>
@@ -1051,20 +1050,17 @@
                             <label for="fechaVenta" class="block text-sm font-medium text-gray-700">Fecha</label>
                             <input type="date" id="fechaVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
                         </div>
-                        <!-- Cliente (Manual Entry) -->
+                        <!-- Cliente (AHORA CON DATALIST REAL DE FIRESTORE) -->
                         <div class="mb-4">
                             <label for="clienteVentaInput" class="block text-sm font-medium text-gray-700">Cliente <i class="fas fa-pen-to-square text-xs text-blue-500 ml-1 cursor-pointer"></i></label>
                             <div class="flex items-center mt-1">
-                                <input type="text" id="clienteVentaInput" list="clientListOptions" placeholder="Escriba o seleccione un cliente..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
+                                <input type="text" id="clienteVentaInput" list="clientListOptions" placeholder="Escriba o seleccione un cliente..." class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
                                 
                                 <datalist id="clientListOptions">
-                                    <option value="Cliente Frecuente A">
-                                    <option value="Nuevo Cliente B">
+                                    <!-- Opciones cargadas desde Firestore por JS -->
                                 </datalist>
                                 
-                                <button type="button" id="addNewClientBtn" class="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition" title="Guardar como nuevo cliente (simulado)">
-                                    <i class="fas fa-plus"></i>
-                                </button>
+                                <!-- Botón para agregar (Eliminado: se agrega al guardar la venta si es nuevo) -->
                             </div>
                         </div>
                         <!-- Monto Cobrado (MOVIDO AQUÍ) -->
@@ -1217,7 +1213,7 @@
                             <input type="text" id="nroFactura" placeholder="X-XXXX-XXXXXXXX" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
                         </div>
 
-                        <!-- Notas -->
+                        <!-- Notas (MOSTRADA EN EL HISTORIAL) -->
                         <div>
                             <label for="notasVenta" class="block text-sm font-medium text-gray-700">Notas - Optativo</label>
                             <textarea id="notasVenta" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border" placeholder="Escribe aquí cualquier nota importante sobre la venta."></textarea>
@@ -1347,15 +1343,14 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, setLogLevel, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 
     // Configuración de Seguridad y entorno
     const SECURE_PIN = "1440"; 
     const SIMULATED_VENTAS_VALUE = "$14,400 / $72";
-    const SIMULATED_GANANCIAS_VALUE = "$5,500";
     const SIMULATED_CAJA_VALUE = "$12,000.00"; 
-    const SIMULATED_CLIENT_COUNT = 75; 
+    
     let pendingAuthAction = null; 
 
     // Global variables provided by the environment
@@ -1369,18 +1364,20 @@
     let isAuthReady = false; 
     let productsData = []; 
     let salesData = []; 
-    let expensesData = []; // NUEVO: Para almacenar datos de gastos
+    let expensesData = []; 
+    let clientsData = []; // NUEVO: Para almacenar clientes
+    
     let unsubscribeProducts = null; 
     let unsubscribeSales = null; 
-    let unsubscribeExpenses = null; // NUEVO: Para el listener de gastos
+    let unsubscribeExpenses = null; 
+    let unsubscribeClients = null; // NUEVO: Para el listener de clientes
     
-    // NUEVO: Variables para métricas en tiempo real
+    // Variables para métricas en tiempo real
     let totalVentasDelMes = 0; 
     let totalGastosDelMes = 0; 
 
     // --- Funciones de Utilidad ---
     
-    // FUNCIÓN CORREGIDA: Definida al principio para que 'onAuthStateChanged' pueda acceder a ella.
     const updateAuthStatus = (loggedIn) => { 
         const userStatusEl = document.getElementById('userStatus');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -1421,7 +1418,6 @@
              timeEl.textContent = formattedTime;
         }
         
-        // Llamada recurrente para actualizar la hora cada 1 segundo (1000ms)
         setTimeout(updateClock, 1000);
     };
 
@@ -1445,6 +1441,19 @@
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     }
+    
+    // Nueva función para dar formato de fecha corta y mes (ej: 25 Nov)
+    function formatSaleDateShort(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString + 'T00:00:00'); 
+        if (isNaN(date)) return dateString; 
+        
+        const day = date.getDate();
+        const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        const monthName = monthNames[date.getMonth()];
+        return `${day} ${monthName}`;
+    }
+
 
     function generateDailyData(monthName) {
         let total = 0;
@@ -1480,8 +1489,9 @@
         }, 3000);
     }
 
-    // NUEVO: Función para actualizar Ganancias Netas en la tarjeta
+    // FUNCIÓN PRINCIPAL DE CÁLCULO DE GANANCIAS NETAS (ACTUALIZADA)
     const updateDashboardMetrics = () => {
+        // Cálculo: Ventas Totales del Mes - Gastos Totales del Mes
         const ganancias = totalVentasDelMes - totalGastosDelMes;
         const gananciasDisplayValueEl = document.getElementById('gananciasDisplayValue');
         const gananciasCard = document.getElementById('gananciasCard');
@@ -1489,7 +1499,7 @@
         if (gananciasDisplayValueEl) {
              gananciasDisplayValueEl.textContent = `$${ganancias.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
              
-             // Actualizar color de la tarjeta
+             // Actualizar color de la tarjeta según el resultado
              if(gananciasCard) {
                  gananciasCard.classList.remove('card-ganancias-border', 'card-ganancias-border-red');
                  if (ganancias < 0) {
@@ -1524,21 +1534,10 @@
                 const currentUserIdDisplay = document.getElementById('currentUserIdDisplay');
                 
                 // 1. Unsubscribe previous listeners
-                if (unsubscribeProducts) {
-                    unsubscribeProducts();
-                    unsubscribeProducts = null;
-                    console.log("Firestore: Previous product listener successfully detached.");
-                }
-                if (unsubscribeSales) { 
-                    unsubscribeSales();
-                    unsubscribeSales = null;
-                    console.log("Firestore: Previous sales listener successfully detached.");
-                }
-                if (unsubscribeExpenses) { // NUEVO: Unsubscribe expenses listener
-                    unsubscribeExpenses();
-                    unsubscribeExpenses = null;
-                    console.log("Firestore: Previous expenses listener successfully detached.");
-                }
+                if (unsubscribeProducts) { unsubscribeProducts(); unsubscribeProducts = null; }
+                if (unsubscribeSales) { unsubscribeSales(); unsubscribeSales = null; }
+                if (unsubscribeExpenses) { unsubscribeExpenses(); unsubscribeExpenses = null; }
+                if (unsubscribeClients) { unsubscribeClients(); unsubscribeClients = null; } // NUEVO: Unsubscribe clients
 
                 if (user) {
                     userId = user.uid;
@@ -1548,7 +1547,8 @@
                     // 2. Set up new listeners for the new user ID
                     setupRealtimeProductsListener(); 
                     setupRealtimeSalesListener();    
-                    setupRealtimeExpensesListener(); // NUEVO: Inicia listener de gastos
+                    setupRealtimeExpensesListener(); 
+                    setupRealtimeClientsListener(); // NUEVO: Inicia listener de clientes
                 } else {
                     userId = null;
                     updateAuthStatus(false);
@@ -1557,7 +1557,8 @@
                     // 3. Clear data
                     productsData = [];
                     salesData = []; 
-                    expensesData = []; // Limpia datos de gastos
+                    expensesData = []; 
+                    clientsData = []; // Limpia datos de clientes
                     totalVentasDelMes = 0;
                     totalGastosDelMes = 0;
                     updateDashboardMetrics(); // Reset Ganancias
@@ -1582,37 +1583,18 @@
         }
     };
     
-    // Path for private products collection: /artifacts/{appId}/users/{userId}/products
-    const getProductsCollectionRef = () => {
+    // Path for private collections
+    const getCollectionRef = (collectionName) => {
         if (!db || !userId) {
-            console.warn("DB or User ID not available for product collection (Permission expected to fail).");
+            console.warn(`DB or User ID not available for ${collectionName} collection (Permission expected to fail).`);
             return null;
         }
-        return collection(db, 'artifacts', appId, 'users', userId, 'products');
+        return collection(db, 'artifacts', appId, 'users', userId, collectionName);
     };
 
-    // Path for private sales collection: /artifacts/{appId}/users/{userId}/sales
-    const getSalesCollectionRef = () => {
-        if (!db || !userId) {
-            console.warn("DB or User ID not available for sales collection.");
-            return null;
-        }
-        return collection(db, 'artifacts', appId, 'users', userId, 'sales');
-    };
-    
-    // Path for private expenses collection: /artifacts/{appId}/users/{userId}/expenses (NUEVO)
-    const getExpensesCollectionRef = () => {
-        if (!db || !userId) {
-            console.warn("DB or User ID not available for expenses collection.");
-            return null;
-        }
-        return collection(db, 'artifacts', appId, 'users', userId, 'expenses');
-    };
-
-
-    // --- Real-Time Listener for Products ---
+    // --- Real-Time Listener for Products (MANTENIDO) ---
     const setupRealtimeProductsListener = () => { 
-        const productsRef = getProductsCollectionRef();
+        const productsRef = getCollectionRef('products');
         if (!productsRef) return; 
 
         unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
@@ -1653,7 +1635,7 @@
 
     // --- Real-Time Listener for Sales (MODIFICADO) ---
     const setupRealtimeSalesListener = () => { 
-        const salesRef = getSalesCollectionRef();
+        const salesRef = getCollectionRef('sales');
         if (!salesRef) return; 
 
         unsubscribeSales = onSnapshot(salesRef, (snapshot) => {
@@ -1694,7 +1676,7 @@
                  ventasDisplayValueEl.textContent = `$${ventasFormateadas} / $${ticketFormateado}`;
             }
             
-            // 3. Recalcular Ganancias Netas
+            // 3. Recalcular Ganancias Netas (Usa totalGastosDelMes que ya fue actualizado por su listener)
             updateDashboardMetrics();
             
             // 4. Cargar historial de ventas si el modal está abierto
@@ -1712,9 +1694,9 @@
         });
     };
 
-    // --- Real-Time Listener for Expenses (NUEVO) ---
+    // --- Real-Time Listener for Expenses (MANTENIDO) ---
     const setupRealtimeExpensesListener = () => { 
-        const expensesRef = getExpensesCollectionRef();
+        const expensesRef = getCollectionRef('expenses');
         if (!expensesRef) return; 
 
         unsubscribeExpenses = onSnapshot(expensesRef, (snapshot) => {
@@ -1756,9 +1738,114 @@
         });
     };
 
+    // --- Real-Time Listener for Clients (NUEVO) ---
+    const setupRealtimeClientsListener = () => { 
+        const clientsRef = getCollectionRef('clients');
+        if (!clientsRef) return; 
 
-    // --- Data Rendering Functions (History) (NUEVO) ---
+        unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
+            clientsData = [];
+            snapshot.forEach((doc) => {
+                clientsData.push({ id: doc.id, ...doc.data() });
+            });
+            console.log(`Clients data updated in real-time. Total: ${clientsData.length}`);
+            
+            // 1. Actualizar contador del dashboard
+            document.getElementById('totalClientsCount').textContent = clientsData.length;
+            
+            // 2. Llenar el datalist de clientes
+            renderClientDatalist();
+            
+            // 3. Renderizar tabla de clientes si el modal está abierto
+            if (document.getElementById('clientesModal').classList.contains('hidden') === false) {
+                 loadClientHistory();
+            }
+
+        }, (error) => {
+            if (error.code === 'permission-denied') {
+                 console.error("Error de permisos: No se pueden cargar los clientes.");
+            } else {
+                console.error("Error listening to clients collection:", error);
+            }
+        });
+    };
+
+
+    // --- Data Rendering Functions (History) ---
     
+    // RENDERIZAR DATALIST DE CLIENTES
+    const renderClientDatalist = () => {
+        const datalist = document.getElementById('clientListOptions');
+        if (!datalist) return;
+
+        datalist.innerHTML = ''; // Limpiar opciones anteriores
+
+        clientsData.forEach(client => {
+            if (client.name && client.name.trim() !== '') {
+                const option = document.createElement('option');
+                option.value = client.name;
+                datalist.appendChild(option);
+            }
+        });
+    };
+    
+    // CARGAR HISTORIAL DE CLIENTES (NUEVO)
+    const loadClientHistory = () => {
+        const tbody = document.getElementById('clientesTablaContenido');
+        if (!tbody || !isAuthReady || !userId) return;
+
+        tbody.innerHTML = '';
+
+        if (clientsData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay clientes registrados aún.</td></tr>`;
+            return;
+        }
+
+        // Simular cálculo de métricas de cliente (para simplificar, se usan datos de ventas)
+        const clientSalesMap = salesData.reduce((acc, sale) => {
+            const clientName = sale.clientName || 'Consumidor Final';
+            const monto = parseFloat(sale.montoCobrado) || 0;
+            const saleDate = sale.date ? new Date(sale.date + 'T00:00:00') : new Date(sale.createdAt);
+            
+            if (!acc[clientName]) {
+                acc[clientName] = { totalSpent: 0, purchaseCount: 0, lastSaleDate: null };
+            }
+            
+            acc[clientName].totalSpent += monto;
+            acc[clientName].purchaseCount += 1;
+            
+            if (!acc[clientName].lastSaleDate || saleDate > acc[clientName].lastSaleDate) {
+                 acc[clientName].lastSaleDate = saleDate;
+            }
+            return acc;
+        }, {});
+        
+        // Crear lista de clientes únicos (incluyendo los que solo están en clientsData)
+        const uniqueClients = [...new Set(clientsData.map(c => c.name).filter(n => n && n.trim() !== ''))];
+        
+        uniqueClients.forEach(clientName => {
+            const metrics = clientSalesMap[clientName] || { totalSpent: 0, purchaseCount: 0, lastSaleDate: null };
+            
+            const lastSaleDisplay = metrics.lastSaleDate 
+                ? formatSaleDateShort(metrics.lastSaleDate.toISOString().split('T')[0]) 
+                : 'N/A';
+            const totalSpentDisplay = `$${metrics.totalSpent.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-indigo-700">${clientName}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${metrics.purchaseCount} compras</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${lastSaleDisplay}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-center">
+                    <button class="text-indigo-500 hover:text-indigo-700 text-sm font-medium">Ver Detalle</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+    };
+
+    // CARGAR HISTORIAL DE VENTAS (MODIFICADO: AÑADE NOTAS)
     const loadSalesHistory = () => {
         const tbody = document.getElementById('salesHistoryTableContent');
         if (!tbody || !isAuthReady || !userId) return;
@@ -1770,12 +1857,10 @@
             return;
         }
 
-        // Sort by date (most recent first)
         const sortedSales = [...salesData].sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
 
-        // Group by month
         const groupedSales = sortedSales.reduce((acc, sale) => {
-            const dateKey = sale.date ? sale.date.substring(0, 7) : 'N/A'; // YYYY-MM
+            const dateKey = sale.date ? sale.date.substring(0, 7) : 'N/A';
             if (!acc[dateKey]) {
                 acc[dateKey] = [];
             }
@@ -1783,7 +1868,6 @@
             return acc;
         }, {});
         
-        // Render the data
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -1791,7 +1875,6 @@
             const [year, monthIndex] = key.split('-');
             const monthName = monthNames[parseInt(monthIndex) - 1] || 'Sin Fecha';
             
-            // Month Separator Row
             const separatorRow = document.createElement('tr');
             separatorRow.innerHTML = `<td colspan="5" class="px-6 py-2 bg-blue-50/70 text-blue-800 font-bold text-sm sticky top-0 border-t border-b border-blue-200">
                 ${monthName} ${year}
@@ -1805,11 +1888,17 @@
                 const statusClass = sale.status === 'Entregado' ? 'bg-green-100 text-green-700' : 
                                     (sale.status === 'Cerrado' ? 'bg-indigo-100 text-indigo-700' : 'bg-yellow-100 text-yellow-700');
 
+                // NUEVO: Mostrar notas si existen
+                const notesDisplay = sale.notes && sale.notes.trim() !== '' 
+                    ? `<span class="block text-xs text-gray-400 mt-1 italic">Nota: ${sale.notes.substring(0, 40)}${sale.notes.length > 40 ? '...' : ''}</span>`
+                    : '';
+
                 row.innerHTML = `
                     <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(sale.date)}</td>
                     <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                         ${sale.clientName}<br>
                         <span class="text-xs text-gray-500">${sale.salesChannel || 'Directo'}</span>
+                        ${notesDisplay}
                     </td>
                     <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-600">${montoDisplay}</td>
                     <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${sale.paymentType || 'Efectivo'}</td>
@@ -1821,7 +1910,8 @@
             });
         }
     };
-
+    
+    // CARGAR HISTORIAL DE GASTOS (MANTENIDO)
     const loadExpensesHistory = () => {
         const tbody = document.getElementById('expensesHistoryTableContent');
         if (!tbody || !isAuthReady || !userId) return;
@@ -1833,10 +1923,8 @@
             return;
         }
 
-        // Sort by date (most recent first)
         const sortedExpenses = [...expensesData].sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
 
-        // Group by month
         const groupedExpenses = sortedExpenses.reduce((acc, expense) => {
             const dateKey = expense.date ? expense.date.substring(0, 7) : 'N/A'; // YYYY-MM
             if (!acc[dateKey]) {
@@ -1846,7 +1934,6 @@
             return acc;
         }, {});
         
-        // Render the data
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -1854,7 +1941,6 @@
             const [year, monthIndex] = key.split('-');
             const monthName = monthNames[parseInt(monthIndex) - 1] || 'Sin Fecha';
             
-            // Month Separator Row
             const separatorRow = document.createElement('tr');
             separatorRow.innerHTML = `<td colspan="5" class="px-6 py-2 bg-green-50/70 text-green-800 font-bold text-sm sticky top-0 border-t border-b border-green-200">
                 ${monthName} ${year}
@@ -1966,13 +2052,13 @@
     // --- Data Saving Functions (Product) (MANTENIDA) ---
     const saveProduct = async (event) => {
         event.preventDefault();
-        // ... (Logic for saving product)
+        
         if (!isAuthReady || !userId) {
             alertMessage('Error: Debe iniciar sesión para guardar productos.', 'error');
             return;
         }
 
-        const productsRef = getProductsCollectionRef();
+        const productsRef = getCollectionRef('products');
         if (!productsRef) {
              alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
              return;
@@ -2029,7 +2115,35 @@
     };
 
 
-    // --- Data Saving Functions (Sale) (MANTENIDA) ---
+    // --- Data Saving Functions (Sale) (MODIFICADO: GUARDA CLIENTES NUEVOS) ---
+    
+    // Función auxiliar para guardar el cliente si es nuevo
+    const saveNewClient = async (clientName) => {
+        if (!clientName || clientName.trim() === '' || clientName.trim().toLowerCase() === 'consumidor final') {
+            return; // No guardar clientes vacíos o el Consumidor Final
+        }
+        
+        const existingClient = clientsData.find(c => c.name.toLowerCase() === clientName.toLowerCase());
+        
+        if (existingClient) {
+            return; // El cliente ya existe
+        }
+
+        const clientsRef = getCollectionRef('clients');
+        if (!clientsRef) return;
+        
+        try {
+            const clientData = {
+                name: clientName,
+                createdAt: new Date().toISOString()
+            };
+            await addDoc(clientsRef, clientData);
+            console.log(`Cliente nuevo guardado: ${clientName}`);
+        } catch (e) {
+            console.error("Error al guardar cliente nuevo: ", e);
+        }
+    };
+    
     const saveSale = async (event) => {
         event.preventDefault();
         
@@ -2038,7 +2152,7 @@
             return;
         }
 
-        const salesRef = getSalesCollectionRef();
+        const salesRef = getCollectionRef('sales');
         if (!salesRef) {
              alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
              return;
@@ -2064,10 +2178,12 @@
             return;
         }
         
+        const clientNameFinal = clienteVentaInput || 'Consumidor Final';
+        
         const saleData = {
             montoCobrado: parseFloat(montoCobrado),
             date: fechaVenta,
-            clientName: clienteVentaInput || 'Consumidor Final',
+            clientName: clientNameFinal, // Nombre del cliente final
             discountPercent: parseFloat(descuentoVenta) || 0,
             salesChannel: canalVentaInput || 'Ninguno',
             status: estadoVenta,
@@ -2076,23 +2192,21 @@
             saleType: tipoVenta,
             vendor: vendedorVenta,
             invoiceNumber: nroFactura,
-            notes: notasVenta,
+            notes: notasVenta, // NOTAS AÑADIDAS
             createdAt: new Date().toISOString()
         };
 
         try {
-            // 3. Guardar en Firestore
+            // 3. Guardar el cliente si es nuevo (No bloquea la venta)
+            await saveNewClient(clientNameFinal);
+            
+            // 4. Guardar la venta en Firestore
             const docRef = await addDoc(salesRef, saleData);
             console.log("Venta guardada con ID: ", docRef.id);
             alertMessage(`Venta por $${saleData.montoCobrado.toFixed(2)} guardada con éxito!`, 'success');
             
-            // 4. Limpiar formulario y cerrar modal (opcionalmente)
-            document.getElementById('montoCobrado').value = '';
-            document.getElementById('clienteVentaInput').value = '';
-            document.getElementById('descuentoVenta').value = '0';
-            document.getElementById('canalVentaInput').value = '';
-            document.getElementById('notasVenta').value = '';
-            
+            // 5. Limpiar formulario y cerrar modal
+            document.getElementById('ventaForm').reset();
             closeModal(document.getElementById('ventaModal'));
 
         } catch (e) {
@@ -2101,7 +2215,7 @@
         }
     };
 
-    // --- Data Saving Functions (Expense) (NUEVO) ---
+    // --- Data Saving Functions (Expense) (MANTENIDA) ---
     const saveExpense = async (event) => {
         event.preventDefault();
         
@@ -2110,7 +2224,7 @@
             return;
         }
 
-        const expensesRef = getExpensesCollectionRef();
+        const expensesRef = getCollectionRef('expenses');
         if (!expensesRef) {
              alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
              return;
@@ -2168,24 +2282,24 @@
     };
 
 
-    // --- Lógica del Gemini AI Analista (Mantenida) ---
+    // --- Lógica del Gemini AI Analista (MANTENIDA) ---
     const ANALISIS_CONTENT_ID = 'analisisContent';
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
     const API_KEY = ""; 
 
     const collectMockMetrics = () => {
-        // Usar valores reales del mes para el análisis si existen, sino usar simulados.
-        const ventas = totalVentasDelMes || parseFloat(SIMULATED_VENTAS_VALUE.split('/')[0].replace('$', '').replace(/,/g, '').trim()) || 0;
-        const gastos = totalGastosDelMes || 4500; // Si no hay gastos reales, usar un valor fijo simulado para el análisis
+        // Usar valores reales del mes para el análisis
+        const ventas = totalVentasDelMes;
+        const gastos = totalGastosDelMes; 
         const gananciaNeta = ventas - gastos;
         
-        // Mantener algunos valores simulados para completar el análisis
-        const ticketPromedio = ventas > 0 ? (ventas / (salesData.length || 100)) : 0; 
+        // Simulación de métricas derivadas (COGS y Costos fijos)
+        const ticketPromedio = salesData.length > 0 ? (ventas / salesData.length) : 0; 
         const costosFijos = 2000;
-        const cogs = ventas * 0.40; // Simulación de Costo de Bienes Vendidos (40%)
+        const cogs = ventas * 0.40; 
         const margenBruto = ventas - cogs;
-        const unidadesVendidas = ventas / (ticketPromedio || 1);
-        const margenNetoPorcentual = ((gananciaNeta / ventas) * 100).toFixed(2) + '%';
+        const unidadesVendidas = ventas > 0 ? (ventas / (ticketPromedio || 1)) : 0;
+        const margenNetoPorcentual = ventas > 0 ? ((gananciaNeta / ventas) * 100).toFixed(2) + '%' : '0.00%';
         
         return {
             VentasMensuales: ventas.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
@@ -2310,17 +2424,6 @@
         `;
     };
 
-    const updateClientCount = () => {
-        const countEl = document.getElementById('totalClientsCount');
-        const simulatedCountEl = document.getElementById('totalClientsCountSimulated');
-        
-        if (countEl) {
-            countEl.textContent = SIMULATED_CLIENT_COUNT;
-        }
-        if (simulatedCountEl) {
-            simulatedCountEl.textContent = SIMULATED_CLIENT_COUNT;
-        }
-    };
     
     const updateChartTitle = (metric) => {
         const titleMap = {
@@ -2398,7 +2501,7 @@
         const option = Array.from(datalist.options).find(opt => opt.value === nameToDelete);
         
         if (!option) {
-            alertMessage(`El ${fieldName.toLowerCase()} "${nameToDelete}" no se encuentra en la lista.`, 'error');
+            alertMessage(`El ${fieldName.toLowerCase()} "${nameToDelete}" no se encuentra en la lista.`, 'info');
             return;
         }
 
@@ -2526,39 +2629,25 @@
         
         const productoForm = document.getElementById('productoForm');
         const ventaForm = document.getElementById('ventaForm'); 
-        const gastoForm = document.getElementById('gastoForm'); // NUEVO: Obtener el formulario de gasto
+        const gastoForm = document.getElementById('gastoForm'); 
         
         const togglePriceSection = document.getElementById('togglePriceSection');
         const priceSectionContent = document.getElementById('priceSectionContent');
         
+        // Elementos de CRUD y Datalist
+        const encargadoInput = document.getElementById('encargadoInput');
+        const encargadoListOptions = document.getElementById('encargadoListOptions');
+        const deleteEncargadoWithPinBtn = document.getElementById('deleteEncargadoWithPinBtn');
+        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
+        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput');
+        const tipoPagoListOptions = document.getElementById('tipoPagoListOptions');
+        const deleteTipoPagoWithPinBtn = document.getElementById('deleteTipoPagoWithPinBtn');
         const canalVentaInput = document.getElementById('canalVentaInput');
-        const addNewCanalBtn = document.getElementById('addNewCanalBtn');
-        const canalListOptions = document.getElementById('canalListOptions');
         
         const metricSelect = document.getElementById('metricSelect'); 
-
         const ventaPinInput = document.getElementById('ventaPinInput');
         const checkVentaPinBtn = document.getElementById('checkVentaPinBtn');
         
-        // --- Elementos de Gasto ---
-        const encargadoInput = document.getElementById('encargadoInput');
-        const encargadoListOptions = document.getElementById('encargadoListOptions');
-        const addNewEncargadoBtn = document.getElementById('addNewEncargadoBtn');
-        const deleteEncargadoWithPinBtn = document.getElementById('deleteEncargadoWithPinBtn');
-        
-        const categoriaGastoInput = document.getElementById('categoriaGastoInput');
-        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
-        const addNewGastoCategoryBtn = document.getElementById('addNewGastoCategoryBtn');
-        
-        // --- Elementos de Venta ---
-        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput');
-        const tipoPagoListOptions = document.getElementById('tipoPagoListOptions');
-        const addNewTipoPagoBtn = document.getElementById('addNewTipoPagoBtn');
-        const deleteTipoPagoWithPinBtn = document.getElementById('deleteTipoPagoWithPinBtn');
-
-        
-        // Inicializar hora y conteo de clientes
-        updateClientCount(); 
         
         // --- Lógica de CRUD para Datalists (Inicialización) ---
         
@@ -2650,7 +2739,7 @@
         
         // Botón de la tarjeta Clientes: Abre el modal de historial
         openClientesModalTrigger.addEventListener('click', () => {
-            updateClientCount(); 
+            loadClientHistory(); // Cargar tabla de clientes real
             openModal(document.getElementById('clientesModal'));
         });
 
@@ -2717,6 +2806,8 @@
         });
         
         // Lógica para agregar un nuevo canal de venta manualmente (MANTENIDO)
+        const addNewCanalBtn = document.getElementById('addNewCanalBtn');
+        const canalListOptions = document.getElementById('canalListOptions');
         if (addNewCanalBtn && canalVentaInput && canalListOptions) {
             addNewCanalBtn.addEventListener('click', () => {
                 const canalName = canalVentaInput.value.trim();
