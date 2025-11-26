@@ -1,0 +1,3088 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Negocios</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Configuración de fuente base */
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Colores personalizados para las tarjetas */
+        .card-ventas-border { border-left: 5px solid #3b82f6; } /* Azul */
+        .card-ganancias-border { border-left: 5px solid #10b981; } /* Verde Esmeralda (Ganancias Positivas) */
+        .card-ganancias-border-red { border-left: 5px solid #ef4444; } /* Rojo (Ganancias Negativas) */
+        .card-finanzas-border { border-left: 5px solid #f59e0b; } /* Amarillo/Ámbar */
+        .card-inventario-border { border-left: 5px solid #f97316; } /* Naranja */
+
+        /* Estilo para el gráfico de barras simulado (solo estético) */
+        .chart-placeholder {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 1rem;
+            padding-bottom: 1rem;
+        }
+        .bar {
+            width: 30px;
+            border-radius: 9999px 9999px 0 0;
+            transition: height 0.3s ease;
+            height: 100%; /* Asegura que la barra toma la altura del padre flex */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 5px;
+        }
+        
+        /* Estilos del modal (oculto por defecto) */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Estilo para los botones de tipo de gasto (como chips) */
+        .gasto-chip {
+            @apply px-4 py-2 text-sm font-medium rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition cursor-pointer;
+        }
+
+        /* Estilo para el input de Gasto Total que se ve resaltado */
+        .input-gasto-total {
+            @apply border-blue-400 focus:border-blue-600 focus:ring-blue-600;
+        }
+
+        /* Estilo para el background de inputs en modals */
+        .input-bg-blue {
+            @apply bg-blue-50/70;
+        }
+        
+        /* Estilo para los meses de la tabla de Ganancias */
+        .ganancias-mes-celda {
+            @apply px-3 py-3 text-sm font-medium text-blue-600 cursor-pointer hover:bg-gray-100 transition rounded-lg;
+        }
+        
+        /* Estilo para el menú desplegable de "Otra Información" en Nueva Venta */
+        .details-summary {
+            cursor: pointer;
+            list-style: none; /* Oculta el marcador por defecto */
+        }
+        .details-summary::-webkit-details-marker {
+            display: none; /* Oculta el marcador en WebKit */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Navbar Superior -->
+    <nav class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Sección Izquierda (Logo/INICIO) -->
+                <div class="flex items-center space-x-6">
+                    <span class="text-xl font-bold text-gray-800">INICIO</span>
+                    <div class="flex items-center space-x-2 text-gray-500">
+                        <i class="fas fa-info-circle hover:text-blue-500 cursor-pointer text-lg"></i>
+                        <i class="fas fa-exclamation-circle hover:text-red-500 cursor-pointer text-lg"></i>
+                    </div>
+                </div>
+
+                <!-- Sección Derecha (Iconos de Usuario y Acciones) -->
+                <div class="flex items-center space-x-4 text-gray-500">
+                    <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <!-- Botón de Instalar App (NUEVO) -->
+                    <button id="installAppBtn" class="hover:text-gray-800 cursor-pointer text-lg transition" title="Instalar Aplicación">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <!-- Icono de Notificaciones -->
+                    <i class="fas fa-bell hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <!-- Botón de Perfil/Login -->
+                    <button id="openProfileModalBtn" class="relative group cursor-pointer p-1 -m-1">
+                        <i class="fas fa-user-circle text-2xl text-gray-500 hover:text-gray-800"></i>
+                        <i class="fas fa-caret-down text-sm absolute bottom-0 right-0"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal del Dashboard -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- CABECERA CON FECHA Y HORA ACTUAL -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+                <i class="fas fa-calendar-alt text-blue-500 mr-3"></i> Dashboard de Gestión
+            </h1>
+            <div class="text-right mt-2 sm:mt-0">
+                <p id="currentDateDisplay" class="text-lg font-medium text-blue-600">--/--/----</p>
+                <p id="currentTimeDisplay" class="text-sm text-gray-500">--:--:--</p>
+            </div>
+        </div>
+        <!-- FIN CABECERA CON FECHA Y HORA ACTUAL -->
+
+        <!-- Fila de Tarjetas de Acción Rápida (Ver...) - 5 COLUMNAS EN LG -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+            
+            <!-- Tarjeta 1: Ver Productos -->
+            <button id="openProductoModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-tshirt text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Productos</span>
+            </button>
+            <!-- Tarjeta 2: Ver Ventas (AHORA ABRE EL HISTORIAL DE TRANSACCIONES) -->
+            <button id="openVerVentasLink" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-blue-100 text-blue-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Ventas</span>
+                <!-- NUEVO: Contador de Ventas Diarias -->
+                <p class="text-xs text-gray-500 mt-1">Hoy: <span id="totalDailySalesCount">$0.00</span></p>
+            </button>
+            <!-- Tarjeta 3: Ver Gastos (AHORA ABRE EL HISTORIAL DE GASTOS) -->
+            <button id="openGananciasModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-green-100 text-green-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-calculator text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Gastos</span>
+                <!-- NUEVO: Contador de Gastos Diarios -->
+                <p class="text-xs text-gray-500 mt-1">Hoy: <span id="totalDailyExpensesCount">$0.00</span></p>
+            </button>
+            <!-- Tarjeta 4: Ver Inventario -->
+            <button id="openInventarioModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-orange-100 text-orange-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-warehouse text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Inventario</span>
+            </button>
+            
+            <!-- Tarjeta 5: Ver Clientes -->
+            <button id="openClientesModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+                <div class="bg-indigo-100 text-indigo-600 p-3 rounded-xl mb-2">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">Ver Clientes</span>
+                <p class="text-xs text-gray-500 mt-1"><span id="totalClientsCount">0</span> clientes totales</p>
+            </button>
+        </div>
+        
+        <!-- Fila de Botones de Acción (+ Producto, + Venta, + Gasto) -->
+        <div class="flex flex-wrap gap-3 mb-8">
+            <button id="openProductoModalTrigger" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                <i class="fas fa-plus mr-2"></i>
+                Producto
+            </button>
+            <!-- Botón de Venta que abre el modal directamente sin PIN (MODIFICADO) -->
+            <button id="openVentaModalDirect" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                <i class="fas fa-plus mr-2"></i>
+                Venta
+            </button>
+            <!-- Botón de Gasto que abre el modal -->
+            <button id="openGastoModal" class="flex-1 min-w-[150px] flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-blue-500 hover:bg-blue-600 transition">
+                <i class="fas fa-plus mr-2"></i>
+                Gasto
+            </button>
+        </div>
+
+        <!-- Fila de Filtros (Mes y Año) -->
+        <div class="flex justify-end mb-8 space-x-3">
+            <div class="relative">
+                <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
+                    <option>Enero</option>
+                    <option>Febrero</option>
+                    <option>Marzo</option>
+                    <option>Abril</option>
+                    <option>Mayo</option>
+                    <option>Junio</option>
+                    <option>Julio</option>
+                    <option>Agosto</option>
+                    <option>Septiembre</option>
+                    <option>Octubre</option>
+                    <option>Noviembre</option>
+                    <option>Diciembre</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+            <div class="relative">
+                <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm">
+                    <option>2025</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila de Tarjetas de Métricas Principales -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            
+            <!-- Tarjeta 1: Ventas - Métrica Protegida (REQUIERE PIN) -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-ventas-border transition hover:shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-blue-100 text-blue-600 p-3 rounded-xl">
+                            <i class="fas fa-cloud-download-alt text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ventas</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
+                <h4 class="text-lg font-medium text-gray-500">Ventas / Ticket Promedio</h4>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-3xl font-bold text-blue-600">
+                        <span id="ventasDisplayValue" class="hidden">$0.00 / $0.00</span>
+                        <span id="ventasProtectedValue">******</span>
+                    </p>
+                    <button type="button" data-auth-for="revealVentas" class="text-blue-500 text-sm font-semibold hover:text-blue-700 transition">
+                        <i id="ventasEyeIcon" class="fas fa-eye"></i> Ver
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500"><span id="totalProductsCount">0</span> productos en inventario</p>
+                <p class="text-sm text-gray-500">Ventas de hoy: $<span id="dailySalesSummaryValue">0</span></p>
+            </div>
+
+            <!-- Tarjeta 2: Ganancias - Métrica Protegida (AHORA REAL: Ventas - Gastos) -->
+            <div id="gananciasCard" class="bg-white rounded-xl shadow-lg p-6 card-ganancias-border transition hover:shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-green-100 text-green-600 p-3 rounded-xl">
+                            <i class="fas fa-chart-line text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Ganancias</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
+                <h4 class="text-lg font-medium text-gray-500">Resultados Netos del mes</h4>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-3xl font-bold text-green-600">
+                        <span id="gananciasDisplayValue" class="hidden">$0.00</span>
+                        <span id="gananciasProtectedValue">******</span>
+                    </p>
+                    <button type="button" data-auth-for="revealGanancias" class="text-green-500 text-sm font-semibold hover:text-green-700 transition">
+                        <i id="gananciasEyeIcon" class="fas fa-eye"></i> Ver
+                    </button>
+                </div>
+                <div class="h-4"></div> <!-- Espacio ajustado para alineación visual -->
+            </div>
+
+            <!-- Tarjeta 3: Finanzas (Caja Protegida) -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-finanzas-border transition hover:shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
+                            <i class="fas fa-dollar-sign text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Finanzas</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">DEUDAS Y CUENTAS</p>
+                <!-- CAMBIO: Saldo -> Caja, y métrica protegida -->
+                <h4 class="text-lg font-medium text-gray-500">Caja <i class="fas fa-circle text-xs text-green-500"></i></h4>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-3xl font-bold text-yellow-600">
+                        <span id="cajaDisplayValue" class="hidden">$12,000.00</span> 
+                        <span id="cajaProtectedValue">******</span>
+                    </p>
+                    <button type="button" data-auth-for="revealCaja" class="text-yellow-500 text-sm font-semibold hover:text-yellow-700 transition">
+                        <i id="cajaEyeIcon" class="fas fa-eye"></i> Ver
+                    </button>
+                </div>
+                <div class="h-4"></div>
+            </div>
+
+            <!-- Tarjeta 4: Inventario - Abre el historial de productos (Unidades) -->
+            <button id="openInventarioModalTrigger" class="bg-white rounded-xl shadow-lg p-6 card-inventario-border transition hover:shadow-xl text-left">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-orange-100 text-orange-600 p-3 rounded-xl">
+                            <i class="fas fa-cube text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-600 uppercase tracking-wider">Inventario</h3>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm cursor-pointer"></i>
+                </div>
+                <p class="text-sm text-gray-400 mb-2">UNIDADES</p>
+                <h4 class="text-lg font-medium text-gray-500">Stock Total</h4>
+                <!-- ID AÑADIDO PARA ACTUALIZAR CON EL STOCK REAL -->
+                <p class="text-3xl font-bold text-orange-600 mb-2" id="stockTotalDisplay">0</p>
+                <p class="text-sm text-gray-500">Nacionales: 300 / Importados: 150</p>
+            </button>
+
+        </div>
+        
+        <!-- Sección de Gráficos de Métricas de Negocios (NUEVO) -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-chart-area text-blue-500 mr-3"></i> Métrica de Desempeño vs Tiempo
+                </h2>
+                
+                <!-- Menú Desplegable de Métricas (NUEVO) -->
+                <div class="relative mt-3 sm:mt-0">
+                    <label for="metricSelect" class="text-sm font-medium text-gray-700 mr-2 hidden sm:inline">Seleccionar Métrica:</label>
+                    <select id="metricSelect" class="block appearance-none bg-blue-50 border border-blue-300 text-gray-800 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm font-semibold">
+                        <option value="ventas">Ventas ($)</option>
+                        <option value="gastos">Gastos ($)</option>
+                        <option value="clientes">Clientes (Total)</option>
+                        <option value="inventario">Inventario (Unidades)</option>
+                        <option value="caja">Caja (Saldo)</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 top-1/2 transform -translate-y-1/2">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Placeholder del Gráfico (Ventas vs. Tiempo) -->
+            <div id="metricChartPlaceholder" class="h-64 flex justify-center items-center relative">
+                <div class="chart-placeholder w-full max-w-5xl px-4">
+                    <h3 class="text-lg font-bold text-gray-600 mb-4">Tendencia: Ventas vs. Últimos 6 Meses</h3>
+                    <div class="flex items-end h-48 gap-4 border-l border-b border-gray-300 w-full pl-2 pb-2">
+                        <!-- Barras simuladas de ejemplo -->
+                        <div class="flex-1 text-center text-xs text-gray-500">
+                            <div class="bar bg-blue-500 shadow-md" style="height: 40%;"><span class="block text-xs text-white">40%</span></div>
+                            Ago
+                        </div>
+                        <div class="flex-1 text-center text-xs text-gray-500">
+                            <div class="bar bg-blue-500 shadow-md" style="height: 55%;"><span class="block text-xs text-white">55%</span></div>
+                            Sep
+                        </div>
+                        <div class="flex-1 text-center text-xs text-gray-500">
+                            <div class="bar bg-blue-500 shadow-md" style="height: 70%;"><span class="block text-xs text-white">70%</span></div>
+                            Oct
+                        </div>
+                        <div class="flex-1 text-center text-xs text-gray-500">
+                            <div class="bar bg-blue-500 shadow-md" style="height: 90%;"><span class="block text-xs text-white">90%</span></div>
+                            Nov
+                        </div>
+                        <div class="flex-1 text-center text-xs text-gray-500">
+                            <div class="bar bg-blue-500 shadow-md" style="height: 60%;"><span class="block text-xs text-white">60%</span></div>
+                            Dic
+                        </div>
+                        <div class="flex-1 text-center text-xs text-gray-500">
+                            <div class="bar bg-blue-500 shadow-md" style="height: 75%;"><span class="block text-xs text-white">75%</span></div>
+                            Ene
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- FIN SECCIÓN DE GRÁFICOS -->
+
+    </main>
+
+    <!-- Botón flotante de WhatsApp/Ayuda -->
+    <button class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-all">
+        <i class="fab fa-whatsapp text-2xl"></i>
+    </button>
+    
+    <!-- MODAL DE PERFIL Y AUTENTICACIÓN -->
+    <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-xl font-bold text-gray-800">Acceso / Perfil de Usuario</h2>
+                <button data-close-modal="profileModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Modal: Opciones de Login -->
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 font-semibold mb-3">ID de Sesión (para compartir):</p>
+                <p id="currentUserIdDisplay" class="text-xs text-gray-500 break-all bg-gray-100 p-2 rounded-lg">Cargando...</p>
+
+                <!-- Estado del Usuario (Real) -->
+                <div class="pt-4 border-t mt-4 space-y-3">
+                    <p class="text-sm font-medium text-gray-700">Estado Actual: <span id="userStatus" class="font-bold text-red-500">Desconectado</span></p>
+                    <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-xl shadow-sm text-white bg-red-500 hover:bg-red-600 transition disabled:opacity-50" disabled>
+                        <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL PERFIL Y AUTENTICACIÓN -->
+
+    <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles y la eliminación de encargados/tipo de pago -->
+    <div id="authModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 id="authModalTitle" class="text-xl font-bold text-gray-800">Acceso Restringido</h2>
+                <button data-close-modal="authModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Formulario de PIN -->
+            <div class="p-6 space-y-4 text-center">
+                <p id="authModalMessage" class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos).</p>
+                <input type="password" id="ventaPinInput" maxlength="4" placeholder="••••" class="text-center text-2xl tracking-widest mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                <p id="pinError" class="text-sm text-red-500 hidden font-medium">PIN Incorrecto. Intente de nuevo.</p>
+            </div>
+
+            <!-- Pie de página del Modal (Acciones de Intentar) -->
+            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="authModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cancelar
+                </button>
+                <button id="checkVentaPinBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+                    Acceder
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL AUTENTICACIÓN -->
+
+    <!-- MODAL DE ESTADOS MENSUALES (Ganancias) - MANTENIDO COMO RESUMEN MENSUAL SIMULADO -->
+    <div id="gananciasModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <div class="flex items-center space-x-3">
+                    <h2 class="text-2xl font-bold text-gray-800">ESTADOS MENSUALES (Resumen)</h2>
+                    <i class="fas fa-info-circle text-xl text-green-500 cursor-pointer"></i>
+                </div>
+                <!-- NUEVO BOTÓN GEMINI -->
+                <button id="openAnalisisModalBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition shadow-md flex items-center">
+                    <i class="fas fa-magic mr-2"></i> Análisis Estratégico ✨
+                </button>
+                <!-- FIN NUEVO BOTÓN GEMINI -->
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-search hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <i class="fas fa-plus-circle hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <i class="fas fa-user-circle hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <i class="fas fa-caret-down hover:text-gray-800 cursor-pointer text-lg"></i>
+                    <button data-close-modal="gananciasModal" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navegación de Pestañas y Contenido de la Tabla (Sin cambios) -->
+            <div class="px-6 border-b">
+                <nav class="flex space-x-8">
+                    <button class="py-4 border-b-2 border-blue-600 text-blue-600 font-medium text-sm transition">De Gestión</button>
+                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Financieros</button>
+                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Flujo de Caja</button>
+                    <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm transition">Finanzas de Socios</button>
+                </nav>
+            </div>
+            
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-6 max-w-4xl">
+                    Incluyen datos estadísticos dentro de los costos, cómo los % de impuestos registrados en Preferencias y en cada venta, costos financieros, comisiones de ventas y cobros registrados en las ventas para obtener una ganancia más representativa.
+                </p>
+
+                <div class="flex flex-wrap items-center space-x-4 mb-6">
+                    <div class="relative group">
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm hover:bg-gray-50 text-sm font-medium">
+                            Columnas <i class="fas fa-chevron-down text-xs ml-1"></i>
+                        </button>
+                        <div class="absolute z-20 w-56 mt-2 origin-top-left bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 hidden group-hover:block p-2">
+                            <div class="flex justify-between items-center p-2 text-sm font-semibold text-gray-800 border-b mb-1">
+                                <span>Mostrar/Ocultar columnas</span>
+                                <button class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Enero</span>
+                                </label>
+                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Febrero</span>
+                                </label>
+                                <label class="flex items-center p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                                    <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-600 border-gray-300 rounded mr-3"><span class="flex-1">Total</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <label class="text-sm font-medium text-gray-700 mr-2">Canal de Venta:</label>
+                        <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
+                            <option>Todos</option>
+                            <option>Showroom</option>
+                            <option>Mi Tienda Online</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <label class="text-sm font-medium text-gray-700 mr-2">Año:</label>
+                        <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm text-sm">
+                            <option>2025</option>
+                            <option>2024</option>
+                            <option>2023</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50">Concepto <i class="fas fa-sort text-gray-300 ml-1"></i></th>
+                                <th data-month="Enero" class="ganancias-mes-celda">Enero</th>
+                                <th data-month="Febrero" class="ganancias-mes-celda">Febrero</th>
+                                <th data-month="Marzo" class="ganancias-mes-celda">Marzo</th>
+                                <th data-month="Abril" class="ganancias-mes-celda">Abril</th>
+                                <th data-month="Mayo" class="ganancias-mes-celda">Mayo</th>
+                                <th data-month="Junio" class="ganancias-mes-celda">Junio</th>
+                                <th data-month="Julio" class="ganancias-mes-celda">Julio</th>
+                                <th data-month="Agosto" class="ganancias-mes-celda">Agosto</th>
+                                <th data-month="Septiembre" class="ganancias-mes-celda">Septiembre</th>
+                                <th data-month="Octubre" class="ganancias-mes-celda">Octubre</th>
+                                <th data-month="Noviembre" class="ganancias-mes-celda">Noviembre</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total <i class="fas fa-sort text-gray-300 ml-1"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="14" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Ningún dato disponible</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL ESTADOS MENSUALES -->
+
+    <!-- MODAL DE ANÁLISIS ESTRATÉGICO -->
+    <div id="analisisModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-purple-600 flex items-center">
+                    <i class="fas fa-chart-pie mr-3"></i> Diagnóstico y Estrategia AI
+                </h2>
+                <button data-close-modal="analisisModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Análisis -->
+            <div class="p-6">
+                <div id="analisisContent">
+                    <!-- Contenido se llenará aquí, incluyendo el spinner de carga -->
+                    <div class="flex justify-center items-center h-40">
+                        <div id="loadingSpinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mr-3"></div>
+                        <p class="text-lg font-medium text-gray-600">Analizando métricas y formulando estrategias...</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL ANÁLISIS ESTRATÉGICO -->
+
+    <!-- MODAL DE HISTORIAL DE VENTAS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO -->
+    <div id="salesDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-blue-600 flex items-center">
+                    <i class="fas fa-history mr-3"></i> Historial de Ventas
+                </h2>
+                <button data-close-modal="salesDetailModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Cuerpo del Historial de Ventas -->
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">Detalle de todas las transacciones de ventas registradas, agrupadas por mes.</p>
+                
+                <!-- NUEVOS CONTADORES DE VENTA (MES Y AÑO) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50/70 rounded-xl border border-blue-200">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Ventas del Mes:</p>
+                        <p id="totalMonthlySalesDisplay" class="text-xl font-bold text-blue-700">$0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Ventas del Año:</p>
+                        <p id="totalYearlySalesDisplay" class="text-xl font-bold text-blue-700">$0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Ventas Registradas:</p>
+                        <p class="text-xl font-bold text-gray-700" id="totalSalesCountValue">0</p>
+                    </div>
+                </div>
+                <!-- FIN NUEVOS CONTADORES -->
+
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente / Canal</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Cobrado ($)</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Pago</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesHistoryTableContent" class="bg-white divide-y divide-gray-100">
+                            <!-- Los datos se cargarán aquí por JS -->
+                            <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de ventas...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Pie del Modal -->
+            <div class="p-6 border-t flex justify-end sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="salesDetailModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL HISTORIAL DE VENTAS -->
+
+    <!-- MODAL DE HISTORIAL DE GASTOS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO -->
+    <div id="expensesDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-green-600 flex items-center">
+                    <i class="fas fa-receipt mr-3"></i> Historial de Gastos
+                </h2>
+                <button data-close-modal="expensesDetailModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Cuerpo del Historial de Gastos -->
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">Detalle de todos los gastos registrados, agrupados por mes.</p>
+                
+                <!-- NUEVOS CONTADORES DE GASTO (MES Y AÑO) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-green-50/70 rounded-xl border border-green-200">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Gastos del Mes:</p>
+                        <p id="totalMonthlyExpensesDisplay" class="text-xl font-bold text-red-700">-$0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Gastos del Año:</p>
+                        <p id="totalYearlyExpensesDisplay" class="text-xl font-bold text-red-700">-$0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Gastos Registrados:</p>
+                        <p class="text-xl font-bold text-gray-700" id="totalExpensesCountValue">0</p>
+                    </div>
+                </div>
+                <!-- FIN NUEVOS CONTADORES -->
+
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría / Descripción</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Gasto ($)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encargado</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expensesHistoryTableContent" class="bg-white divide-y divide-gray-100">
+                            <!-- Los datos se cargarán aquí por JS -->
+                            <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de gastos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Pie del Modal -->
+            <div class="p-6 border-t flex justify-end sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="expensesDetailModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL HISTORIAL DE GASTOS -->
+
+    <!-- MODAL DE HISTORIAL DE INVENTARIO (Ahora con datos reales de Firestore) -->
+    <div id="inventarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-boxes-stacked mr-3 text-orange-600"></i> Historial y Stock de Productos
+                </h2>
+                <button data-close-modal="inventarioModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Inventario (Tabla de Firestore) -->
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                    <div class="relative">
+                        <input type="text" placeholder="Buscar producto o código..." class="block w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2 text-sm input-bg-blue border">
+                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <button class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-md flex items-center">
+                        <i class="fas fa-file-export mr-2"></i> Exportar
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                <!-- COLUMNA 'CÓDIGO' ELIMINADA -->
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Promedio ($)</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Venta ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventarioTablaContenido" class="bg-white divide-y divide-gray-100">
+                            <!-- Los datos se cargarán aquí por JS desde Firestore -->
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando inventario...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL HISTORIAL DE INVENTARIO -->
+
+    <!-- MODAL DE HISTORIAL DE CLIENTES (ACTUALIZADO: Ahora usa datos reales de Firestore) -->
+    <div id="clientesModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-users mr-3 text-indigo-600"></i> Historial y Listado de Clientes
+                </h2>
+                <button data-close-modal="clientesModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Listado de Clientes (Tabla Real de Firestore) -->
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                    <div class="relative">
+                        <input type="text" placeholder="Buscar cliente por nombre..." class="block w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm input-bg-blue border">
+                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <button class="px-4 py-2 text-sm font-medium text-white bg-indigo-500 rounded-xl hover:bg-indigo-600 transition shadow-md flex items-center">
+                        <i class="fas fa-file-export mr-2"></i> Exportar Clientes
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Cliente</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Compras</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Última Venta</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesTablaContenido" class="bg-white divide-y divide-gray-100">
+                            <!-- Los datos se cargarán aquí por JS desde Firestore -->
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">
+                                    Cargando clientes...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL HISTORIAL DE CLIENTES -->
+
+    <!-- MODAL DE DETALLE DIARIO (Se abre al hacer clic en un mes de la tabla) -->
+    <div id="detalleDiarioModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 id="detalleDiarioTitulo" class="text-xl font-bold text-gray-800">Historial Diario de Ganancias (Mes)</h2>
+                <button data-close-modal="detalleDiarioModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Detalle Diario (Tabla Simulada) -->
+            <div class="p-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ganancia Neta ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detalleDiarioContenido" class="bg-white divide-y divide-gray-100">
+                            <!-- Los datos se cargarán aquí por JS -->
+                        </tbody>
+                        <tfoot class="bg-gray-100">
+                            <tr>
+                                <td class="px-6 py-3 text-left text-sm font-semibold text-gray-800">TOTAL MES</td>
+                                <td id="detalleDiarioTotal" class="px-6 py-3 text-right text-sm font-bold text-green-600">$1,500.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- FIN DEL MODAL DETALLE DIARIO -->
+
+    <!-- MODAL DE NUEVO PRODUCTO (Con despliegue opcional para precios) -->
+    <div id="productoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800">Nuevo Producto</h2>
+                <button data-close-modal="productoModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL DEL MODAL PRODUCTO (HISTORIAL Y FORMULARIO) -->
+            <div class="p-6 space-y-8">
+                
+                <!-- Historial de Productos Agregados -->
+                <div class="bg-gray-100 p-4 rounded-xl shadow-inner border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-700 mb-3 flex justify-between items-center">
+                        Historial de Últimos Productos
+                        <button id="verTodoHistorialBtn" class="text-blue-500 text-sm font-medium hover:underline">Ver todo</button>
+                    </h3>
+                    <ul id="historialProductosLista" class="text-sm space-y-2">
+                        <!-- Se llena con productos de Firestore en tiempo real -->
+                        <li class="text-gray-400 text-center py-2">Cargando historial...</li>
+                    </ul>
+                </div>
+                
+                <!-- FORMULARIO DE NUEVO PRODUCTO -->
+                <form id="productoForm" class="space-y-8">
+
+                    <!-- Bloque 1: Información Básica -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Información Básica </h3>
+
+                        <!-- Nombre -->
+                        <div class="mb-4">
+                            <label for="nombreProducto" class="block text-sm font-medium text-gray-700">Nombre *</label>
+                            <input type="text" id="nombreProducto" required placeholder="Nombre del Producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-4">
+                            <label for="descripcionProducto" class="block text-sm font-medium text-gray-700">Descripción - Optativo</label>
+                            <textarea id="descripcionProducto" rows="3" placeholder="Describa aquí el producto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
+                        </div>
+
+                        <!-- Cantidad Inicial (Stock) -->
+                        <div class="mb-4">
+                            <label for="stockProducto" class="block text-sm font-medium text-gray-700">Cantidad (Stock Inicial) *</label>
+                            <input type="number" id="stockProducto" required value="0" min="0" placeholder="Ej: 100" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border text-right">
+                        </div>
+
+                        <!-- Categoría -->
+                        <div class="mb-6">
+                            <label for="categoriaProducto" class="block text-sm font-medium text-gray-700">Categoría <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i> - Opt.</label>
+                            <div id="categorySelectGroup" class="flex items-center space-x-2 mt-1">
+                                <select id="categoriaProducto" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
+                                    <option>Ninguna</option>
+                                    <option>Ropa</option>
+                                    <option>Accesorios</option>
+                                    <option>Calzado</option>
+                                </select>
+                                <!-- Botón para eliminar la categoría seleccionada -->
+                                <button type="button" id="deleteCategoryBtn" disabled class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm disabled:bg-gray-400" title="Eliminar Categoría Seleccionada">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <!-- Botón para cambiar a modo de ingreso manual -->
+                                <button type="button" id="addCustomCategoryBtn" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Categoría Personalizada">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Nuevo campo para ingresar categoría personalizada (Inicialmente oculto) -->
+                            <div id="customCategoryInputGroup" class="mt-2 hidden flex items-center space-x-2">
+                                <input type="text" id="customCategoryInput" placeholder="Nombre de la nueva categoría" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 p-3 input-bg-blue border">
+                                <!-- Botón para guardar la categoría custom y seleccionarla -->
+                                <button type="button" id="saveCustomCategoryBtn" class="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition shadow-sm" title="Guardar Categoría">
+                                    <i class="fas fa-save"></i>
+                                </button>
+                                <!-- Botón para cancelar y volver a la selección -->
+                                <button type="button" id="cancelCustomCategoryBtn" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm" title="Cancelar">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bloque 2: PRECIO DE VENTA OPCIONAL (Desplegable) -->
+                    <div class="space-y-6">
+                        
+                        <!-- Botón/Encabezado para Desplegar la Sección de Precios -->
+                        <button type="button" id="togglePriceSection" class="w-full text-center py-3 bg-gray-100 rounded-xl text-lg font-bold text-blue-600 hover:bg-gray-200 transition shadow-md">
+                            <i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta
+                        </button>
+                        
+                        <!-- Contenido Oculto de Precio de Venta y Costo -->
+                        <div id="priceSectionContent" class="space-y-6 hidden">
+                            
+                            <!-- Header de Costo del Producto -->
+                            <div class="costo-header text-white p-4 rounded-xl text-center">
+                                <h4 class="text-lg font-light">COSTO DEL PRODUCTO</h4>
+                                <p id="costoProductoDisplay" class="text-3xl font-bold my-1">$0 <span class="text-base font-normal">(POR UNIDAD)</span></p>
+                            </div>
+
+                            <!-- Sección de Precio de Venta -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Precio de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></h3>
+                                <p class="text-sm text-gray-500 mb-4">Elija precios para su producto. Puede usar las técnicas de marcación sobre costos o margen sobre precio para calcular el mismo.</p>
+                                
+                                <!-- Actualizar Precios Checkbox -->
+                                <div class="flex items-center mb-6">
+                                    <input id="actualizarPrecios" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <label for="actualizarPrecios" class="ml-2 text-sm text-gray-700">Actualizar Precios <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <!-- Tarjeta 1: Precio Minorista -->
+                                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
+                                        <h4 class="font-semibold text-gray-800">Precio Minorista</h4>
+                                        <div class="grid grid-cols-5 gap-3 items-center">
+                                            <div>
+                                                <label class="block text-xs text-gray-500">Marcación %</label>
+                                                <input type="number" value="150.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500">Márgen %</label>
+                                                <input type="number" value="60" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                            </div>
+                                            <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </div>
+                                            <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
+                                                <p class="text-xs font-light">Calculado</p>
+                                                <p class="text-xl font-bold">$0</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Precio Minorista Elegido -->
+                                        <div class="pt-2">
+                                            <label class="block text-sm font-medium text-gray-700">Precio Minorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                            <div class="flex items-center mt-1 space-x-2">
+                                                <input type="number" id="priceRetailInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                                                <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
+                                                    Actualizar %
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Tarjeta 2: Precio Mayorista -->
+                                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
+                                        <h4 class="font-semibold text-gray-800">Precio Mayorista</h4>
+                                        <div class="grid grid-cols-5 gap-3 items-center">
+                                            <div>
+                                                <label class="block text-xs text-gray-500">Marcación %</label>
+                                                <input type="number" value="50.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500">Márgen %</label>
+                                                <input type="number" value="33.33" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm input-bg-blue border text-center">
+                                            </div>
+                                            <div class="col-span-1 text-center text-green-500 text-2xl font-bold">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </div>
+                                            <div class="col-span-2 calculated-price text-white p-3 rounded-xl text-center">
+                                                <p class="text-xs font-light">Calculado</p>
+                                                <p class="text-xl font-bold">$0</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Precio Mayorista Elegido -->
+                                        <div class="pt-2">
+                                            <label class="block text-sm font-medium text-gray-700">Precio Mayorista Elegido ($) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                            <div class="flex items-center mt-1 space-x-2">
+                                                <input type="number" id="priceWholesaleInput" placeholder="Ingrese el Precio de Venta (Ej: 799)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                                                <button type="button" class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition whitespace-nowrap">
+                                                    Actualizar %
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Pie de página del Modal (Acciones de Guardar) -->
+            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="productoModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cancelar
+                </button>
+                <button form="productoForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    Guardar Producto
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL PRODUCTO -->
+
+    <!-- MODAL DE NUEVA VENTA (Con despliegue para "Otra Información") -->
+    <div id="ventaModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800">Nueva Venta</h2>
+                <button data-close-modal="ventaModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Formulario de Venta -->
+            <form id="ventaForm" class="p-6 space-y-8">
+
+                <!-- Bloque 1: Información Principal (Fecha, Cliente, MONTO COBRADO) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Tarjeta de Datos de la Venta (Fecha, Cliente, Monto Cobrado) -->
+                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <!-- Fecha -->
+                        <div class="mb-4">
+                            <label for="fechaVenta" class="block text-sm font-medium text-gray-700">Fecha</label>
+                            <input type="date" id="fechaVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        </div>
+                        <!-- Cliente (AHORA CON DATALIST REAL DE FIRESTORE) -->
+                        <div class="mb-4">
+                            <label for="clienteVentaInput" class="block text-sm font-medium text-gray-700">Cliente <i class="fas fa-pen-to-square text-xs text-blue-500 ml-1 cursor-pointer"></i></label>
+                            <div class="flex items-center mt-1">
+                                <input type="text" id="clienteVentaInput" list="clientListOptions" placeholder="Escriba o seleccione un cliente..." class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
+                                
+                                <datalist id="clientListOptions">
+                                    <!-- Opciones cargadas desde Firestore por JS -->
+                                </datalist>
+                                
+                                <!-- Botón para agregar (Eliminado: se agrega al guardar la venta si es nuevo) -->
+                            </div>
+                        </div>
+                        <!-- Monto Cobrado (MOVIDO AQUÍ) -->
+                        <div>
+                            <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
+                            <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right" required>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de Descuentos/Canal -->
+                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <!-- Descuento Gral -->
+                        <div class="mb-6">
+                            <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
+                            <input type="text" id="descuentoVenta" value="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
+                        </div>
+                        
+                        <!-- Canal de Venta (Manual Entry) -->
+                        <div>
+                            <label for="canalVentaInput" class="block text-sm font-medium text-gray-700">Canal de Venta <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                            <div class="flex items-center mt-1">
+                                <input type="text" id="canalVentaInput" list="canalListOptions" placeholder="Escriba o seleccione un canal..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
+                                
+                                <datalist id="canalListOptions">
+                                    <option value="Ninguno">
+                                    <option value="Showroom">
+                                    <option value="Feria Y Eventos">
+                                    <option value="Mi Local">
+                                    <option value="Mi Tienda Online">
+                                    <option value="Facebook / Instagram">
+                                    <option value="Mercadolibre">
+                                </datalist>
+                                
+                                <button type="button" id="addNewCanalBtn" class="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition" title="Guardar como nuevo canal de venta (simulado)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de Estado/Entrega -->
+                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <!-- Estado -->
+                        <div class="mb-4">
+                            <label for="estadoVenta" class="block text-sm font-medium text-gray-700">Estado - Optativo</label>
+                            <select id="estadoVenta" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                <option>Seleccione</option>
+                                <option>Sin Estado</option>
+                                <option>Pedido</option>
+                                <option>Compra Pendiente</option>
+                                <option>En Producción</option>
+                                <option>Para Entregar</option>
+                                <option>Despachado</option>
+                                <option>Entregado</option>
+                                <option>Cerrado</option>
+                            </select>
+                        </div>
+                        <!-- Fecha de Entrega -->
+                        <div>
+                            <label for="fechaEntrega" class="block text-sm font-medium text-gray-700">Fecha de Entrega - Optativo</label>
+                            <input type="date" id="fechaEntrega" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloque 2: Cobro y Tipo de Pago (RESTRUCTURADO) -->
+                <div class="border-t pt-8 space-y-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalle de Cobro</h3>
+
+                    <!-- TIPO DE PAGO (NUEVO CRUD CON DATALIST) -->
+                    <div>
+                        <label for="tipoPagoVentaInput" class="block text-sm font-medium text-gray-700">Categoría de Tipo de Pago</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="text" id="tipoPagoVentaInput" list="tipoPagoListOptions" placeholder="Escriba o seleccione un tipo de pago..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
+                            
+                            <datalist id="tipoPagoListOptions">
+                                <!-- Las opciones se agregarán dinámicamente -->
+                                <option value="Efectivo"></option>
+                                <option value="Transferencia Bancaria"></option>
+                                <option value="Tarjeta de Crédito"></option>
+                            </datalist>
+
+                            <!-- Botón para eliminar (Requiere PIN) -->
+                            <button type="button" id="deleteTipoPagoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Tipo de Pago (Requiere PIN)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                            <!-- Botón para agregar -->
+                            <button type="button" id="addNewTipoPagoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Tipo de Pago">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- FIN TIPO DE PAGO -->
+                    
+                    <!-- Opción de recordar cobro (Mantener) -->
+                    <div class="flex items-center pt-2">
+                        <input id="recordarCobrado" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="recordarCobrado" class="ml-2 text-sm text-gray-700">
+                            Recordar Cobrado <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i><br>
+                            <span class="text-xs text-gray-500">Para la próxima venta.</span>
+                        </label>
+                    </div>
+                </div>
+
+
+                <!-- Bloque 3: Otra Información (Desplegable con flecha) -->
+                <details id="otherInfoDetails" class="border-t pt-8">
+                    <!-- Resumen del Despliegue -->
+                    <summary class="details-summary text-xl font-semibold text-gray-700 mb-4 flex items-center justify-between">
+                        Otra Información
+                        <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
+                    </summary>
+
+                    <!-- Contenido del Despliegue -->
+                    <div class="pt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <!-- Tipo de Venta -->
+                            <div>
+                                <label for="tipoVenta" class="block text-sm font-medium text-gray-700">Tipo de Venta</label>
+                                <select id="tipoVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                    <option>Venta Común</option>
+                                    <option>Venta Mayorista</option>
+                                </select>
+                            </div>
+                            <!-- Vendedor -->
+                            <div>
+                                <label for="vendedorVenta" class="block text-sm font-medium text-gray-700">Vendedor - Optativo <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                <select id="vendedorVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                    <option>Seleccione</option>
+                                    <option>Vendedor 1</option>
+                                    <option>Vendedor 2</option>
+                                </select>
+                            </div>
+                            <!-- FORMA DE PAGO ORIGINAL ELIMINADA (REEMPLAZADA POR TIPO DE PAGO ARRIBA) -->
+                            <!-- Forma de Envío -->
+                            <div>
+                                <label for="formaEnvio" class="block text-sm font-medium text-gray-700">Forma de Envío - Optativo</label>
+                                <select id="formaEnvio" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                    <option>Seleccione</option>
+                                    <option>Retira en Tienda</option>
+                                    <option>Correo Argentino</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Nro. de Factura -->
+                        <div class="mb-6">
+                            <label for="nroFactura" class="block text-sm font-medium text-gray-700">Nro. de Factura - Optativo</label>
+                            <input type="text" id="nroFactura" placeholder="X-XXXX-XXXXXXXX" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                        </div>
+
+                        <!-- Notas (MOSTRADA EN EL HISTORIAL) -->
+                        <div>
+                            <label for="notasVenta" class="block text-sm font-medium text-gray-700">Notas - Optativo</label>
+                            <textarea id="notasVenta" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border" placeholder="Escribe aquí cualquier nota importante sobre la venta."></textarea>
+                        </div>
+                    </div>
+                </details>
+
+            </form>
+
+            <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
+            <div class="p-6 border-t flex justify-end space-x-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button data-close-modal="ventaModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Cancelar
+                </button>
+                <button form="ventaForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+                    Guardar Venta
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL VENTA -->
+
+
+    <!-- MODAL DE AGREGAR GASTO (MODIFICADO) -->
+    <div id="gastoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-gray-800">Agregar Gasto</h2>
+                <button data-close-modal="gastoModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Formulario de Gasto (AÑADIDO ID) -->
+            <form id="gastoForm" class="p-6 space-y-6">
+
+                <!-- Fila de Fecha -->
+                <div class="flex flex-col sm:flex-row justify-start items-start sm:items-center">
+                    <div class="mb-4 sm:mb-0">
+                        <label for="fechaGasto" class="block text-sm font-medium text-gray-700">Fecha (Opt.)</label>
+                        <input type="date" id="fechaGasto" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
+                    </div>
+                </div>
+
+                <!-- Gasto Total y Categoría (MODIFICADO CON DATALIST) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="gastoTotal" class="block text-sm font-medium text-gray-700">Gasto Total ($)</label>
+                        <input type="number" id="gastoTotal" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 p-3 border input-gasto-total" required>
+                    </div>
+                    
+                    <!-- CATEGORÍA CON DATALIST Y BOTÓN DE ADD (ESTILO VENTA) -->
+                    <div>
+                        <label for="categoriaGastoInput" class="block text-sm font-medium text-gray-700">Categoría</label> 
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="text" id="categoriaGastoInput" list="categoriaGastoListOptions" placeholder="Escriba o seleccione una categoría..." class="block flex-1 rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue">
+                            
+                            <datalist id="categoriaGastoListOptions">
+                                <!-- Las opciones se agregarán dinámicamente -->
+                            </datalist>
+
+                            <button type="button" id="addNewGastoCategoryBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nueva Categoría">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- FIN CATEGORÍA CON DATALIST -->
+                </div>
+
+                <!-- ENCARGADO DE TURNO (NUEVO DISEÑO CON DATALIST Y ELIMINAR CON PIN) -->
+                <div>
+                    <label for="encargadoInput" class="block text-sm font-medium text-gray-700">Encargado de Turno</label>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <input type="text" id="encargadoInput" list="encargadoListOptions" placeholder="Escriba o seleccione un encargado..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
+                        
+                        <datalist id="encargadoListOptions">
+                            <!-- Las opciones se agregarán dinámicamente -->
+                        </datalist>
+
+                        <!-- Botón para eliminar (Requiere PIN) -->
+                        <button type="button" id="deleteEncargadoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Encargado (Requiere PIN)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        
+                        <!-- Botón para agregar -->
+                        <button type="button" id="addNewEncargadoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Encargado">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- FIN ENCARGADO DE TURNO -->
+                
+                <!-- CAMPO DE DESCRIPCIÓN -->
+                <div>
+                    <label for="descripcionGastoTextArea" class="block text-sm font-medium text-gray-700">Descripción (Opt.)</label>
+                    <textarea id="descripcionGastoTextArea" rows="3" placeholder="Detalles o notas adicionales sobre el gasto..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
+                </div>
+
+                <!-- Pagado Checkbox -->
+                <div class="flex items-center pt-2">
+                    <input id="pagadoGasto" type="checkbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <label for="pagadoGasto" class="ml-2 text-base font-medium text-gray-800">
+                        Pagado
+                    </label>
+                </div>
+
+            </form>
+
+            <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
+            <div class="p-6 border-t flex justify-end flex-wrap gap-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
+                <button form="gastoForm" type="submit" data-action="saveAndClose" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    Guardar
+                </button>
+                <button form="gastoForm" type="submit" data-action="saveAndAddAnother" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    Guardar y Agregar Otro
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FIN DEL MODAL GASTO -->
+
+
+</body>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, setLogLevel, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+    // Configuración de Seguridad y entorno
+    const SECURE_PIN = "1440"; 
+    const SIMULATED_VENTAS_VALUE = "$14,400 / $72";
+    const SIMULATED_CAJA_VALUE = "$12,000.00"; 
+    
+    let pendingAuthAction = null; 
+
+    // Global variables provided by the environment
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // Firebase Service instances
+    let app, auth, db;
+    let userId = null; 
+    let isAuthReady = false; 
+    let productsData = []; 
+    let salesData = []; 
+    let expensesData = []; 
+    let clientsData = []; 
+    
+    let unsubscribeProducts = null; 
+    let unsubscribeSales = null; 
+    let unsubscribeExpenses = null; 
+    let unsubscribeClients = null; 
+    
+    // Variables para métricas en tiempo real (ACTUALIZADAS)
+    let totalVentasDelMes = 0; 
+    let totalGastosDelMes = 0; 
+    let totalVentasDelDia = 0; 
+    let totalGastosDelDia = 0; 
+    let totalVentasDelAnio = 0; 
+    let totalGastosDelAnio = 0; 
+
+    // --- Funciones de Utilidad ---
+    
+    const updateAuthStatus = (loggedIn) => { 
+        const userStatusEl = document.getElementById('userStatus');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if (loggedIn) {
+            userStatusEl.textContent = 'Conectado';
+            userStatusEl.classList.remove('text-red-500');
+            userStatusEl.classList.add('text-green-500');
+            logoutBtn.disabled = false;
+        } else {
+            userStatusEl.textContent = 'Desconectado';
+            userStatusEl.classList.remove('text-green-500');
+            userStatusEl.classList.add('text-red-500');
+            logoutBtn.disabled = true;
+        }
+    };
+    
+    // Función para obtener y mostrar la fecha y hora actual (se actualiza cada segundo)
+    const updateClock = () => {
+        const now = new Date();
+        
+        // Formato de hora (12h con AM/PM)
+        const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        const formattedTime = now.toLocaleTimeString('es-ES', timeOptions);
+
+        // Formato de fecha (Día de la semana, Día/Mes/Año)
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = now.toLocaleDateString('es-ES', dateOptions);
+
+        const dateEl = document.getElementById('currentDateDisplay');
+        const timeEl = document.getElementById('currentTimeDisplay');
+        
+        if (dateEl) {
+             // Capitalizar el primer caracter de la fecha (ej: "Martes, 25 de noviembre de 2025")
+             dateEl.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+        }
+        if (timeEl) {
+             timeEl.textContent = formattedTime;
+        }
+        
+        setTimeout(updateClock, 1000);
+    };
+
+    function getCurrentDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Helper para obtener la fecha de hoy en formato YYYY-MM-DD
+    function getTodayDateString() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        // Asume formato YYYY-MM-DD para evitar problemas de zona horaria con new Date()
+        const date = new Date(dateString + 'T00:00:00'); 
+        if (isNaN(date)) return dateString; 
+
+        // Formato D/M/YYYY
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+    
+    // Nueva función para dar formato de fecha corta y mes (ej: 25 Nov)
+    function formatSaleDateShort(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString + 'T00:00:00'); 
+        if (isNaN(date)) return dateString; 
+        
+        const day = date.getDate();
+        const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        const monthName = monthNames[date.getMonth()];
+        return `${day} ${monthName}`;
+    }
+
+
+    function generateDailyData(monthName) {
+        let total = 0;
+        const daysInMonth = (monthName === 'Febrero') ? 28 : (['Abril', 'Junio', 'Septiembre', 'Noviembre'].includes(monthName) ? 30 : 31);
+        const data = [];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const profit = Math.floor(Math.random() * 91 + 10);
+            total += profit;
+            data.push({ day, profit });
+        }
+
+        return { data, total: total.toFixed(2) };
+    }
+
+    const openModal = (modalElement) => {
+        modalElement.classList.remove('hidden');
+    };
+
+    const closeModal = (modalElement) => {
+        modalElement.classList.add('hidden');
+    };
+    
+    const alertMessage = (message, type = 'info') => {
+        const color = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-blue-500');
+        const alertBox = document.createElement('div');
+        alertBox.className = `fixed bottom-20 right-6 p-4 rounded-xl text-white font-semibold shadow-xl transition-all z-[60] ${color}`;
+        alertBox.textContent = message;
+        document.body.appendChild(alertBox);
+        setTimeout(() => {
+            alertBox.classList.add('opacity-0');
+            setTimeout(() => alertBox.remove(), 500);
+        }, 3000);
+    }
+
+    // FUNCIÓN PRINCIPAL DE CÁLCULO DE GANANCIAS NETAS 
+    const updateDashboardMetrics = () => {
+        // Cálculo: Ventas Totales del Mes - Gastos Totales del Mes
+        const ganancias = totalVentasDelMes - totalGastosDelMes;
+        const gananciasDisplayValueEl = document.getElementById('gananciasDisplayValue');
+        const gananciasCard = document.getElementById('gananciasCard');
+        const dailySalesSummaryValueEl = document.getElementById('dailySalesSummaryValue'); // NEW SUMMARY
+        
+        if (gananciasDisplayValueEl) {
+             gananciasDisplayValueEl.textContent = `$${ganancias.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+             
+             // Actualizar color de la tarjeta según el resultado
+             if(gananciasCard) {
+                 gananciasCard.classList.remove('card-ganancias-border', 'card-ganancias-border-red');
+                 if (ganancias < 0) {
+                     gananciasCard.classList.add('card-ganancias-border-red');
+                     gananciasDisplayValueEl.classList.remove('text-green-600');
+                     gananciasDisplayValueEl.classList.add('text-red-600');
+                 } else {
+                     gananciasCard.classList.add('card-ganancias-border'); 
+                     gananciasDisplayValueEl.classList.remove('text-red-600');
+                     gananciasDisplayValueEl.classList.add('text-green-600');
+                 }
+             }
+        }
+        
+        // Actualizar el resumen de Ventas del día en la tarjeta de Ventas
+        if (dailySalesSummaryValueEl) {
+             dailySalesSummaryValueEl.textContent = totalVentasDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+        }
+    };
+    
+    // --- Firebase Initialization and Authentication ---
+    const initializeFirebase = async () => {
+        if (!firebaseConfig) {
+            console.error("Firebase config is missing. Cannot initialize Firestore.");
+            return;
+        }
+
+        try {
+            setLogLevel('debug'); // Enable Firestore debug logging
+
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            // Handle Authentication State Changes
+            onAuthStateChanged(auth, (user) => {
+                const currentUserIdDisplay = document.getElementById('currentUserIdDisplay');
+                
+                // 1. Unsubscribe previous listeners
+                if (unsubscribeProducts) { unsubscribeProducts(); unsubscribeProducts = null; }
+                if (unsubscribeSales) { unsubscribeSales(); unsubscribeSales = null; }
+                if (unsubscribeExpenses) { unsubscribeExpenses(); unsubscribeExpenses = null; }
+                if (unsubscribeClients) { unsubscribeClients(); unsubscribeClients = null; } 
+
+                if (user) {
+                    userId = user.uid;
+                    updateAuthStatus(true);
+                    if (currentUserIdDisplay) currentUserIdDisplay.textContent = userId;
+                    
+                    // 2. Set up new listeners for the new user ID
+                    setupRealtimeProductsListener(); 
+                    setupRealtimeSalesListener();    
+                    setupRealtimeExpensesListener(); 
+                    setupRealtimeClientsListener(); 
+                } else {
+                    userId = null;
+                    updateAuthStatus(false);
+                    if (currentUserIdDisplay) currentUserIdDisplay.textContent = 'N/A';
+                    
+                    // 3. Clear data
+                    productsData = [];
+                    salesData = []; 
+                    expensesData = []; 
+                    clientsData = []; 
+                    totalVentasDelMes = 0;
+                    totalGastosDelMes = 0;
+                    totalVentasDelDia = 0;
+                    totalGastosDelDia = 0;
+                    totalVentasDelAnio = 0;
+                    totalGastosDelAnio = 0;
+                    updateDashboardMetrics(); 
+                    renderProductHistory();
+                    loadInventoryData(); 
+                }
+                isAuthReady = true;
+                console.log("Firebase Auth State Changed. User ID:", userId);
+            });
+
+            // Initial sign-in logic
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            alertMessage(`Error de conexión Firebase: ${error.message}`, 'error');
+            isAuthReady = true; 
+        }
+    };
+    
+    // Path for private collections
+    const getCollectionRef = (collectionName) => {
+        if (!db || !userId) {
+            console.warn(`DB or User ID not available for ${collectionName} collection (Permission expected to fail).`);
+            return null;
+        }
+        return collection(db, 'artifacts', appId, 'users', userId, collectionName);
+    };
+
+    // --- Real-Time Listener for Products ---
+    const setupRealtimeProductsListener = () => { 
+        const productsRef = getCollectionRef('products');
+        if (!productsRef) return; 
+
+        unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
+            productsData = [];
+            snapshot.forEach((doc) => {
+                productsData.push({ id: doc.id, ...doc.data() });
+            });
+            console.log(`Products data updated in real-time. Total: ${productsData.length}`);
+            
+            document.getElementById('totalProductsCount').textContent = productsData.length;
+            renderProductHistory();
+            
+            let totalStock = productsData.reduce((sum, product) => {
+                const stockValue = typeof product.stock === 'number' ? product.stock : (parseInt(product.stock) || 0);
+                return sum + stockValue;
+            }, 0);
+
+            const stockTotalDisplayEl = document.getElementById('stockTotalDisplay');
+            if (stockTotalDisplayEl) {
+                stockTotalDisplayEl.textContent = totalStock.toLocaleString('es-ES');
+            }
+
+            if (document.getElementById('inventarioModal').classList.contains('hidden') === false) {
+                 loadInventoryData();
+            }
+
+        }, (error) => {
+            if (error.code === 'permission-denied') {
+                 console.error("Error de permisos: Asegúrese de que el usuario tenga permisos para leer la colección privada.");
+                 document.getElementById('historialProductosLista').innerHTML = `<li class="text-red-500 text-center py-2">Error de permisos: No se pueden cargar los productos.</li>`;
+                 document.getElementById('inventarioTablaContenido').innerHTML = `<tr><td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-red-500">Error de permisos: No se pueden cargar los productos.</td></tr>`;
+
+            } else {
+                console.error("Error listening to products collection:", error);
+            }
+        });
+    };
+
+    // --- Real-Time Listener for Sales (MODIFICADO) ---
+    const setupRealtimeSalesListener = () => { 
+        const salesRef = getCollectionRef('sales');
+        if (!salesRef) return; 
+        
+        const todayDateString = getTodayDateString(); 
+
+        unsubscribeSales = onSnapshot(salesRef, (snapshot) => {
+            salesData = [];
+            
+            // Reiniciar TODOS los contadores
+            totalVentasDelMes = 0; 
+            totalVentasDelDia = 0;
+            totalVentasDelAnio = 0;
+            
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+
+            snapshot.forEach((doc) => {
+                const sale = { id: doc.id, ...doc.data() };
+                salesData.push(sale);
+                const monto = parseFloat(sale.montoCobrado) || 0;
+                
+                if (sale.date) {
+                    const saleDate = new Date(sale.date + 'T00:00:00'); 
+                    
+                    // Acumular Ventas del Año
+                    if (saleDate.getFullYear() === currentYear) {
+                        totalVentasDelAnio += monto;
+                        
+                        // Acumular Ventas del Mes
+                        if (saleDate.getMonth() === currentMonth) {
+                            totalVentasDelMes += monto;
+                        }
+                    }
+                    
+                    // Acumular Ventas del Día
+                    if (sale.date === todayDateString) {
+                        totalVentasDelDia += monto;
+                    }
+                }
+            });
+
+            // 1. Calcular Ticket Promedio
+            const ventasEnElMes = salesData.filter(s => {
+                if (!s.date) return false;
+                const saleDate = new Date(s.date + 'T00:00:00'); 
+                return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+            });
+
+            const ticketPromedio = ventasEnElMes.length > 0 ? (totalVentasDelMes / ventasEnElMes.length) : 0;
+            
+            // 2. Actualizar el Dashboard (Ventas/Ticket)
+            const ventasDisplayValueEl = document.getElementById('ventasDisplayValue');
+            if (ventasDisplayValueEl) {
+                 const ventasFormateadas = totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+                 const ticketFormateado = ticketPromedio.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+                 ventasDisplayValueEl.textContent = `$${ventasFormateadas} / $${ticketFormateado}`;
+            }
+            
+            // NUEVO: Actualizar contador de ventas diarias en el action card
+            const dailySalesDisplay = document.getElementById('totalDailySalesCount');
+            if (dailySalesDisplay) {
+                 dailySalesDisplay.textContent = `$${totalVentasDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+            }
+            
+            // 3. Recalcular Ganancias Netas
+            updateDashboardMetrics();
+            
+            // 4. Cargar historial de ventas si el modal está abierto
+            if (document.getElementById('salesDetailModal').classList.contains('hidden') === false) {
+                 loadSalesHistory();
+            }
+            
+
+        }, (error) => {
+            if (error.code === 'permission-denied') {
+                 console.error("Error de permisos: No se pueden cargar las ventas.");
+            } else {
+                console.error("Error listening to sales collection:", error);
+            }
+        });
+    };
+
+    // --- Real-Time Listener for Expenses (MODIFICADO) ---
+    const setupRealtimeExpensesListener = () => { 
+        const expensesRef = getCollectionRef('expenses');
+        if (!expensesRef) return; 
+        
+        const todayDateString = getTodayDateString(); 
+
+        unsubscribeExpenses = onSnapshot(expensesRef, (snapshot) => {
+            expensesData = [];
+            
+            // Reiniciar TODOS los contadores
+            totalGastosDelMes = 0;
+            totalGastosDelDia = 0;
+            totalGastosDelAnio = 0;
+            
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+
+            snapshot.forEach((doc) => {
+                const expense = { id: doc.id, ...doc.data() };
+                expensesData.push(expense);
+                const monto = parseFloat(expense.gastoTotal) || 0;
+                
+                if (expense.date) {
+                    const expenseDate = new Date(expense.date + 'T00:00:00');
+                    
+                    // Acumular Gastos del Año
+                    if (expenseDate.getFullYear() === currentYear) {
+                        totalGastosDelAnio += monto;
+                        
+                        // Acumular Gastos del Mes
+                        if (expenseDate.getMonth() === currentMonth) {
+                            totalGastosDelMes += monto;
+                        }
+                    }
+                    
+                    // Acumular Gastos del Día
+                    if (expense.date === todayDateString) {
+                        totalGastosDelDia += monto;
+                    }
+                }
+            });
+            
+            console.log(`Expenses data updated in real-time. Total Monthly Expense: $${totalGastosDelMes.toFixed(2)}`);
+            
+            // NUEVO: Actualizar contador de gastos diarios en el action card
+            const dailyExpensesDisplay = document.getElementById('totalDailyExpensesCount');
+            if (dailyExpensesDisplay) {
+                 dailyExpensesDisplay.textContent = `$${totalGastosDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+            }
+            
+            // Recalcular Ganancias Netas
+            updateDashboardMetrics();
+            
+            // Cargar historial de gastos si el modal está abierto
+            if (document.getElementById('expensesDetailModal').classList.contains('hidden') === false) {
+                 loadExpensesHistory();
+            }
+
+        }, (error) => {
+            if (error.code === 'permission-denied') {
+                 console.error("Error de permisos: No se pueden cargar los gastos.");
+            } else {
+                console.error("Error listening to expenses collection:", error);
+            }
+        });
+    };
+
+    // --- Real-Time Listener for Clients ---
+    const setupRealtimeClientsListener = () => { 
+        const clientsRef = getCollectionRef('clients');
+        if (!clientsRef) return; 
+
+        unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
+            clientsData = [];
+            snapshot.forEach((doc) => {
+                clientsData.push({ id: doc.id, ...doc.data() });
+            });
+            console.log(`Clients data updated in real-time. Total: ${clientsData.length}`);
+            
+            // 1. Actualizar contador del dashboard
+            document.getElementById('totalClientsCount').textContent = clientsData.length;
+            
+            // 2. Llenar el datalist de clientes
+            renderClientDatalist();
+            
+            // 3. Renderizar tabla de clientes si el modal está abierto
+            if (document.getElementById('clientesModal').classList.contains('hidden') === false) {
+                 loadClientHistory();
+            }
+
+        }, (error) => {
+            if (error.code === 'permission-denied') {
+                 console.error("Error de permisos: No se pueden cargar los clientes.");
+            } else {
+                console.error("Error listening to clients collection:", error);
+            }
+        });
+    };
+
+
+    // --- Data Rendering Functions (History) ---
+    
+    // RENDERIZAR DATALIST DE CLIENTES
+    const renderClientDatalist = () => {
+        const datalist = document.getElementById('clientListOptions');
+        if (!datalist) return;
+
+        datalist.innerHTML = ''; // Limpiar opciones anteriores
+
+        clientsData.forEach(client => {
+            if (client.name && client.name.trim() !== '') {
+                const option = document.createElement('option');
+                option.value = client.name;
+                datalist.appendChild(option);
+            }
+        });
+    };
+    
+    // CARGAR HISTORIAL DE CLIENTES 
+    const loadClientHistory = () => {
+        const tbody = document.getElementById('clientesTablaContenido');
+        if (!tbody || !isAuthReady || !userId) return;
+
+        tbody.innerHTML = '';
+
+        if (clientsData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay clientes registrados aún.</td></tr>`;
+            return;
+        }
+
+        // Simular cálculo de métricas de cliente (para simplificar, se usan datos de ventas)
+        const clientSalesMap = salesData.reduce((acc, sale) => {
+            const clientName = sale.clientName || 'Consumidor Final';
+            const monto = parseFloat(sale.montoCobrado) || 0;
+            const saleDate = sale.date ? new Date(sale.date + 'T00:00:00') : new Date(sale.createdAt);
+            
+            if (!acc[clientName]) {
+                acc[clientName] = { totalSpent: 0, purchaseCount: 0, lastSaleDate: null };
+            }
+            
+            acc[clientName].totalSpent += monto;
+            acc[clientName].purchaseCount += 1;
+            
+            if (!acc[clientName].lastSaleDate || saleDate > acc[clientName].lastSaleDate) {
+                 acc[clientName].lastSaleDate = saleDate;
+            }
+            return acc;
+        }, {});
+        
+        // Crear lista de clientes únicos (incluyendo los que solo están en clientsData)
+        const uniqueClients = [...new Set(clientsData.map(c => c.name).filter(n => n && n.trim() !== ''))];
+        
+        uniqueClients.forEach(clientName => {
+            const metrics = clientSalesMap[clientName] || { totalSpent: 0, purchaseCount: 0, lastSaleDate: null };
+            
+            const lastSaleDisplay = metrics.lastSaleDate 
+                ? formatSaleDateShort(metrics.lastSaleDate.toISOString().split('T')[0]) 
+                : 'N/A';
+            const totalSpentDisplay = `$${metrics.totalSpent.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-indigo-700">${clientName}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${metrics.purchaseCount} compras</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${lastSaleDisplay}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-center">
+                    <button class="text-indigo-500 hover:text-indigo-700 text-sm font-medium">Ver Detalle</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+    };
+
+    // CARGAR HISTORIAL DE VENTAS (MODIFICADO: AÑADE TOTALES DE MES/AÑO)
+    const loadSalesHistory = () => {
+        const tbody = document.getElementById('salesHistoryTableContent');
+        const totalMonthlyDisplay = document.getElementById('totalMonthlySalesDisplay');
+        const totalYearlyDisplay = document.getElementById('totalYearlySalesDisplay');
+        const totalCountValue = document.getElementById('totalSalesCountValue');
+
+        if (!tbody || !isAuthReady || !userId) return;
+
+        // Actualizar los contadores totales
+        if (totalMonthlyDisplay) totalMonthlyDisplay.textContent = `$${totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (totalYearlyDisplay) totalYearlyDisplay.textContent = `$${totalVentasDelAnio.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (totalCountValue) totalCountValue.textContent = salesData.length.toLocaleString('es-ES');
+        
+        
+        tbody.innerHTML = '';
+        
+        if (salesData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay ventas registradas.</td></tr>`;
+            return;
+        }
+
+        const sortedSales = [...salesData].sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
+
+        const groupedSales = sortedSales.reduce((acc, sale) => {
+            const dateKey = sale.date ? sale.date.substring(0, 7) : 'N/A';
+            if (!acc[dateKey]) {
+                acc[dateKey] = [];
+            }
+            acc[dateKey].push(sale);
+            return acc;
+        }, {});
+        
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        for (const [key, sales] of Object.entries(groupedSales)) {
+            const [year, monthIndex] = key.split('-');
+            const monthName = monthNames[parseInt(monthIndex) - 1] || 'Sin Fecha';
+            
+            const separatorRow = document.createElement('tr');
+            separatorRow.innerHTML = `<td colspan="5" class="px-6 py-2 bg-blue-50/70 text-blue-800 font-bold text-sm sticky top-0 border-t border-b border-blue-200">
+                ${monthName} ${year}
+            </td>`;
+            tbody.appendChild(separatorRow);
+
+            sales.forEach(sale => {
+                const row = document.createElement('tr');
+                const monto = parseFloat(sale.montoCobrado) || 0;
+                const montoDisplay = `$${monto.toFixed(2)}`;
+                const statusClass = sale.status === 'Entregado' ? 'bg-green-100 text-green-700' : 
+                                    (sale.status === 'Cerrado' ? 'bg-indigo-100 text-indigo-700' : 'bg-yellow-100 text-yellow-700');
+
+                // NUEVO: Mostrar notas si existen
+                const notesDisplay = sale.notes && sale.notes.trim() !== '' 
+                    ? `<span class="block text-xs text-gray-400 mt-1 italic">Nota: ${sale.notes.substring(0, 40)}${sale.notes.length > 40 ? '...' : ''}</span>`
+                    : '';
+
+                row.innerHTML = `
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(sale.date)}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${sale.clientName}<br>
+                        <span class="text-xs text-gray-500">${sale.salesChannel || 'Directo'}</span>
+                        ${notesDisplay}
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-600">${montoDisplay}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${sale.paymentType || 'Efectivo'}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-center">
+                        <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${statusClass}">${sale.status || 'Sin Estado'}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    };
+    
+    // CARGAR HISTORIAL DE GASTOS (MODIFICADO: AÑADE TOTALES DE MES/AÑO)
+    const loadExpensesHistory = () => {
+        const tbody = document.getElementById('expensesHistoryTableContent');
+        const totalMonthlyDisplay = document.getElementById('totalMonthlyExpensesDisplay');
+        const totalYearlyDisplay = document.getElementById('totalYearlyExpensesDisplay');
+        const totalCountValue = document.getElementById('totalExpensesCountValue');
+
+        if (!tbody || !isAuthReady || !userId) return;
+
+        // Actualizar los contadores totales
+        if (totalMonthlyDisplay) totalMonthlyDisplay.textContent = `-$${totalGastosDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (totalYearlyDisplay) totalYearlyDisplay.textContent = `-$${totalGastosDelAnio.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (totalCountValue) totalCountValue.textContent = expensesData.length.toLocaleString('es-ES');
+        
+        tbody.innerHTML = '';
+        
+        if (expensesData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay gastos registrados.</td></tr>`;
+            return;
+        }
+
+        const sortedExpenses = [...expensesData].sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
+
+        const groupedExpenses = sortedExpenses.reduce((acc, expense) => {
+            const dateKey = expense.date ? expense.date.substring(0, 7) : 'N/A'; // YYYY-MM
+            if (!acc[dateKey]) {
+                acc[dateKey] = [];
+            }
+            acc[dateKey].push(expense);
+            return acc;
+        }, {});
+        
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        for (const [key, expenses] of Object.entries(groupedExpenses)) {
+            const [year, monthIndex] = key.split('-');
+            const monthName = monthNames[parseInt(monthIndex) - 1] || 'Sin Fecha';
+            
+            const separatorRow = document.createElement('tr');
+            separatorRow.innerHTML = `<td colspan="5" class="px-6 py-2 bg-green-50/70 text-green-800 font-bold text-sm sticky top-0 border-t border-b border-green-200">
+                ${monthName} ${year}
+            </td>`;
+            tbody.appendChild(separatorRow);
+
+            expenses.forEach(expense => {
+                const row = document.createElement('tr');
+                const monto = parseFloat(expense.gastoTotal) || 0;
+                const montoDisplay = `-$${monto.toFixed(2)}`;
+                const statusClass = expense.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                const statusText = expense.paid ? 'Pagado' : 'Pendiente';
+
+                row.innerHTML = `
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(expense.date)}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${expense.category}<br>
+                        <span class="text-xs text-gray-500 truncate">${expense.description || 'Sin descripción'}</span>
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-red-600">${montoDisplay}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">${expense.vendor || 'N/A'}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-center">
+                        <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${statusClass}">${statusText}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    };
+    
+    // Funciones de renderizado de productos e inventario (MANTENIDAS)
+    const renderProductHistory = () => {
+        const listEl = document.getElementById('historialProductosLista');
+        if (!listEl) return;
+        // ... (Logic for rendering product history)
+        listEl.innerHTML = '';
+        if (!userId) {
+            listEl.innerHTML = `<li class="text-gray-400 text-center py-2">Inicie sesión para ver el historial.</li>`;
+            return;
+        }
+
+        const recentProducts = productsData.slice(-4).reverse(); // Last 4 products
+
+        if (recentProducts.length === 0) {
+             listEl.innerHTML = `<li class="text-gray-400 text-center py-2">No hay productos guardados.</li>`;
+             return;
+        }
+
+        recentProducts.forEach(item => {
+            const priceValue = parseFloat(item.priceRetail);
+            const price = priceValue > 0 ? `$${priceValue.toFixed(2)}` : '-'; 
+            
+            const li = document.createElement('li');
+            li.className = 'flex justify-between items-center text-gray-600 border-b border-gray-200 pb-1 cursor-pointer hover:bg-gray-200 px-1 rounded-sm';
+            li.innerHTML = `
+                <span class="truncate">${item.name}</span>
+                <span class="text-xs text-green-600 font-semibold">${price}</span>
+            `;
+            listEl.appendChild(li);
+        });
+        
+        if (productsData.length > 4) {
+             listEl.innerHTML += `<li class="text-gray-400 text-center py-1">... (${productsData.length - 4} más)</li>`;
+        }
+    }
+
+    const loadInventoryData = () => {
+        const tbody = document.getElementById('inventarioTablaContenido');
+        if (!tbody) return;
+
+        const colspan = 4;
+
+        tbody.innerHTML = ''; 
+        if (!userId) {
+             tbody.innerHTML = `<tr><td colspan="${colspan}" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Inicie sesión para ver el inventario.</td></tr>`;
+             return;
+        }
+
+        if (productsData.length === 0) {
+             tbody.innerHTML = `<tr><td colspan="${colspan}" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay productos en inventario.</td></tr>`;
+             return;
+        }
+
+        productsData.forEach(item => {
+            const stock = item.stock || 0;
+            const cost = item.costPerUnit || 0;
+            const priceValue = parseFloat(item.priceRetail);
+            
+            const priceDisplay = priceValue > 0 ? `$${priceValue.toFixed(2)}` : '-'; 
+            const priceColor = priceValue > 0 ? 'text-green-600 font-semibold' : 'text-gray-500';
+
+            const stockColorClass = stock < 10 ? 'text-red-600 font-bold' : 'text-gray-800';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm ${stockColorClass}">
+                    ${stock.toLocaleString('es-ES')}
+                    ${stock < 10 ? '<i class="fas fa-exclamation-triangle text-xs ml-1"></i>' : ''}
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-500">$${parseFloat(cost).toFixed(2)}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm ${priceColor}">${priceDisplay}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
+
+
+    // --- Data Saving Functions (Product) (MANTENIDA) ---
+    const saveProduct = async (event) => {
+        event.preventDefault();
+        
+        if (!isAuthReady || !userId) {
+            alertMessage('Error: Debe iniciar sesión para guardar productos.', 'error');
+            return;
+        }
+
+        const productsRef = getCollectionRef('products');
+        if (!productsRef) {
+             alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
+             return;
+        }
+        
+        // Gather form data
+        const name = document.getElementById('nombreProducto').value.trim();
+        const description = document.getElementById('descripcionProducto').value.trim();
+        const stockInput = document.getElementById('stockProducto').value;
+        const category = document.getElementById('categoriaProducto').value;
+        
+        const priceRetailInput = document.getElementById('priceRetailInput').value;
+        const priceWholesaleInput = document.getElementById('priceWholesaleInput').value;
+        const priceSectionVisible = !document.getElementById('priceSectionContent').classList.contains('hidden');
+        
+        const costPerUnit = 10.00; 
+        
+        // Basic validation
+        if (!name || stockInput === "") {
+            alertMessage('El nombre y la Cantidad (Stock Inicial) del producto son obligatorios.', 'error');
+            return;
+        }
+        
+        // If the price section is visible, parse values. If hidden, they will be 0.
+        const priceRetail = priceSectionVisible ? (parseFloat(priceRetailInput) || 0) : 0;
+        const priceWholesale = priceSectionVisible ? (parseFloat(priceWholesaleInput) || 0) : 0;
+        const stock = parseInt(stockInput) || 0; 
+
+        const productData = {
+            name: name,
+            description: description,
+            category: category,
+            costPerUnit: costPerUnit,
+            priceRetail: priceRetail,
+            priceWholesale: priceWholesale,
+            stock: stock, 
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            // Save to Firestore
+            const docRef = await addDoc(productsRef, productData);
+            console.log("Producto guardado con ID: ", docRef.id);
+            alertMessage('Producto guardado con éxito!', 'success');
+            
+            // Clear form and close modal
+            document.getElementById('productoForm').reset();
+            closeModal(document.getElementById('productoModal'));
+
+        } catch (e) {
+            console.error("Error al añadir el producto: ", e);
+            alertMessage('Error al guardar el producto. ¿Tiene permisos? Ver consola.', 'error');
+        }
+    };
+
+
+    // --- Data Saving Functions (Sale) (MANTENIDA) ---
+    
+    // Función auxiliar para guardar el cliente si es nuevo
+    const saveNewClient = async (clientName) => {
+        if (!clientName || clientName.trim() === '' || clientName.trim().toLowerCase() === 'consumidor final') {
+            return; // No guardar clientes vacíos o el Consumidor Final
+        }
+        
+        const existingClient = clientsData.find(c => c.name.toLowerCase() === clientName.toLowerCase());
+        
+        if (existingClient) {
+            return; // El cliente ya existe
+        }
+
+        const clientsRef = getCollectionRef('clients');
+        if (!clientsRef) return;
+        
+        try {
+            const clientData = {
+                name: clientName,
+                createdAt: new Date().toISOString()
+            };
+            await addDoc(clientsRef, clientData);
+            console.log(`Cliente nuevo guardado: ${clientName}`);
+        } catch (e) {
+            console.error("Error al guardar cliente nuevo: ", e);
+        }
+    };
+    
+    const saveSale = async (event) => {
+        event.preventDefault();
+        
+        if (!isAuthReady || !userId) {
+            alertMessage('Error: Debe iniciar sesión para guardar ventas.', 'error');
+            return;
+        }
+
+        const salesRef = getCollectionRef('sales');
+        if (!salesRef) {
+             alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
+             return;
+        }
+
+        // 1. Recoger datos del formulario de Venta
+        const montoCobrado = document.getElementById('montoCobrado').value;
+        const fechaVenta = document.getElementById('fechaVenta').value || getCurrentDate();
+        const clienteVentaInput = document.getElementById('clienteVentaInput').value.trim();
+        const descuentoVenta = document.getElementById('descuentoVenta').value;
+        const canalVentaInput = document.getElementById('canalVentaInput').value.trim();
+        const estadoVenta = document.getElementById('estadoVenta').value;
+        const fechaEntrega = document.getElementById('fechaEntrega').value;
+        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput').value.trim();
+        const tipoVenta = document.getElementById('tipoVenta').value;
+        const vendedorVenta = document.getElementById('vendedorVenta').value;
+        const nroFactura = document.getElementById('nroFactura').value.trim();
+        const notasVenta = document.getElementById('notasVenta').value.trim();
+        
+        // 2. Validación básica
+        if (!montoCobrado || parseFloat(montoCobrado) <= 0) {
+            alertMessage('El Monto Cobrado es obligatorio y debe ser mayor que cero.', 'error');
+            return;
+        }
+        
+        const clientNameFinal = clienteVentaInput || 'Consumidor Final';
+        
+        const saleData = {
+            montoCobrado: parseFloat(montoCobrado),
+            date: fechaVenta,
+            clientName: clientNameFinal, // Nombre del cliente final
+            discountPercent: parseFloat(descuentoVenta) || 0,
+            salesChannel: canalVentaInput || 'Ninguno',
+            status: estadoVenta,
+            deliveryDate: fechaEntrega || null,
+            paymentType: tipoPagoVentaInput || 'Efectivo',
+            saleType: tipoVenta,
+            vendor: vendedorVenta,
+            invoiceNumber: nroFactura,
+            notes: notasVenta, // NOTAS AÑADIDAS
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            // 3. Guardar el cliente si es nuevo (No bloquea la venta)
+            await saveNewClient(clientNameFinal);
+            
+            // 4. Guardar la venta en Firestore
+            const docRef = await addDoc(salesRef, saleData);
+            console.log("Venta guardada con ID: ", docRef.id);
+            alertMessage(`Venta por $${saleData.montoCobrado.toFixed(2)} guardada con éxito!`, 'success');
+            
+            // 5. Limpiar formulario y cerrar modal
+            document.getElementById('ventaForm').reset();
+            closeModal(document.getElementById('ventaModal'));
+
+        } catch (e) {
+            console.error("Error al añadir la venta: ", e);
+            alertMessage('Error al guardar la venta. Ver consola para más detalles.', 'error');
+        }
+    };
+
+    // --- Data Saving Functions (Expense) (MANTENIDA) ---
+    const saveExpense = async (event) => {
+        event.preventDefault();
+        
+        if (!isAuthReady || !userId) {
+            alertMessage('Error: Debe iniciar sesión para guardar gastos.', 'error');
+            return;
+        }
+
+        const expensesRef = getCollectionRef('expenses');
+        if (!expensesRef) {
+             alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
+             return;
+        }
+
+        // 1. Recoger datos del formulario de Gasto
+        const form = event.target.closest('form');
+        const submitter = event.submitter; // El botón que disparó el submit
+        
+        const montoGasto = form.querySelector('#gastoTotal').value;
+        const fechaGasto = form.querySelector('#fechaGasto').value || getCurrentDate();
+        const categoriaGasto = form.querySelector('#categoriaGastoInput').value.trim();
+        const encargado = form.querySelector('#encargadoInput').value.trim();
+        const descripcion = form.querySelector('#descripcionGastoTextArea').value.trim();
+        const pagado = form.querySelector('#pagadoGasto').checked;
+
+        // 2. Validación básica
+        if (!montoGasto || parseFloat(montoGasto) <= 0) {
+            alertMessage('El Gasto Total es obligatorio y debe ser mayor que cero.', 'error');
+            return;
+        }
+        
+        const expenseData = {
+            gastoTotal: parseFloat(montoGasto),
+            date: fechaGasto,
+            category: categoriaGasto || 'No especificado',
+            vendor: encargado || 'Desconocido', 
+            description: descripcion,
+            paid: pagado,
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            // 3. Guardar en Firestore
+            const docRef = await addDoc(expensesRef, expenseData);
+            console.log("Gasto guardado con ID: ", docRef.id);
+            alertMessage(`Gasto por $${expenseData.gastoTotal.toFixed(2)} guardado con éxito!`, 'success');
+            
+            // 4. Limpiar formulario y cerrar modal
+            form.reset();
+            
+            if (submitter && submitter.getAttribute('data-action') === 'saveAndClose') {
+                closeModal(document.getElementById('gastoModal'));
+            } else {
+                 // Si es "Guardar y Agregar Otro", solo dejar el modal abierto y limpiar el monto
+                 form.querySelector('#gastoTotal').value = '';
+                 form.querySelector('#gastoTotal').focus();
+            }
+
+
+        } catch (e) {
+            console.error("Error al añadir el gasto: ", e);
+            alertMessage('Error al guardar el gasto. Ver consola para más detalles.', 'error');
+        }
+    };
+
+
+    // --- Lógica del Gemini AI Analista (MANTENIDA) ---
+    const ANALISIS_CONTENT_ID = 'analisisContent';
+    const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+    const API_KEY = ""; 
+
+    const collectMockMetrics = () => {
+        // Usar valores reales del mes para el análisis
+        const ventas = totalVentasDelMes;
+        const gastos = totalGastosDelMes; 
+        const gananciaNeta = ventas - gastos;
+        
+        // Simulación de métricas derivadas (COGS y Costos fijos)
+        const ticketPromedio = salesData.length > 0 ? (ventas / salesData.length) : 0; 
+        const costosFijos = 2000;
+        const cogs = ventas * 0.40; 
+        const margenBruto = ventas - cogs;
+        const unidadesVendidas = ventas > 0 ? (ventas / (ticketPromedio || 1)) : 0;
+        const margenNetoPorcentual = ventas > 0 ? ((gananciaNeta / ventas) * 100).toFixed(2) + '%' : '0.00%';
+        
+        return {
+            VentasMensuales: ventas.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            GananciaNeta: gananciaNeta.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            CostoDeBienesVendidos: cogs.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            MargenBruto: margenBruto.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            CostosOperacionalesFijos: costosFijos.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            UnidadesVendidas: Math.round(unidadesVendidas).toLocaleString('es-ES'),
+            TicketPromedio: ticketPromedio.toLocaleString('es-ES', { style: 'currency', currency: 'USD' }),
+            MargenNetoPorcentual: margenNetoPorcentual
+        };
+    };
+
+    const performAnalysis = async () => {
+        const analisisContentEl = document.getElementById(ANALISIS_CONTENT_ID);
+        const metrics = collectMockMetrics();
+        
+        analisisContentEl.innerHTML = `
+            <div class="flex justify-center items-center h-40">
+                <div id="loadingSpinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mr-3"></div>
+                <p class="text-lg font-medium text-gray-600">Analizando métricas y formulando estrategias...</p>
+            </div>
+        `;
+
+        const userQuery = `Analiza las siguientes métricas financieras simuladas de mi negocio (cifras en USD): 
+        Ventas Mensuales: ${metrics.VentasMensuales}, 
+        Ganancia Neta: ${metrics.GananciaNeta}, 
+        Costo de Bienes Vendidos (COGS): ${metrics.CostoDeBienesVendidos}, 
+        Margen Bruto: ${metrics.MargenBruto},
+        Costos Fijos: ${metrics.CostosOperacionalesFijos}, 
+        Unidades Vendidas: ${metrics.UnidadesVendidas}, 
+        Ticket Promedio: ${metrics.TicketPromedio},
+        Margen Neto Porcentual: ${metrics.MargenNetoPorcentual}.
+        
+        Actúa como un analista financiero experto. 
+        1. Proporciona un breve diagnóstico sobre la salud financiera de mi negocio.
+        2. Formula tres estrategias específicas y accionables para mejorar el Margen Neto. Usa formato de lista numerada para las estrategias.`;
+
+        const systemPrompt = "Eres un analista financiero experto. Tu respuesta debe ser concisa, profesional y formatada en Markdown, cubriendo el diagnóstico y las 3 estrategias solicitadas. El diagnóstico debe ser un párrafo breve y las estrategias una lista numerada con una breve explicación de cada una. Utiliza español de América Latina.";
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            tools: [{ "google_search": {} }], 
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+        };
+
+        const maxRetries = 3;
+        let lastError = null;
+
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const response = await fetch(API_URL + API_KEY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    let analysisText = candidate.content.parts[0].text;
+                    let sources = [];
+
+                    // 1. Mostrar el resultado
+                    analisisContentEl.innerHTML = `
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-gray-800">Métricas Analizadas:</h3>
+                            <ul class="grid grid-cols-2 gap-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl">
+                                <li><strong>Ventas:</strong> ${metrics.VentasMensuales}</li>
+                                <li><strong>Ticket Promedio:</strong> ${metrics.TicketPromedio}</li>
+                                <li><strong>Ganancia Neta:</strong> ${metrics.GananciaNeta}</li>
+                                <li><strong>Margen Neto:</strong> ${metrics.MargenNetoPorcentual}</li>
+                            </ul>
+                            <div class="prose max-w-none text-gray-800 border-t pt-4">
+                                ${analysisText.replace(/\n/g, '<br>')}
+                            </div>
+                            <div id="sourcesContainer" class="text-xs text-gray-500 mt-4 border-t pt-2"></div>
+                        </div>
+                    `;
+
+                    // 2. Extraer y mostrar fuentes (si existen)
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title);
+                    }
+                    
+                    if (sources.length > 0) {
+                        const sourcesContainer = document.getElementById('sourcesContainer');
+                        sourcesContainer.innerHTML = '<strong>Fuentes:</strong><br>' + 
+                            sources.map(s => `<a href="${s.uri}" target="_blank" class="text-blue-500 hover:underline">${s.title}</a>`).join(', ');
+                    }
+
+                    return; 
+                } else {
+                    throw new Error("Respuesta de la API incompleta o vacía.");
+                }
+            } catch (error) {
+                lastError = error;
+                if (i < maxRetries - 1) {
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        analisisContentEl.innerHTML = `
+            <div class="text-center p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl">
+                <p class="font-bold">Error al generar el análisis.</p>
+                <p class="text-sm">No pudimos conectar con el analista AI. Por favor, intente de nuevo más tarde.</p>
+                <p class="text-xs mt-2">Detalles: ${lastError ? lastError.message : 'Error de red desconocido'}</p>
+            </div>
+        `;
+    };
+
+    
+    const updateChartTitle = (metric) => {
+        const titleMap = {
+            ventas: 'Tendencia: Ventas vs. Últimos 6 Meses',
+            gastos: 'Tendencia: Gastos vs. Últimos 6 Meses',
+            clientes: 'Tendencia: Clientes Registrados vs. Últimos 6 Meses',
+            inventario: 'Tendencia: Stock Total vs. Últimos 6 Meses',
+            caja: 'Tendencia: Saldo de Caja vs. Últimos 6 Meses'
+        };
+        const newTitle = titleMap[metric] || titleMap.ventas;
+        
+        const chartTitleEl = document.querySelector('#metricChartPlaceholder h3');
+        if (chartTitleEl) {
+            chartTitleEl.textContent = newTitle;
+        }
+        
+        // Simular cambio de barras y color
+        const bars = document.querySelectorAll('#metricChartPlaceholder .bar');
+        const color = metric === 'ventas' ? 'bg-blue-500' : 
+                      metric === 'gastos' ? 'bg-red-500' :
+                      metric === 'clientes' ? 'bg-indigo-500' :
+                      metric === 'inventario' ? 'bg-orange-500' : 
+                      'bg-yellow-500';
+                      
+        bars.forEach(bar => {
+            bar.className = bar.className.replace(/bg-[\w-]+/, color);
+        });
+        
+        alertMessage(`Gráfico actualizado a: ${newTitle.split(':')[1].trim()}`, 'info');
+    };
+
+
+    // --- LÓGICA DE CRUD DE DATALIST (REUTILIZABLE) ---
+    
+    // Función para agregar una opción a un datalist (MANTENIDA)
+    const setupDatalistAdd = (addButtonId, inputId, datalistId, fieldName) => {
+        const addBtn = document.getElementById(addButtonId);
+        const input = document.getElementById(inputId);
+        const datalist = document.getElementById(datalistId);
+
+        if (!addBtn || !input || !datalist) return; 
+
+        addBtn.addEventListener('click', () => {
+            const name = input.value.trim();
+            
+            if (name) {
+                const existingOption = Array.from(datalist.options).some(opt => opt.value === name);
+
+                if (existingOption) {
+                    alertMessage(`El ${fieldName} "${name}" ya existe en la lista.`, 'info');
+                } else {
+                    const newOption = document.createElement('option');
+                    newOption.value = name;
+                    datalist.appendChild(newOption);
+                    
+                    input.value = name;
+                    alertMessage(`${fieldName} "${name}" agregado manualmente a la lista.`, 'success');
+                }
+            } else {
+                alertMessage(`Por favor, escriba un nombre de ${fieldName} para agregar.`, 'error');
+            }
+        });
+    };
+
+    // Función para eliminar una opción de la datalist (requiere PIN) (MANTENIDA)
+    const attemptDeleteOption = (input, datalist, deleteBtnId, fieldName) => {
+        const deleteBtn = document.getElementById(deleteBtnId);
+        const nameToDelete = input.value.trim();
+
+        if (!nameToDelete || nameToDelete === 'Seleccione Encargado' || nameToDelete === 'Efectivo') {
+            alertMessage(`Seleccione un ${fieldName.toLowerCase()} válido para eliminar.`, 'error');
+            return;
+        }
+        
+        const option = Array.from(datalist.options).find(opt => opt.value === nameToDelete);
+        
+        if (!option) {
+            alertMessage(`El ${fieldName.toLowerCase()} "${nameToDelete}" no se encuentra en la lista.`, 'info');
+            return;
+        }
+
+        // Almacenar la acción pendiente y el valor a borrar
+        const actionType = fieldName.includes('Encargado') ? 'deleteEncargado' : 'deleteCategoríadeTipodePago';
+        pendingAuthAction = { 
+            type: actionType, 
+            name: nameToDelete,
+            input: input.id,
+            datalist: datalist.id
+        };
+        
+        // Configurar el modal de autenticación para la eliminación
+        document.getElementById('authModalTitle').textContent = 'Confirmación de Eliminación';
+        document.getElementById('authModalMessage').textContent = `Ingrese el PIN ${SECURE_PIN} para eliminar el ${fieldName.toLowerCase()}: "${nameToDelete}"`;
+        document.getElementById('pinError').classList.add('hidden');
+        document.getElementById('ventaPinInput').value = '';
+        
+        openModal(document.getElementById('authModal'));
+        document.getElementById('ventaPinInput').focus();
+    };
+
+    // --- Lógica de Autenticación y Revelación/Eliminación (MANTENIDA) ---
+    
+    // Extiende la lógica de revelación para que también oculte
+    const revealMetrics = (target, pinInput) => {
+        const displayEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'DisplayValue');
+        const protectedEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'ProtectedValue');
+        const eyeIcon = document.getElementById(target.replace('reveal', '').toLowerCase() + 'EyeIcon');
+        
+        if (pinInput.value === SECURE_PIN) {
+            displayEl.classList.remove('hidden');
+            protectedEl.classList.add('hidden');
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+            
+            // Restablecer el modal
+            document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
+            document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+            pinInput.value = '';
+            closeModal(document.getElementById('authModal'));
+            pendingAuthAction = null;
+        } else {
+            document.getElementById('pinError').classList.remove('hidden');
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    };
+
+    // Manejador central para el botón "Acceder" del modal de PIN
+    const handlePinCheck = () => {
+        if (!pendingAuthAction) return;
+
+        const pinInput = document.getElementById('ventaPinInput');
+        
+        if (pinInput.value === SECURE_PIN) {
+            
+            // 1. ELIMINACIÓN DE OPCIÓN (Encargado o Tipo de Pago)
+            if (pendingAuthAction.type === 'deleteEncargado' || pendingAuthAction.type === 'deleteCategoríadeTipodePago') {
+                const nameToDelete = pendingAuthAction.name;
+                const datalist = document.getElementById(pendingAuthAction.datalist);
+                const input = document.getElementById(pendingAuthAction.input);
+                
+                const option = Array.from(datalist.options).find(opt => opt.value === nameToDelete);
+
+                if (option) {
+                    option.remove();
+                    if (input.value === nameToDelete) {
+                        input.value = ''; // Limpiar el input si la opción eliminada estaba seleccionada
+                    }
+                    const fieldName = pendingAuthAction.type === 'deleteEncargado' ? 'Encargado de Turno' : 'Categoría de Tipo de Pago';
+                    alertMessage(`${fieldName} "${nameToDelete}" eliminado con éxito.`, 'success');
+                } else {
+                    alertMessage(`Error: La opción "${nameToDelete}" no se encontró en la lista.`, 'error');
+                }
+
+                // 2. Restablecer el modal y el estado
+                document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
+                document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+                closeModal(document.getElementById('authModal'));
+                pendingAuthAction = null;
+                
+            } else if (typeof pendingAuthAction === 'string' && pendingAuthAction.startsWith('reveal')) {
+                // 3. REVELACIÓN DE MÉTRICAS
+                revealMetrics(pendingAuthAction, pinInput);
+            }
+            
+        } else {
+            document.getElementById('pinError').classList.remove('hidden');
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    };
+    
+    // Función de apertura de Auth para métricas
+    const attemptAuth = (actionTarget) => {
+        pendingAuthAction = actionTarget;
+        document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
+        document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+        openModal(document.getElementById('authModal'));
+        document.getElementById('ventaPinInput').value = '';
+        document.getElementById('pinError').classList.add('hidden');
+        document.getElementById('ventaPinInput').focus();
+    };
+
+
+    // --- Inicialización DOM ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Iniciar Firebase y el flujo de autenticación
+        initializeFirebase();
+
+        // ** INICIAR RELOJ Y CALENDARIO **
+        updateClock(); 
+        // ********************************
+
+        // --- Selectores de Modales y Botones ---
+        const productoModal = document.getElementById('productoModal');
+        const openProductoBtn = document.getElementById('openProductoModal');
+        const openProductoBtnTrigger = document.getElementById('openProductoModalTrigger');
+        const openGastoBtn = document.getElementById('openGastoModal');
+        const openGananciasBtnAction = document.getElementById('openGananciasModal');
+        const openInventarioModalTrigger = document.getElementById('openInventarioModalTrigger');
+        const openVentaModalDirect = document.getElementById('openVentaModalDirect');
+        const openClientesModalTrigger = document.getElementById('openClientesModalTrigger'); 
+        
+        const productoForm = document.getElementById('productoForm');
+        const ventaForm = document.getElementById('ventaForm'); 
+        const gastoForm = document.getElementById('gastoForm'); 
+        
+        const togglePriceSection = document.getElementById('togglePriceSection');
+        const priceSectionContent = document.getElementById('priceSectionContent');
+        
+        // Elementos de CRUD y Datalist
+        const encargadoInput = document.getElementById('encargadoInput');
+        const encargadoListOptions = document.getElementById('encargadoListOptions');
+        const deleteEncargadoWithPinBtn = document.getElementById('deleteEncargadoWithPinBtn');
+        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
+        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput');
+        const tipoPagoListOptions = document.getElementById('tipoPagoListOptions');
+        const deleteTipoPagoWithPinBtn = document.getElementById('deleteTipoPagoWithPinBtn');
+        const canalVentaInput = document.getElementById('canalVentaInput');
+        
+        const metricSelect = document.getElementById('metricSelect'); 
+        const ventaPinInput = document.getElementById('ventaPinInput');
+        const checkVentaPinBtn = document.getElementById('checkVentaPinBtn');
+        
+        
+        // --- Lógica de CRUD para Datalists (Inicialización) ---
+        
+        // 1. Categoría de Gasto (Adición)
+        setupDatalistAdd('addNewGastoCategoryBtn', 'categoriaGastoInput', 'categoriaGastoListOptions', 'Categoría de Gasto');
+        if (categoriaGastoListOptions) categoriaGastoListOptions.innerHTML = ''; 
+
+        // 2. Encargado de Turno (Adición)
+        setupDatalistAdd('addNewEncargadoBtn', 'encargadoInput', 'encargadoListOptions', 'Encargado de Turno');
+        if (encargadoListOptions) encargadoListOptions.innerHTML = ''; 
+
+        // 3. Encargado de Turno (Eliminación con PIN)
+        if (deleteEncargadoWithPinBtn) {
+            deleteEncargadoWithPinBtn.addEventListener('click', () => {
+                attemptDeleteOption(encargadoInput, encargadoListOptions, 'deleteEncargadoWithPinBtn', 'Encargado de Turno');
+            });
+        }
+        
+        // 4. Tipo de Pago (Adición)
+        setupDatalistAdd('addNewTipoPagoBtn', 'tipoPagoVentaInput', 'tipoPagoListOptions', 'Categoría de Tipo de Pago');
+
+        // 5. Tipo de Pago (Eliminación con PIN)
+        if (deleteTipoPagoWithPinBtn) {
+            deleteTipoPagoWithPinBtn.addEventListener('click', () => {
+                attemptDeleteOption(tipoPagoVentaInput, tipoPagoListOptions, 'deleteTipoPagoWithPinBtn', 'Categoría de Tipo de Pago');
+            });
+        }
+
+
+        // --- Listeners de Eventos (Botones y Lógica Principal) ---
+
+        // Toggle para la sección de Precio de Venta (MANTENIDO)
+        if (togglePriceSection && priceSectionContent) {
+            togglePriceSection.addEventListener('click', () => {
+                const isHidden = priceSectionContent.classList.toggle('hidden');
+                
+                if (isHidden) {
+                    togglePriceSection.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta';
+                } else {
+                    togglePriceSection.innerHTML = '<i class="fas fa-minus-circle mr-2"></i> Ocultar Precio de Venta';
+                }
+            });
+            if (priceSectionContent.classList.contains('hidden')) {
+                togglePriceSection.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta';
+            }
+        }
+
+
+        // Abrir modales
+        openProductoBtn.addEventListener('click', () => openModal(productoModal));
+        openProductoBtnTrigger.addEventListener('click', () => openModal(productoModal));
+        openGastoBtn.addEventListener('click', () => openModal(document.getElementById('gastoModal')));
+        
+        // ABRIR HISTORIAL DE VENTAS
+        document.getElementById('openVerVentasLink').addEventListener('click', () => { 
+            loadSalesHistory();
+            openModal(document.getElementById('salesDetailModal'));
+        }); 
+        
+        // ABRIR HISTORIAL DE GASTOS
+        openGananciasBtnAction.addEventListener('click', () => { 
+            loadExpensesHistory();
+            openModal(document.getElementById('expensesDetailModal'));
+        });
+        
+        openVentaModalDirect.addEventListener('click', () => {
+            document.getElementById('fechaVenta').value = getCurrentDate(); // Establecer fecha actual por defecto
+            openModal(document.getElementById('ventaModal'));
+        });
+
+        document.getElementById('openProfileModalBtn').addEventListener('click', () => openModal(document.getElementById('profileModal')));
+        
+        // Producto: Lógica de Guardado (Firestore)
+        if (productoForm) {
+            productoForm.addEventListener('submit', saveProduct);
+        }
+        
+        // Venta: Lógica de Guardado (Firestore)
+        if (ventaForm) {
+            ventaForm.addEventListener('submit', saveSale);
+        }
+        
+        // Gasto: Lógica de Guardado (Firestore) (NUEVO)
+        if (gastoForm) {
+            gastoForm.addEventListener('submit', saveExpense);
+        }
+
+        // Botón de la tarjeta Inventario: Abre el modal de historial
+        openInventarioModalTrigger.addEventListener('click', () => {
+            loadInventoryData();
+            openModal(document.getElementById('inventarioModal'));
+        });
+        
+        // Botón de la tarjeta Clientes: Abre el modal de historial
+        openClientesModalTrigger.addEventListener('click', () => {
+            loadClientHistory(); // Cargar tabla de clientes real
+            openModal(document.getElementById('clientesModal'));
+        });
+
+        // Botón Gemini: Abre el modal y ejecuta el análisis
+        document.getElementById('openAnalisisModalBtn').addEventListener('click', () => {
+            closeModal(document.getElementById('gananciasModal')); 
+            openModal(document.getElementById('analisisModal'));
+            performAnalysis();
+        });
+
+        // Lógica para cambiar el título y estilo del gráfico
+        if (metricSelect) {
+            metricSelect.addEventListener('change', (e) => {
+                updateChartTitle(e.target.value);
+            });
+        }
+        
+        // Lógica para Rotar la Flecha en "Otra Información"
+        const otherInfoDetails = document.getElementById('otherInfoDetails');
+        if (otherInfoDetails) {
+            const arrow = otherInfoDetails.querySelector('summary i');
+            otherInfoDetails.addEventListener('toggle', () => {
+                if (otherInfoDetails.open) {
+                    arrow.classList.add('rotate-180');
+                } else {
+                    arrow.classList.remove('rotate-180');
+                }
+            });
+        }
+        
+
+        // Botones que requieren PIN (Solo MÉTICAS REVELADAS - MANTENIDA)
+        document.querySelectorAll('[data-auth-for^="reveal"]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const target = e.currentTarget.getAttribute('data-auth-for');
+                
+                // Determina los elementos de la métrica
+                const displayEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'DisplayValue');
+                const protectedEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'ProtectedValue');
+                const eyeIcon = document.getElementById(target.replace('reveal', '').toLowerCase() + 'EyeIcon');
+                
+                if (!displayEl.classList.contains('hidden')) {
+                    // Ocultar al hacer click si ya está visible
+                    displayEl.classList.add('hidden');
+                    protectedEl.classList.remove('hidden');
+                    eyeIcon.classList.remove('fa-eye-slash');
+                    eyeIcon.classList.add('fa-eye');
+                } else {
+                    // Mostrar modal de auth
+                    attemptAuth(target);
+                }
+            });
+        });
+
+        // Listener del botón de Acceso en el modal de PIN
+        checkVentaPinBtn.addEventListener('click', handlePinCheck);
+
+        // Permitir Enter para enviar el PIN
+        ventaPinInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handlePinCheck();
+            }
+        });
+        
+        // Lógica para agregar un nuevo canal de venta manualmente (MANTENIDO)
+        const addNewCanalBtn = document.getElementById('addNewCanalBtn');
+        const canalListOptions = document.getElementById('canalListOptions');
+        if (addNewCanalBtn && canalVentaInput && canalListOptions) {
+            addNewCanalBtn.addEventListener('click', () => {
+                const canalName = canalVentaInput.value.trim();
+                
+                if (canalName && canalName !== "Ninguno") {
+                    const existingOption = Array.from(canalListOptions.options).some(opt => opt.value === canalName);
+
+                    if (existingOption) {
+                        alertMessage(`El canal "${canalName}" ya existe en la lista.`, 'info');
+                    } else {
+                        const newOption = document.createElement('option');
+                        newOption.value = canalName;
+                        canalListOptions.appendChild(newOption);
+                        
+                        canalVentaInput.value = canalName;
+                        alertMessage(`Canal de venta "${canalName}" agregado manualmente a la lista.`, 'success');
+                    }
+                } else {
+                    alertMessage('Por favor, escriba un nombre de canal para agregar.', 'error');
+                }
+            });
+        }
+        
+        // Lógica para el manejo de categorías de Producto (Mantenido y Corregido)
+        const setupCustomCategoryListeners = () => {
+            const addBtn = document.getElementById('addCustomCategoryBtn');
+            const saveBtn = document.getElementById('saveCustomCategoryBtn');
+            const cancelBtn = document.getElementById('cancelCustomCategoryBtn');
+            const inputGroup = document.getElementById('customCategoryInputGroup');
+            const selectGroup = document.getElementById('categorySelectGroup');
+            const input = document.getElementById('customCategoryInput');
+            const categorySelect = document.getElementById('categoriaProducto');
+            const deleteCategoryBtn = document.getElementById('deleteCategoryBtn');
+
+            const checkCategoryDeletable = () => {
+                if (deleteCategoryBtn && categorySelect) {
+                    deleteCategoryBtn.disabled = categorySelect.value === 'Ninguna' || categorySelect.selectedIndex === 0;
+                }
+            };
+            
+            if (addBtn) addBtn.addEventListener('click', () => {
+                if (selectGroup) selectGroup.classList.add('hidden');
+                if (inputGroup) inputGroup.classList.remove('hidden');
+                if (input) input.value = '';
+                if (input) input.focus();
+            });
+
+            if (cancelBtn) cancelBtn.addEventListener('click', () => {
+                if (inputGroup) inputGroup.classList.add('hidden');
+                if (selectGroup) selectGroup.classList.remove('hidden');
+                checkCategoryDeletable();
+            });
+
+            if (saveBtn) saveBtn.addEventListener('click', () => {
+                const newCategoryName = input?.value.trim();
+                
+                if (newCategoryName && newCategoryName.length > 0) {
+                    const newOption = document.createElement('option');
+                    newOption.value = newCategoryName;
+                    newOption.textContent = newCategoryName;
+                    categorySelect.appendChild(newOption);
+                    categorySelect.value = newCategoryName;
+                    
+                    if (inputGroup) inputGroup.classList.add('hidden');
+                    if (selectGroup) selectGroup.classList.remove('hidden');
+                    checkCategoryDeletable(); 
+                    alertMessage(`Categoría "${newCategoryName}" añadida y seleccionada.`, 'success');
+                } else {
+                    alertMessage('Ingrese un nombre para la nueva categoría.', 'error');
+                }
+            });
+            
+            if (deleteCategoryBtn) {
+                deleteCategoryBtn.addEventListener('click', () => {
+                    const selectedIndex = categorySelect.selectedIndex;
+                    if (selectedIndex > 0) {
+                        const categoryToDelete = categorySelect.options[selectedIndex].textContent;
+                        categorySelect.remove(selectedIndex);
+                        categorySelect.value = 'Ninguna'; 
+                        checkCategoryDeletable();
+                        alertMessage(`Categoría "${categoryToDelete}" eliminada.`, 'success');
+                    } else {
+                        alertMessage('No se puede eliminar la categoría "Ninguna".', 'error');
+                    }
+                });
+            }
+            
+            if (categorySelect) categorySelect.addEventListener('change', checkCategoryDeletable);
+            checkCategoryDeletable(); 
+        };
+        
+        // Inicializar los selectores de CRUD
+        setupCustomCategoryListeners();
+        
+        // --- Lógica del Historial Diario de Ganancias (MANTENIDA) ---
+        document.querySelectorAll('.ganancias-mes-celda').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const monthName = e.currentTarget.getAttribute('data-month');
+                const { data, total } = generateDailyData(monthName);
+                
+                document.getElementById('detalleDiarioTitulo').textContent = `Historial Diario de Ganancias (${monthName})`;
+                
+                const tbody = document.getElementById('detalleDiarioContenido');
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">${item.day} de ${monthName}</td>
+                        <td class="px-6 py-2 whitespace-nowrap text-right text-sm font-medium text-green-600">$${item.profit.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('detalleDiarioTotal').textContent = `$${total}`;
+                
+                closeModal(document.getElementById('gananciasModal')); 
+                openModal(document.getElementById('detalleDiarioModal'));
+            });
+        });
+        
+        // Event Listeners para cerrar los modales (botón X y botón Cancelar)
+        document.querySelectorAll('[data-close-modal]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const modalId = e.currentTarget.getAttribute('data-close-modal');
+                const targetModal = document.getElementById(modalId);
+                if (targetModal) {
+                    closeModal(targetModal);
+                }
+            });
+        });
+        
+        // Cerrar modal al hacer clic fuera del contenido (en el overlay)
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-overlay')) {
+                    closeModal(e.target);
+                }
+            });
+        });
+    });
+</script>
