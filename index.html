@@ -233,7 +233,7 @@
                 <h4 class="text-lg font-medium text-gray-500">Ventas / Ticket Promedio</h4>
                 <div class="flex justify-between items-center mb-4">
                     <p class="text-3xl font-bold text-blue-600">
-                        <span id="ventasDisplayValue" class="hidden"></span>
+                        <span id="ventasDisplayValue" class="hidden">$14,400 / $72</span>
                         <span id="ventasProtectedValue">******</span>
                     </p>
                     <button type="button" data-auth-for="revealVentas" class="text-blue-500 text-sm font-semibold hover:text-blue-700 transition">
@@ -259,7 +259,7 @@
                 <h4 class="text-lg font-medium text-gray-500">Resultados Netos del mes</h4>
                 <div class="flex justify-between items-center mb-4">
                     <p class="text-3xl font-bold text-green-600">
-                        <span id="gananciasDisplayValue" class="hidden"></span>
+                        <span id="gananciasDisplayValue" class="hidden">$5,500</span>
                         <span id="gananciasProtectedValue">******</span>
                     </p>
                     <button type="button" data-auth-for="revealGanancias" class="text-green-500 text-sm font-semibold hover:text-green-700 transition">
@@ -285,7 +285,7 @@
                 <h4 class="text-lg font-medium text-gray-500">Caja <i class="fas fa-circle text-xs text-green-500"></i></h4>
                 <div class="flex justify-between items-center mb-4">
                     <p class="text-3xl font-bold text-yellow-600">
-                        <span id="cajaDisplayValue" class="hidden"></span> 
+                        <span id="cajaDisplayValue" class="hidden">$12,000.00</span> 
                         <span id="cajaProtectedValue">******</span>
                     </p>
                     <button type="button" data-auth-for="revealCaja" class="text-yellow-500 text-sm font-semibold hover:text-yellow-700 transition">
@@ -952,7 +952,7 @@
             </div>
 
             <!-- Cuerpo del Formulario de Venta -->
-            <form class="p-6 space-y-8">
+            <form id="ventaForm" class="p-6 space-y-8">
 
                 <!-- Bloque 1: Información Principal (Fecha, Cliente, MONTO COBRADO) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -983,7 +983,7 @@
                         <!-- Monto Cobrado (MOVIDO AQUÍ) -->
                         <div>
                             <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
-                            <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right">
+                            <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right" required>
                         </div>
                     </div>
 
@@ -1145,7 +1145,7 @@
                 <button data-close-modal="ventaModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
                     Cancelar
                 </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+                <button form="ventaForm" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">
                     Guardar Venta
                 </button>
             </div>
@@ -1281,7 +1281,9 @@
     let userId = null; 
     let isAuthReady = false; 
     let productsData = []; 
+    let salesData = []; // NUEVO: Para almacenar datos de ventas
     let unsubscribeProducts = null; 
+    let unsubscribeSales = null; // NUEVO: Para el listener de ventas
 
     // --- Funciones de Utilidad ---
     
@@ -1397,25 +1399,34 @@
             onAuthStateChanged(auth, (user) => {
                 const currentUserIdDisplay = document.getElementById('currentUserIdDisplay');
                 
-                // 1. Unsubscribe previous listener if it exists
+                // 1. Unsubscribe previous listeners
                 if (unsubscribeProducts) {
                     unsubscribeProducts();
                     unsubscribeProducts = null;
-                    console.log("Firestore: Previous listener successfully detached.");
+                    console.log("Firestore: Previous product listener successfully detached.");
+                }
+                if (unsubscribeSales) { // NUEVO: Unsubscribe sales listener
+                    unsubscribeSales();
+                    unsubscribeSales = null;
+                    console.log("Firestore: Previous sales listener successfully detached.");
                 }
 
                 if (user) {
                     userId = user.uid;
-                    updateAuthStatus(true); // Ahora llama a la función globalmente definida
+                    updateAuthStatus(true);
                     if (currentUserIdDisplay) currentUserIdDisplay.textContent = userId;
-                    // 2. Set up new listener for the new user ID
-                    setupRealtimeListeners(); 
+                    
+                    // 2. Set up new listeners for the new user ID
+                    setupRealtimeProductsListener(); // Llama a la función renombrada/existente
+                    setupRealtimeSalesListener();    // NUEVO: Inicia listener de ventas
                 } else {
                     userId = null;
-                    updateAuthStatus(false); // Ahora llama a la función globalmente definida
+                    updateAuthStatus(false);
                     if (currentUserIdDisplay) currentUserIdDisplay.textContent = 'N/A';
-                    // 3. Clear product data immediately for privacy/permissions
+                    
+                    // 3. Clear product and sales data
                     productsData = [];
+                    salesData = []; // Limpia datos de ventas
                     renderProductHistory();
                     loadInventoryData(); 
                 }
@@ -1437,18 +1448,26 @@
         }
     };
     
-    // Path for private collections: /artifacts/{appId}/users/{userId}/products
+    // Path for private products collection: /artifacts/{appId}/users/{userId}/products
     const getProductsCollectionRef = () => {
         if (!db || !userId) {
-            // Esto es normal si el usuario es anónimo y no tiene permisos
             console.warn("DB or User ID not available for product collection (Permission expected to fail).");
             return null;
         }
         return collection(db, 'artifacts', appId, 'users', userId, 'products');
     };
 
-    // --- Real-Time Listener for Products (Only runs when userId is valid) ---
-    const setupRealtimeListeners = () => {
+    // Path for private sales collection: /artifacts/{appId}/users/{userId}/sales (NUEVO)
+    const getSalesCollectionRef = () => {
+        if (!db || !userId) {
+            console.warn("DB or User ID not available for sales collection.");
+            return null;
+        }
+        return collection(db, 'artifacts', appId, 'users', userId, 'sales');
+    };
+
+    // --- Real-Time Listener for Products (Renombrado) ---
+    const setupRealtimeProductsListener = () => { // Renombrado de setupRealtimeListeners
         const productsRef = getProductsCollectionRef();
         if (!productsRef) return; // Stop if no valid ref/user
 
@@ -1494,7 +1513,62 @@
             }
         });
     };
-    
+
+    // --- Real-Time Listener for Sales (NUEVO) ---
+    const setupRealtimeSalesListener = () => { 
+        const salesRef = getSalesCollectionRef();
+        if (!salesRef) return; 
+
+        unsubscribeSales = onSnapshot(salesRef, (snapshot) => {
+            salesData = [];
+            let totalVentasDelMes = 0;
+            // Asumiendo que el mes de gestión es el mes actual para la demo
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            snapshot.forEach((doc) => {
+                const sale = { id: doc.id, ...doc.data() };
+                salesData.push(sale);
+                
+                // Cálculo de Ventas del mes y año actual
+                if (sale.date) {
+                    // La fecha se almacena en formato YYYY-MM-DD
+                    const saleDate = new Date(sale.date);
+                    if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+                        const monto = parseFloat(sale.montoCobrado) || 0;
+                        totalVentasDelMes += monto;
+                    }
+                }
+            });
+
+            // 1. Calcular Ticket Promedio
+            const ventasEnElMes = salesData.filter(s => {
+                if (!s.date) return false;
+                const saleDate = new Date(s.date);
+                return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+            });
+
+            const ticketPromedio = ventasEnElMes.length > 0 ? (totalVentasDelMes / ventasEnElMes.length) : 0;
+            
+            // 2. Actualizar el Dashboard
+            const ventasDisplayValueEl = document.getElementById('ventasDisplayValue');
+            if (ventasDisplayValueEl) {
+                 const ventasFormateadas = totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+                 const ticketFormateado = ticketPromedio.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+                 ventasDisplayValueEl.textContent = `$${ventasFormateadas} / $${ticketFormateado}`;
+            }
+            
+        }, (error) => {
+            if (error.code === 'permission-denied') {
+                 console.error("Error de permisos: No se pueden cargar las ventas.");
+            } else {
+                console.error("Error listening to sales collection:", error);
+            }
+        });
+    };
+
+
     // --- Data Rendering Functions (Updated to use productsData) ---
 
     const renderProductHistory = () => {
@@ -1574,7 +1648,7 @@
     };
 
 
-    // --- Data Saving Functions (Firestore) ---
+    // --- Data Saving Functions (Product) ---
     const saveProduct = async (event) => {
         event.preventDefault();
         
@@ -1637,6 +1711,80 @@
         } catch (e) {
             console.error("Error al añadir el producto: ", e);
             alertMessage('Error al guardar el producto. ¿Tiene permisos? Ver consola.', 'error');
+        }
+    };
+
+
+    // --- Data Saving Functions (Sale) (NUEVO) ---
+    const saveSale = async (event) => {
+        event.preventDefault();
+        
+        if (!isAuthReady || !userId) {
+            alertMessage('Error: Debe iniciar sesión para guardar ventas.', 'error');
+            return;
+        }
+
+        const salesRef = getSalesCollectionRef();
+        if (!salesRef) {
+             alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
+             return;
+        }
+
+        // 1. Recoger datos del formulario de Venta
+        const montoCobrado = document.getElementById('montoCobrado').value;
+        // Si la fecha está vacía, usa la fecha actual
+        const fechaVenta = document.getElementById('fechaVenta').value || getCurrentDate();
+        const clienteVentaInput = document.getElementById('clienteVentaInput').value.trim();
+        const descuentoVenta = document.getElementById('descuentoVenta').value;
+        const canalVentaInput = document.getElementById('canalVentaInput').value.trim();
+        const estadoVenta = document.getElementById('estadoVenta').value;
+        const fechaEntrega = document.getElementById('fechaEntrega').value;
+        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput').value.trim();
+        const tipoVenta = document.getElementById('tipoVenta').value;
+        const vendedorVenta = document.getElementById('vendedorVenta').value;
+        const nroFactura = document.getElementById('nroFactura').value.trim();
+        const notasVenta = document.getElementById('notasVenta').value.trim();
+        
+        // 2. Validación básica
+        if (!montoCobrado || parseFloat(montoCobrado) <= 0) {
+            alertMessage('El Monto Cobrado es obligatorio y debe ser mayor que cero.', 'error');
+            return;
+        }
+        
+        const saleData = {
+            montoCobrado: parseFloat(montoCobrado),
+            date: fechaVenta,
+            clientName: clienteVentaInput || 'Consumidor Final',
+            discountPercent: parseFloat(descuentoVenta) || 0,
+            salesChannel: canalVentaInput || 'Ninguno',
+            status: estadoVenta,
+            deliveryDate: fechaEntrega || null,
+            paymentType: tipoPagoVentaInput || 'Efectivo',
+            saleType: tipoVenta,
+            vendor: vendedorVenta,
+            invoiceNumber: nroFactura,
+            notes: notasVenta,
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            // 3. Guardar en Firestore
+            const docRef = await addDoc(salesRef, saleData);
+            console.log("Venta guardada con ID: ", docRef.id);
+            alertMessage(`Venta por $${saleData.montoCobrado.toFixed(2)} guardada con éxito!`, 'success');
+            
+            // 4. Limpiar formulario y cerrar modal (opcionalmente)
+            document.getElementById('montoCobrado').value = '';
+            document.getElementById('clienteVentaInput').value = '';
+            document.getElementById('descuentoVenta').value = '0';
+            document.getElementById('canalVentaInput').value = '';
+            document.getElementById('notasVenta').value = '';
+            
+            closeModal(document.getElementById('ventaModal'));
+
+        } catch (e) {
+            console.error("Error al añadir la venta: ", e);
+            alertMessage('Error al guardar la venta. Ver consola para más detalles.', 'error');
         }
     };
 
@@ -1873,8 +2021,10 @@
         }
 
         // Almacenar la acción pendiente y el valor a borrar
+        // El tipo de acción depende de si es Encargado o Categoría de Tipo de Pago
+        const actionType = fieldName.includes('Encargado') ? 'deleteEncargado' : 'deleteCategoríadeTipodePago';
         pendingAuthAction = { 
-            type: `delete${fieldName.replace(/\s/g, '')}`, 
+            type: actionType, 
             name: nameToDelete,
             input: input.id,
             datalist: datalist.id
@@ -1938,7 +2088,7 @@
                     if (input.value === nameToDelete) {
                         input.value = ''; // Limpiar el input si la opción eliminada estaba seleccionada
                     }
-                    const fieldName = pendingAuthAction.type === 'deleteEncargado' ? 'Encargado' : 'Tipo de Pago';
+                    const fieldName = pendingAuthAction.type === 'deleteEncargado' ? 'Encargado de Turno' : 'Categoría de Tipo de Pago';
                     alertMessage(`${fieldName} "${nameToDelete}" eliminado con éxito.`, 'success');
                 } else {
                     alertMessage(`Error: La opción "${nameToDelete}" no se encontró en la lista.`, 'error');
@@ -1994,6 +2144,7 @@
         const openClientesModalTrigger = document.getElementById('openClientesModalTrigger'); 
         
         const productoForm = document.getElementById('productoForm');
+        const ventaForm = document.getElementById('ventaForm'); // NUEVO: Obtener el formulario de venta
         
         const togglePriceSection = document.getElementById('togglePriceSection');
         const priceSectionContent = document.getElementById('priceSectionContent');
@@ -2024,8 +2175,8 @@
         const deleteTipoPagoWithPinBtn = document.getElementById('deleteTipoPagoWithPinBtn');
 
         
-        // Asignar valores iniciales simulados (mantenidos)
-        document.getElementById('ventasDisplayValue').textContent = SIMULATED_VENTAS_VALUE;
+        // Asignar valores iniciales simulados (se mantendrán hasta que el listener de ventas los sobrescriba)
+        // document.getElementById('ventasDisplayValue').textContent = SIMULATED_VENTAS_VALUE; // Esto lo manejará el listener
         document.getElementById('gananciasDisplayValue').textContent = SIMULATED_GANANCIAS_VALUE;
         document.getElementById('cajaDisplayValue').textContent = SIMULATED_CAJA_VALUE; 
         
@@ -2087,13 +2238,21 @@
         document.getElementById('openVerVentasLink').addEventListener('click', () => openModal(document.getElementById('gananciasModal')));
         openGananciasBtnAction.addEventListener('click', () => openModal(document.getElementById('gananciasModal')));
         
-        openVentaModalDirect.addEventListener('click', () => openModal(document.getElementById('ventaModal')));
+        openVentaModalDirect.addEventListener('click', () => {
+            document.getElementById('fechaVenta').value = getCurrentDate(); // Establecer fecha actual por defecto
+            openModal(document.getElementById('ventaModal'));
+        });
 
         document.getElementById('openProfileModalBtn').addEventListener('click', () => openModal(document.getElementById('profileModal')));
         
         // Producto: Lógica de Guardado (Firestore)
         if (productoForm) {
             productoForm.addEventListener('submit', saveProduct);
+        }
+        
+        // Venta: Lógica de Guardado (Firestore) (NUEVO)
+        if (ventaForm) {
+            ventaForm.addEventListener('submit', saveSale);
         }
 
         // Botón de la tarjeta Inventario: Abre el modal de historial
