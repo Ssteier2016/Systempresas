@@ -1435,11 +1435,13 @@
     </div>
     <!-- FIN CONTENIDO PRINCIPAL -->
 
-    <!-- REGISTRO DEL SERVICE WORKER para PWA -->
+ <!-- REGISTRO DEL SERVICE WORKER para PWA -->
     <script>
-        if ('serviceWorker' in navigator) {
+        // Esta comprobación evita el error "The URL protocol of the script (':') is not supported"
+        // cuando se ejecuta en entornos de desarrollo con protocolos no seguros (como blob: o file:).
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('Service Worker registrado con éxito: ', registration);
                     })
@@ -1447,6 +1449,8 @@
                         console.error('Fallo el registro del Service Worker: ', error);
                     });
             });
+        } else {
+             console.warn('Service Worker no registrado: Protocolo no soportado o API no disponible.');
         }
     </script>
     <!-- FIN REGISTRO DEL SERVICE WORKER -->
