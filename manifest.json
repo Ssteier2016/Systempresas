@@ -1,0 +1,21 @@
+{
+  "name": "Systempresas: Gestión de Negocios",
+  "short_name": "Systempresas",
+  "description": "Dashboard de gestión de ventas, gastos e inventario en tiempo real.",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
