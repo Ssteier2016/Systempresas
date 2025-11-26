@@ -411,13 +411,13 @@
     </div>
     <!-- FIN DEL MODAL PERFIL Y AUTENTICACIÓN -->
 
-    <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles -->
+    <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles y la eliminación de encargados -->
     <div id="authModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
             
             <!-- Encabezado del Modal -->
             <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                <h2 class="text-xl font-bold text-gray-800">Acceso Restringido</h2>
+                <h2 id="authModalTitle" class="text-xl font-bold text-gray-800">Acceso Restringido</h2>
                 <button data-close-modal="authModal" class="text-gray-400 hover:text-gray-600 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -425,7 +425,7 @@
 
             <!-- Cuerpo del Formulario de PIN -->
             <div class="p-6 space-y-4 text-center">
-                <p class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos).</p>
+                <p id="authModalMessage" class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos).</p>
                 <input type="password" id="ventaPinInput" maxlength="4" placeholder="••••" class="text-center text-2xl tracking-widest mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
                 <p id="pinError" class="text-sm text-red-500 hidden font-medium">PIN Incorrecto. Intente de nuevo.</p>
             </div>
@@ -1224,42 +1224,34 @@
                     <!-- FIN CATEGORÍA CON DATALIST -->
                 </div>
 
-                <!-- ENCARGADO DE TURNO (MANTENIENDO EL CRUD DETALLADO) -->
+                <!-- ENCARGADO DE TURNO (NUEVO DISEÑO CON DATALIST Y ELIMINAR CON PIN) -->
                 <div>
-                    <label for="encargadoSelect" class="block text-sm font-medium text-gray-700">Encargado de Turno</label>
-                    <div id="encargadoSelectGroup" class="flex items-center space-x-2 mt-1">
-                        <select id="encargadoSelect" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border">
-                            <option>Seleccione Encargado</option>
-                        </select>
-                        <button type="button" id="deleteEncargadoBtn" disabled class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm disabled:bg-gray-400" title="Eliminar Encargado Seleccionado">
+                    <label for="encargadoInput" class="block text-sm font-medium text-gray-700">Encargado de Turno</label>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <input type="text" id="encargadoInput" list="encargadoListOptions" placeholder="Escriba o seleccione un encargado..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
+                        
+                        <datalist id="encargadoListOptions">
+                            <!-- Las opciones se agregarán dinámicamente -->
+                        </datalist>
+
+                        <!-- Botón para eliminar (Requiere PIN) -->
+                        <button type="button" id="deleteEncargadoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Encargado (Requiere PIN)">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button type="button" id="addCustomEncargadoBtn" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Encargado Personalizado">
+                        
+                        <!-- Botón para agregar -->
+                        <button type="button" id="addNewEncargadoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Encargado">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    
-                    <!-- Nuevo campo para ingresar encargado personalizado (Inicialmente oculto) -->
-                    <div id="customEncargadoInputGroup" class="mt-2 hidden flex items-center space-x-2">
-                        <input type="text" id="customEncargadoInput" placeholder="Nombre del nuevo encargado" class="block flex-1 rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 p-3 input-bg-blue border">
-                        <button type="button" id="saveCustomEncargadoBtn" class="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition shadow-sm" title="Guardar Encargado">
-                            <i class="fas fa-save"></i>
-                        </button>
-                        <button type="button" id="cancelCustomEncargadoBtn" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition shadow-sm" title="Cancelar">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
                 </div>
-                <!-- FIN CAMBIO ENCARGADO DE TURNO -->
+                <!-- FIN ENCARGADO DE TURNO -->
                 
                 <!-- CAMPO DE DESCRIPCIÓN -->
                 <div>
                     <label for="descripcionGastoTextArea" class="block text-sm font-medium text-gray-700">Descripción (Opt.)</label>
                     <textarea id="descripcionGastoTextArea" rows="3" placeholder="Detalles o notas adicionales sobre el gasto..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border"></textarea>
                 </div>
-
-
-                <!-- Tipo de Gasto (Chips) - ELIMINADO SEGÚN SOLICITUD DEL USUARIO -->
 
                 <!-- Pagado Checkbox -->
                 <div class="flex items-center pt-2">
@@ -1853,6 +1845,150 @@
     };
 
 
+    // --- LÓGICA DE CRUD DE DATALIST (REUTILIZABLE) ---
+    
+    // Función para agregar una opción a un datalist
+    const setupDatalistAdd = (addButtonId, inputId, datalistId, fieldName) => {
+        const addBtn = document.getElementById(addButtonId);
+        const input = document.getElementById(inputId);
+        const datalist = document.getElementById(datalistId);
+
+        if (!addBtn || !input || !datalist) return; 
+
+        addBtn.addEventListener('click', () => {
+            const name = input.value.trim();
+            
+            if (name) {
+                const existingOption = Array.from(datalist.options).some(opt => opt.value === name);
+
+                if (existingOption) {
+                    alertMessage(`El ${fieldName} "${name}" ya existe en la lista.`, 'info');
+                } else {
+                    const newOption = document.createElement('option');
+                    newOption.value = name;
+                    datalist.appendChild(newOption);
+                    
+                    input.value = name;
+                    alertMessage(`${fieldName} "${name}" agregado manualmente a la lista.`, 'success');
+                }
+            } else {
+                alertMessage(`Por favor, escriba un nombre de ${fieldName} para agregar.`, 'error');
+            }
+        });
+    };
+
+    // Función para eliminar un Encargado de la datalist (requiere PIN)
+    const attemptDeleteEncargado = (input, datalist) => {
+        const nameToDelete = input.value.trim();
+
+        if (!nameToDelete || nameToDelete === 'Seleccione Encargado') {
+            alertMessage('Seleccione un encargado para eliminar.', 'error');
+            return;
+        }
+        
+        const option = Array.from(datalist.options).find(opt => opt.value === nameToDelete);
+        
+        if (!option) {
+            alertMessage(`El encargado "${nameToDelete}" no se encuentra en la lista.`, 'error');
+            return;
+        }
+
+        // Almacenar la acción pendiente y el valor a borrar
+        pendingAuthAction = { type: 'deleteEncargado', name: nameToDelete };
+        
+        // Configurar el modal de autenticación para la eliminación
+        document.getElementById('authModalTitle').textContent = 'Confirmación de Eliminación';
+        document.getElementById('authModalMessage').textContent = `Ingrese el PIN ${SECURE_PIN} para eliminar el encargado: "${nameToDelete}"`;
+        document.getElementById('pinError').classList.add('hidden');
+        document.getElementById('ventaPinInput').value = '';
+        
+        openModal(document.getElementById('authModal'));
+        document.getElementById('ventaPinInput').focus();
+    };
+
+    // --- Lógica de Autenticación y Revelación/Eliminación ---
+    
+    // Extiende la lógica de revelación para que también oculte
+    const revealMetrics = (target, pinInput) => {
+        const displayEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'DisplayValue');
+        const protectedEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'ProtectedValue');
+        const eyeIcon = document.getElementById(target.replace('reveal', '').toLowerCase() + 'EyeIcon');
+        
+        if (pinInput.value === SECURE_PIN) {
+            displayEl.classList.remove('hidden');
+            protectedEl.classList.add('hidden');
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+            
+            // Restablecer el modal
+            document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
+            document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+            pinInput.value = '';
+            closeModal(document.getElementById('authModal'));
+            pendingAuthAction = null;
+        } else {
+            document.getElementById('pinError').classList.remove('hidden');
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    };
+
+    // Manejador central para el botón "Acceder" del modal de PIN
+    const handlePinCheck = () => {
+        if (!pendingAuthAction) return;
+
+        const pinInput = document.getElementById('ventaPinInput');
+        
+        if (pinInput.value === SECURE_PIN) {
+            
+            // 1. ELIMINACIÓN DE ENCARGADO
+            if (pendingAuthAction.type === 'deleteEncargado') {
+                const nameToDelete = pendingAuthAction.name;
+                const encargadoDatalist = document.getElementById('encargadoListOptions');
+                const encargadoInput = document.getElementById('encargadoInput');
+                
+                const option = Array.from(encargadoDatalist.options).find(opt => opt.value === nameToDelete);
+
+                if (option) {
+                    option.remove();
+                    if (encargadoInput.value === nameToDelete) {
+                        encargadoInput.value = ''; // Limpiar el input si la opción eliminada estaba seleccionada
+                    }
+                    alertMessage(`Encargado "${nameToDelete}" eliminado con éxito.`, 'success');
+                } else {
+                    alertMessage(`Error: El encargado "${nameToDelete}" no se encontró en la lista.`, 'error');
+                }
+
+                // 2. Restablecer el modal y el estado
+                document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
+                document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+                closeModal(document.getElementById('authModal'));
+                pendingAuthAction = null;
+                
+            } else if (typeof pendingAuthAction === 'string' && pendingAuthAction.startsWith('reveal')) {
+                // 2. REVELACIÓN DE MÉTRICAS
+                revealMetrics(pendingAuthAction, pinInput);
+            }
+            
+        } else {
+            document.getElementById('pinError').classList.remove('hidden');
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    };
+    
+    // Función de apertura de Auth para métricas
+    const attemptAuth = (actionTarget) => {
+        pendingAuthAction = actionTarget;
+        document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
+        document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+        openModal(document.getElementById('authModal'));
+        document.getElementById('ventaPinInput').value = '';
+        document.getElementById('pinError').classList.add('hidden');
+        document.getElementById('ventaPinInput').focus();
+    };
+
+
     // --- Inicialización DOM ---
     document.addEventListener('DOMContentLoaded', () => {
         // Iniciar Firebase y el flujo de autenticación
@@ -1862,19 +1998,8 @@
         updateClock(); 
         // ********************************
 
-        // --- Setup de Modales ---
+        // --- Selectores de Modales y Botones ---
         const productoModal = document.getElementById('productoModal');
-        const ventaModal = document.getElementById('ventaModal');
-        const gastoModal = document.getElementById('gastoModal');
-        const gananciasModal = document.getElementById('gananciasModal');
-        const detalleDiarioModal = document.getElementById('detalleDiarioModal');
-        const authModal = document.getElementById('authModal');
-        const analisisModal = document.getElementById('analisisModal'); 
-        const inventarioModal = document.getElementById('inventarioModal');
-        const profileModal = document.getElementById('profileModal');
-        const clientesModal = document.getElementById('clientesModal'); 
-
-        // --- Selectores de Botones y Elementos ---
         const openProductoBtn = document.getElementById('openProductoModal');
         const openProductoBtnTrigger = document.getElementById('openProductoModalTrigger');
         const openGastoBtn = document.getElementById('openGastoModal');
@@ -1885,20 +2010,27 @@
         
         const productoForm = document.getElementById('productoForm');
         
-        // Selectores de Despliegue de Precios (NUEVOS)
         const togglePriceSection = document.getElementById('togglePriceSection');
         const priceSectionContent = document.getElementById('priceSectionContent');
         
-        // Selectores de Canal de Venta en Nueva Venta 
         const canalVentaInput = document.getElementById('canalVentaInput');
         const addNewCanalBtn = document.getElementById('addNewCanalBtn');
         const canalListOptions = document.getElementById('canalListOptions');
         
-        // Selector del nuevo desplegable de métricas
         const metricSelect = document.getElementById('metricSelect'); 
 
         const ventaPinInput = document.getElementById('ventaPinInput');
         const checkVentaPinBtn = document.getElementById('checkVentaPinBtn');
+        
+        // --- Elementos de Encargado/Categoría Gasto ---
+        const encargadoInput = document.getElementById('encargadoInput');
+        const encargadoListOptions = document.getElementById('encargadoListOptions');
+        const addNewEncargadoBtn = document.getElementById('addNewEncargadoBtn');
+        const deleteEncargadoWithPinBtn = document.getElementById('deleteEncargadoWithPinBtn');
+        
+        const categoriaGastoInput = document.getElementById('categoriaGastoInput');
+        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
+        const addNewGastoCategoryBtn = document.getElementById('addNewGastoCategoryBtn');
         
         // Asignar valores iniciales simulados (mantenidos)
         document.getElementById('ventasDisplayValue').textContent = SIMULATED_VENTAS_VALUE;
@@ -1908,50 +2040,25 @@
         // Inicializar hora y conteo de clientes
         updateClientCount(); 
         
-        // --- Lógica de Autenticación y Revelación (Modo Ninja) ---
-        const revealMetrics = (target, pinInput) => {
-            const isVentas = target === 'revealVentas';
-            const isGanancias = target === 'revealGanancias';
-            const isCaja = target === 'revealCaja';
+        // --- Lógica de CRUD para Datalists ---
+        
+        // 1. Categoría de Gasto (Adición)
+        setupDatalistAdd('addNewGastoCategoryBtn', 'categoriaGastoInput', 'categoriaGastoListOptions', 'Categoría de Gasto');
+        if (categoriaGastoListOptions) categoriaGastoListOptions.innerHTML = ''; // Limpiar opciones por defecto
 
-            // Determine elements based on target
-            const displayEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'DisplayValue');
-            const protectedEl = document.getElementById(target.replace('reveal', '').toLowerCase() + 'ProtectedValue');
-            const eyeIcon = document.getElementById(target.replace('reveal', '').toLowerCase() + 'EyeIcon');
-            
-            if (pinInput.value === SECURE_PIN) {
-                displayEl.classList.remove('hidden');
-                protectedEl.classList.add('hidden');
-                eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash');
-                
-                pinInput.value = '';
-                closeModal(authModal);
-                pendingAuthAction = null;
-            } else {
-                document.getElementById('pinError').classList.remove('hidden');
-                pinInput.value = '';
-                pinInput.focus();
-            }
-        };
+        // 2. Encargado de Turno (Adición)
+        setupDatalistAdd('addNewEncargadoBtn', 'encargadoInput', 'encargadoListOptions', 'Encargado de Turno');
+        if (encargadoListOptions) encargadoListOptions.innerHTML = ''; // Limpiar opciones por defecto
 
-        const handlePinCheck = () => {
-            if (!pendingAuthAction) return;
+        // 3. Encargado de Turno (Eliminación con PIN)
+        if (deleteEncargadoWithPinBtn) {
+            deleteEncargadoWithPinBtn.addEventListener('click', () => {
+                attemptDeleteEncargado(encargadoInput, encargadoListOptions);
+            });
+        }
 
-            if (pendingAuthAction.startsWith('reveal')) {
-                revealMetrics(pendingAuthAction, ventaPinInput);
-            }
-        };
 
-        const attemptAuth = (actionTarget) => {
-            pendingAuthAction = actionTarget;
-            openModal(authModal);
-            ventaPinInput.value = '';
-            document.getElementById('pinError').classList.add('hidden');
-            ventaPinInput.focus();
-        };
-
-        // --- Listeners de Eventos (Botones) ---
+        // --- Listeners de Eventos (Botones y Lógica Principal) ---
 
         // Toggle para la sección de Precio de Venta (NUEVO)
         if (togglePriceSection && priceSectionContent) {
@@ -1964,7 +2071,6 @@
                     togglePriceSection.innerHTML = '<i class="fas fa-minus-circle mr-2"></i> Ocultar Precio de Venta';
                 }
             });
-            // Inicializar el texto del botón al cargar
             if (priceSectionContent.classList.contains('hidden')) {
                 togglePriceSection.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta';
             }
@@ -1974,13 +2080,13 @@
         // Abrir modales sin PIN
         openProductoBtn.addEventListener('click', () => openModal(productoModal));
         openProductoBtnTrigger.addEventListener('click', () => openModal(productoModal));
-        openGastoBtn.addEventListener('click', () => openModal(gastoModal));
-        document.getElementById('openVerVentasLink').addEventListener('click', () => openModal(gananciasModal));
-        openGananciasBtnAction.addEventListener('click', () => openModal(gananciasModal));
+        openGastoBtn.addEventListener('click', () => openModal(document.getElementById('gastoModal')));
+        document.getElementById('openVerVentasLink').addEventListener('click', () => openModal(document.getElementById('gananciasModal')));
+        openGananciasBtnAction.addEventListener('click', () => openModal(document.getElementById('gananciasModal')));
         
-        openVentaModalDirect.addEventListener('click', () => openModal(ventaModal));
+        openVentaModalDirect.addEventListener('click', () => openModal(document.getElementById('ventaModal')));
 
-        document.getElementById('openProfileModalBtn').addEventListener('click', () => openModal(profileModal));
+        document.getElementById('openProfileModalBtn').addEventListener('click', () => openModal(document.getElementById('profileModal')));
         
         // Producto: Lógica de Guardado (Firestore)
         if (productoForm) {
@@ -1990,19 +2096,19 @@
         // Botón de la tarjeta Inventario: Abre el modal de historial
         openInventarioModalTrigger.addEventListener('click', () => {
             loadInventoryData();
-            openModal(inventarioModal);
+            openModal(document.getElementById('inventarioModal'));
         });
         
         // Botón de la tarjeta Clientes: Abre el modal de historial
         openClientesModalTrigger.addEventListener('click', () => {
             updateClientCount(); 
-            openModal(clientesModal);
+            openModal(document.getElementById('clientesModal'));
         });
 
         // Botón Gemini: Abre el modal y ejecuta el análisis
         document.getElementById('openAnalisisModalBtn').addEventListener('click', () => {
-            closeModal(gananciasModal); 
-            openModal(analisisModal);
+            closeModal(document.getElementById('gananciasModal')); 
+            openModal(document.getElementById('analisisModal'));
             performAnalysis();
         });
 
@@ -2038,11 +2144,13 @@
                 const eyeIcon = document.getElementById(target.replace('reveal', '').toLowerCase() + 'EyeIcon');
                 
                 if (!displayEl.classList.contains('hidden')) {
+                    // Ocultar al hacer click si ya está visible
                     displayEl.classList.add('hidden');
                     protectedEl.classList.remove('hidden');
                     eyeIcon.classList.remove('fa-eye-slash');
                     eyeIcon.classList.add('fa-eye');
                 } else {
+                    // Mostrar modal de auth
                     attemptAuth(target);
                 }
             });
@@ -2083,83 +2191,6 @@
             });
         }
         
-        // Lógica reutilizable para crear, guardar y eliminar opciones de un selector personalizado (CRUD)
-        const setupCustomSelectListeners = (fieldPrefix, initialOptionText) => {
-            const select = document.getElementById(`${fieldPrefix}Select`);
-            const addBtn = document.getElementById(`addCustom${fieldPrefix}Btn`);
-            const saveBtn = document.getElementById(`saveCustom${fieldPrefix}Btn`);
-            const cancelBtn = document.getElementById(`cancelCustom${fieldPrefix}Btn`);
-            const inputGroup = document.getElementById(`custom${fieldPrefix}InputGroup`);
-            const selectGroup = document.getElementById(`${fieldPrefix}SelectGroup`);
-            const input = document.getElementById(`custom${fieldPrefix}Input`);
-            const deleteBtn = document.getElementById(`delete${fieldPrefix}Btn`);
-
-            if (!select) return; 
-            
-            // PASO CLAVE: Inicializa el selector con solo la opción de texto inicial (limpiando ejemplos por defecto)
-            select.innerHTML = `<option>${initialOptionText}</option>`;
-
-
-            const checkDeletable = () => {
-                if (deleteBtn && select) {
-                    deleteBtn.disabled = select.value === initialOptionText || select.selectedIndex === 0;
-                }
-            };
-            
-            if (addBtn) addBtn.addEventListener('click', () => {
-                if (selectGroup) selectGroup.classList.add('hidden');
-                if (inputGroup) inputGroup.classList.remove('hidden');
-                if (input) input.value = '';
-                if (input) input.focus();
-            });
-
-            if (cancelBtn) cancelBtn.addEventListener('click', () => {
-                if (inputGroup) inputGroup.classList.add('hidden');
-                if (selectGroup) selectGroup.classList.remove('hidden');
-                checkDeletable();
-            });
-
-            if (saveBtn) saveBtn.addEventListener('click', () => {
-                const newName = input?.value.trim();
-                
-                if (newName && newName.length > 0) {
-                    const newOption = document.createElement('option');
-                    newOption.value = newName;
-                    newOption.textContent = newName;
-                    select.appendChild(newOption);
-                    select.value = newName;
-                    
-                    if (inputGroup) inputGroup.classList.add('hidden');
-                    if (selectGroup) selectGroup.classList.remove('hidden');
-                    checkDeletable(); 
-                    const fieldName = fieldPrefix === 'CategoriaGasto' ? 'Categoría' : 'Encargado';
-                    alertMessage(`${fieldName} "${newName}" añadida y seleccionada.`, 'success');
-                } else {
-                    const fieldName = fieldPrefix === 'CategoriaGasto' ? 'la nueva categoría.' : 'el nuevo encargado.';
-                    alertMessage(`Ingrese un nombre para ${fieldName}`, 'error');
-                }
-            });
-            
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', () => {
-                    const selectedIndex = select.selectedIndex;
-                    if (selectedIndex > 0) {
-                        const nameToDelete = select.options[selectedIndex].textContent;
-                        select.remove(selectedIndex);
-                        select.value = initialOptionText; 
-                        checkDeletable();
-                        const fieldName = fieldPrefix === 'CategoriaGasto' ? 'Categoría' : 'Encargado';
-                        alertMessage(`${fieldName} "${nameToDelete}" eliminada.`, 'success');
-                    } else {
-                        alertMessage(`No se puede eliminar la opción "${initialOptionText}".`, 'error');
-                    }
-                });
-            }
-            
-            if (select) select.addEventListener('change', checkDeletable);
-            checkDeletable();
-        };
-
         // Lógica para el manejo de categorías de Producto (Mantenido y Corregido)
         const setupCustomCategoryListeners = () => {
             const addBtn = document.getElementById('addCustomCategoryBtn');
@@ -2228,38 +2259,8 @@
             checkCategoryDeletable(); 
         };
         
-        // Inicializar los selectores de CRUD
+        // Inicializar los selectores de CRUD (MANTENIDO)
         setupCustomCategoryListeners();
-        // ** SE ELIMINA setupCustomSelectListeners('CategoriaGasto', 'Seleccione Categoría'); **
-        setupCustomSelectListeners('Encargado', 'Seleccione Encargado');
-        
-        // --- NUEVA LÓGICA: Agregar Categoría de Gasto con Datalist (Estilo Venta) ---
-        const addNewGastoCategoryBtn = document.getElementById('addNewGastoCategoryBtn');
-        const categoriaGastoInput = document.getElementById('categoriaGastoInput');
-        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
-
-        if (addNewGastoCategoryBtn && categoriaGastoInput && categoriaGastoListOptions) {
-            addNewGastoCategoryBtn.addEventListener('click', () => {
-                const categoryName = categoriaGastoInput.value.trim();
-                
-                if (categoryName) {
-                    const existingOption = Array.from(categoriaGastoListOptions.options).some(opt => opt.value === categoryName);
-
-                    if (existingOption) {
-                        alertMessage(`La categoría "${categoryName}" ya existe en la lista.`, 'info');
-                    } else {
-                        const newOption = document.createElement('option');
-                        newOption.value = categoryName;
-                        categoriaGastoListOptions.appendChild(newOption);
-                        
-                        categoriaGastoInput.value = categoryName;
-                        alertMessage(`Categoría de Gasto "${categoryName}" agregada manualmente a la lista.`, 'success');
-                    }
-                } else {
-                    alertMessage('Por favor, escriba un nombre de categoría para agregar.', 'error');
-                }
-            });
-        }
         
         // --- Lógica del Historial Diario de Ganancias (MANTENIDA) ---
         document.querySelectorAll('.ganancias-mes-celda').forEach(cell => {
@@ -2282,8 +2283,8 @@
 
                 document.getElementById('detalleDiarioTotal').textContent = `$${total}`;
                 
-                closeModal(gananciasModal); 
-                openModal(detalleDiarioModal);
+                closeModal(document.getElementById('gananciasModal')); 
+                openModal(document.getElementById('detalleDiarioModal'));
             });
         });
         
