@@ -411,7 +411,7 @@
     </div>
     <!-- FIN DEL MODAL PERFIL Y AUTENTICACIÓN -->
 
-    <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles y la eliminación de encargados -->
+    <!-- MODAL DE AUTENTICACIÓN (PIN) - Sigue usándose para las métricas sensibles y la eliminación de encargados/tipo de pago -->
     <div id="authModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
             
@@ -769,7 +769,7 @@
 
                     <!-- Bloque 1: Información Básica -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Información Básica</h3>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Información Básica </h3>
 
                         <!-- Nombre -->
                         <div class="mb-4">
@@ -954,33 +954,45 @@
             <!-- Cuerpo del Formulario de Venta -->
             <form class="p-6 space-y-8">
 
-                <!-- Bloque 1: Información Principal (Fecha, Cliente, Canal, Estado, Entrega) -->
+                <!-- Bloque 1: Información Principal (Fecha, Cliente, MONTO COBRADO) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
-                    <!-- Tarjeta de Datos de la Venta (Fecha, Cliente, Canal) -->
+                    <!-- Tarjeta de Datos de la Venta (Fecha, Cliente, Monto Cobrado) -->
                     <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <!-- Fecha -->
-                            <div>
-                                <label for="fechaVenta" class="block text-sm font-medium text-gray-700">Fecha</label>
-                                <input type="date" id="fechaVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        <!-- Fecha -->
+                        <div class="mb-4">
+                            <label for="fechaVenta" class="block text-sm font-medium text-gray-700">Fecha</label>
+                            <input type="date" id="fechaVenta" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
+                        </div>
+                        <!-- Cliente (Manual Entry) -->
+                        <div class="mb-4">
+                            <label for="clienteVentaInput" class="block text-sm font-medium text-gray-700">Cliente <i class="fas fa-pen-to-square text-xs text-blue-500 ml-1 cursor-pointer"></i></label>
+                            <div class="flex items-center mt-1">
+                                <input type="text" id="clienteVentaInput" list="clientListOptions" placeholder="Escriba o seleccione un cliente..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
+                                
+                                <datalist id="clientListOptions">
+                                    <option value="Cliente Frecuente A">
+                                    <option value="Nuevo Cliente B">
+                                </datalist>
+                                
+                                <button type="button" id="addNewClientBtn" class="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition" title="Guardar como nuevo cliente (simulado)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
                             </div>
-                            <!-- Cliente (Manual Entry) -->
-                            <div>
-                                <label for="clienteVentaInput" class="block text-sm font-medium text-gray-700">Cliente <i class="fas fa-pen-to-square text-xs text-blue-500 ml-1 cursor-pointer"></i></label>
-                                <div class="flex items-center mt-1">
-                                    <input type="text" id="clienteVentaInput" list="clientListOptions" placeholder="Escriba o seleccione un cliente..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border input-bg-blue">
-                                    
-                                    <datalist id="clientListOptions">
-                                        <option value="Cliente Frecuente A">
-                                        <option value="Nuevo Cliente B">
-                                    </datalist>
-                                    
-                                    <button type="button" id="addNewClientBtn" class="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition" title="Guardar como nuevo cliente (simulado)">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
+                        </div>
+                        <!-- Monto Cobrado (MOVIDO AQUÍ) -->
+                        <div>
+                            <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
+                            <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right">
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de Descuentos/Canal -->
+                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <!-- Descuento Gral -->
+                        <div class="mb-6">
+                            <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
+                            <input type="text" id="descuentoVenta" value="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
                         </div>
                         
                         <!-- Canal de Venta (Manual Entry) -->
@@ -1004,13 +1016,6 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Tarjeta de Descuentos/Lista de Precios -->
-                    <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <a href="#" class="text-blue-500 text-sm font-medium hover:underline block mb-3">Crear Lista de Precios</a>
-                        <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
-                        <input type="text" id="descuentoVenta" value="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
                     </div>
 
                     <!-- Tarjeta de Estado/Entrega -->
@@ -1038,57 +1043,38 @@
                     </div>
                 </div>
 
-                <!-- Bloque 2: Productos y Detalle (Simulado - Se mostraría una tabla aquí) -->
-                <div class="border-t pt-8">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Productos Vendidos</h3>
-                    <div class="bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300 flex justify-center items-center h-24">
-                        <button type="button" class="text-blue-500 font-medium hover:text-blue-600 transition">
-                            <i class="fas fa-plus-circle mr-2"></i> Añadir Producto
-                        </button>
-                    </div>
-                </div>
+                <!-- Bloque 2: Cobro y Tipo de Pago (RESTRUCTURADO) -->
+                <div class="border-t pt-8 space-y-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalle de Cobro</h3>
 
-                <!-- Bloque 3: Cobros de la Venta -->
-                <div class="border-t pt-8">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Cobros de la Venta</h3>
-                    
-                    <!-- Fila de Cobro (Simulada) -->
-                    <div class="grid grid-cols-6 gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <button type="button" class="col-span-1 bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition w-full">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        
-                        <div class="col-span-1">
-                            <label for="fechaCobro" class="block text-sm font-medium text-gray-700">Fecha</label>
-                            <input type="date" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
-                        </div>
-                        
-                        <div class="col-span-1">
-                            <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado</label>
-                            <input type="text" placeholder="NAN" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
-                        </div>
-                        
-                        <div class="col-span-1">
-                            <label for="descripcionCobro" class="block text-sm font-medium text-gray-700">Descripción</label>
-                            <input type="text" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border">
-                        </div>
+                    <!-- TIPO DE PAGO (NUEVO CRUD CON DATALIST) -->
+                    <div>
+                        <label for="tipoPagoVentaInput" class="block text-sm font-medium text-gray-700">Categoría de Tipo de Pago</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="text" id="tipoPagoVentaInput" list="tipoPagoListOptions" placeholder="Escriba o seleccione un tipo de pago..." class="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border input-bg-blue flex-1">
+                            
+                            <datalist id="tipoPagoListOptions">
+                                <!-- Las opciones se agregarán dinámicamente -->
+                                <option value="Efectivo"></option>
+                                <option value="Transferencia Bancaria"></option>
+                                <option value="Tarjeta de Crédito"></option>
+                            </datalist>
 
-                        <div class="col-span-1">
-                            <label for="cuentaCobro" class="block text-sm font-medium text-gray-700">Cuenta - Optativo <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
-                            <select class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                <option>Efectivo</option>
-                                <option>Transferencia</option>
-                                <option>Tarjeta de Crédito</option>
-                            </select>
+                            <!-- Botón para eliminar (Requiere PIN) -->
+                            <button type="button" id="deleteTipoPagoWithPinBtn" class="bg-red-500 text-white p-3 rounded-none hover:bg-red-600 transition shadow-sm disabled:opacity-75" title="Eliminar Tipo de Pago (Requiere PIN)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                            <!-- Botón para agregar -->
+                            <button type="button" id="addNewTipoPagoBtn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition shadow-sm" title="Agregar Nuevo Tipo de Pago">
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </div>
-                        
-                        <button type="button" class="col-span-1 bg-orange-500 text-white p-2 rounded-xl hover:bg-orange-600 transition">
-                            Eliminar
-                        </button>
                     </div>
+                    <!-- FIN TIPO DE PAGO -->
                     
-                    <!-- Opción de recordar cobro -->
-                    <div class="flex items-center mt-4">
+                    <!-- Opción de recordar cobro (Mantener) -->
+                    <div class="flex items-center pt-2">
                         <input id="recordarCobrado" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                         <label for="recordarCobrado" class="ml-2 text-sm text-gray-700">
                             Recordar Cobrado <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i><br>
@@ -1098,7 +1084,7 @@
                 </div>
 
 
-                <!-- Bloque 4: Otra Información (Desplegable con flecha) -->
+                <!-- Bloque 3: Otra Información (Desplegable con flecha) -->
                 <details id="otherInfoDetails" class="border-t pt-8">
                     <!-- Resumen del Despliegue -->
                     <summary class="details-summary text-xl font-semibold text-gray-700 mb-4 flex items-center justify-between">
@@ -1126,15 +1112,7 @@
                                     <option>Vendedor 2</option>
                                 </select>
                             </div>
-                            <!-- Forma de Pago -->
-                            <div>
-                                <label for="formaPago" class="block text-sm font-medium text-gray-700">Forma de Pago - Optativo</label>
-                                <select id="formaPago" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                                    <option>Seleccione</option>
-                                    <option>Efectivo</option>
-                                    <option>Tarjeta</option>
-                                </select>
-                            </div>
+                            <!-- FORMA DE PAGO ORIGINAL ELIMINADA (REEMPLAZADA POR TIPO DE PAGO ARRIBA) -->
                             <!-- Forma de Envío -->
                             <div>
                                 <label for="formaEnvio" class="block text-sm font-medium text-gray-700">Forma de Envío - Optativo</label>
@@ -1877,28 +1855,34 @@
         });
     };
 
-    // Función para eliminar un Encargado de la datalist (requiere PIN)
-    const attemptDeleteEncargado = (input, datalist) => {
+    // Función para eliminar una opción de la datalist (requiere PIN)
+    const attemptDeleteOption = (input, datalist, deleteBtnId, fieldName) => {
+        const deleteBtn = document.getElementById(deleteBtnId);
         const nameToDelete = input.value.trim();
 
-        if (!nameToDelete || nameToDelete === 'Seleccione Encargado') {
-            alertMessage('Seleccione un encargado para eliminar.', 'error');
+        if (!nameToDelete || nameToDelete === 'Seleccione Encargado' || nameToDelete === 'Efectivo') {
+            alertMessage(`Seleccione un ${fieldName.toLowerCase()} válido para eliminar.`, 'error');
             return;
         }
         
         const option = Array.from(datalist.options).find(opt => opt.value === nameToDelete);
         
         if (!option) {
-            alertMessage(`El encargado "${nameToDelete}" no se encuentra en la lista.`, 'error');
+            alertMessage(`El ${fieldName.toLowerCase()} "${nameToDelete}" no se encuentra en la lista.`, 'error');
             return;
         }
 
         // Almacenar la acción pendiente y el valor a borrar
-        pendingAuthAction = { type: 'deleteEncargado', name: nameToDelete };
+        pendingAuthAction = { 
+            type: `delete${fieldName.replace(/\s/g, '')}`, 
+            name: nameToDelete,
+            input: input.id,
+            datalist: datalist.id
+        };
         
         // Configurar el modal de autenticación para la eliminación
         document.getElementById('authModalTitle').textContent = 'Confirmación de Eliminación';
-        document.getElementById('authModalMessage').textContent = `Ingrese el PIN ${SECURE_PIN} para eliminar el encargado: "${nameToDelete}"`;
+        document.getElementById('authModalMessage').textContent = `Ingrese el PIN ${SECURE_PIN} para eliminar el ${fieldName.toLowerCase()}: "${nameToDelete}"`;
         document.getElementById('pinError').classList.add('hidden');
         document.getElementById('ventaPinInput').value = '';
         
@@ -1941,22 +1925,23 @@
         
         if (pinInput.value === SECURE_PIN) {
             
-            // 1. ELIMINACIÓN DE ENCARGADO
-            if (pendingAuthAction.type === 'deleteEncargado') {
+            // 1. ELIMINACIÓN DE OPCIÓN (Encargado o Tipo de Pago)
+            if (pendingAuthAction.type === 'deleteEncargado' || pendingAuthAction.type === 'deleteCategoríadeTipodePago') {
                 const nameToDelete = pendingAuthAction.name;
-                const encargadoDatalist = document.getElementById('encargadoListOptions');
-                const encargadoInput = document.getElementById('encargadoInput');
+                const datalist = document.getElementById(pendingAuthAction.datalist);
+                const input = document.getElementById(pendingAuthAction.input);
                 
-                const option = Array.from(encargadoDatalist.options).find(opt => opt.value === nameToDelete);
+                const option = Array.from(datalist.options).find(opt => opt.value === nameToDelete);
 
                 if (option) {
                     option.remove();
-                    if (encargadoInput.value === nameToDelete) {
-                        encargadoInput.value = ''; // Limpiar el input si la opción eliminada estaba seleccionada
+                    if (input.value === nameToDelete) {
+                        input.value = ''; // Limpiar el input si la opción eliminada estaba seleccionada
                     }
-                    alertMessage(`Encargado "${nameToDelete}" eliminado con éxito.`, 'success');
+                    const fieldName = pendingAuthAction.type === 'deleteEncargado' ? 'Encargado' : 'Tipo de Pago';
+                    alertMessage(`${fieldName} "${nameToDelete}" eliminado con éxito.`, 'success');
                 } else {
-                    alertMessage(`Error: El encargado "${nameToDelete}" no se encontró en la lista.`, 'error');
+                    alertMessage(`Error: La opción "${nameToDelete}" no se encontró en la lista.`, 'error');
                 }
 
                 // 2. Restablecer el modal y el estado
@@ -1966,7 +1951,7 @@
                 pendingAuthAction = null;
                 
             } else if (typeof pendingAuthAction === 'string' && pendingAuthAction.startsWith('reveal')) {
-                // 2. REVELACIÓN DE MÉTRICAS
+                // 3. REVELACIÓN DE MÉTRICAS
                 revealMetrics(pendingAuthAction, pinInput);
             }
             
@@ -2022,7 +2007,7 @@
         const ventaPinInput = document.getElementById('ventaPinInput');
         const checkVentaPinBtn = document.getElementById('checkVentaPinBtn');
         
-        // --- Elementos de Encargado/Categoría Gasto ---
+        // --- Elementos de Gasto ---
         const encargadoInput = document.getElementById('encargadoInput');
         const encargadoListOptions = document.getElementById('encargadoListOptions');
         const addNewEncargadoBtn = document.getElementById('addNewEncargadoBtn');
@@ -2032,6 +2017,13 @@
         const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
         const addNewGastoCategoryBtn = document.getElementById('addNewGastoCategoryBtn');
         
+        // --- Elementos de Venta (NUEVOS) ---
+        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput');
+        const tipoPagoListOptions = document.getElementById('tipoPagoListOptions');
+        const addNewTipoPagoBtn = document.getElementById('addNewTipoPagoBtn');
+        const deleteTipoPagoWithPinBtn = document.getElementById('deleteTipoPagoWithPinBtn');
+
+        
         // Asignar valores iniciales simulados (mantenidos)
         document.getElementById('ventasDisplayValue').textContent = SIMULATED_VENTAS_VALUE;
         document.getElementById('gananciasDisplayValue').textContent = SIMULATED_GANANCIAS_VALUE;
@@ -2040,7 +2032,7 @@
         // Inicializar hora y conteo de clientes
         updateClientCount(); 
         
-        // --- Lógica de CRUD para Datalists ---
+        // --- Lógica de CRUD para Datalists (Inicialización) ---
         
         // 1. Categoría de Gasto (Adición)
         setupDatalistAdd('addNewGastoCategoryBtn', 'categoriaGastoInput', 'categoriaGastoListOptions', 'Categoría de Gasto');
@@ -2053,7 +2045,18 @@
         // 3. Encargado de Turno (Eliminación con PIN)
         if (deleteEncargadoWithPinBtn) {
             deleteEncargadoWithPinBtn.addEventListener('click', () => {
-                attemptDeleteEncargado(encargadoInput, encargadoListOptions);
+                attemptDeleteOption(encargadoInput, encargadoListOptions, 'deleteEncargadoWithPinBtn', 'Encargado de Turno');
+            });
+        }
+        
+        // 4. Tipo de Pago (Adición)
+        setupDatalistAdd('addNewTipoPagoBtn', 'tipoPagoVentaInput', 'tipoPagoListOptions', 'Categoría de Tipo de Pago');
+        // NOTA: tipoPagoListOptions ya tiene opciones de ejemplo en el HTML.
+
+        // 5. Tipo de Pago (Eliminación con PIN)
+        if (deleteTipoPagoWithPinBtn) {
+            deleteTipoPagoWithPinBtn.addEventListener('click', () => {
+                attemptDeleteOption(tipoPagoVentaInput, tipoPagoListOptions, 'deleteTipoPagoWithPinBtn', 'Categoría de Tipo de Pago');
             });
         }
 
