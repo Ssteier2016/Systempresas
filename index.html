@@ -3040,6 +3040,146 @@
         return productSales;
     };
 
+    // --- LÓGICA DE HISTORIAL DE GANANCIAS (NUEVO) ---
+    const loadProfitHistory = (filterMonth = 'current', filterYear = 'current') => {
+        const tbody = document.getElementById('profitHistoryTableContent');
+        const totalProfitEl = document.getElementById('phTotalProfit');
+        const totalSalesEl = document.getElementById('phTotalSales');
+        const totalExpensesEl = document.getElementById('phTotalExpenses');
+
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        // 1. Unificar fechas únicas de Ventas y Gastos
+        const allDates = new Set();
+        salesData.forEach(s => { if(s.date) allDates.add(s.date); });
+        expensesData.forEach(e => { if(e.date) allDates.add(e.date); });
+        
+        let sortedDates = Array.from(allDates).sort((a, b) => new Date(b) - new Date(a));
+
+        // 2. Filtrar fechas según selectores
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+
+        sortedDates = sortedDates.filter(dateStr => {
+            const d = new Date(dateStr + 'T00:00:00');
+            const dMonth = d.getMonth() + 1;
+            const dYear = d.getFullYear();
+
+            // Filtro Año
+            if (filterYear !== 'all') {
+                const targetYear = filterYear === 'current' ? currentYear : parseInt(filterYear);
+                if (dYear !== targetYear) return false;
+            }
+            // Filtro Mes
+            if (filterMonth !== 'all') {
+                const targetMonth = filterMonth === 'current' ? currentMonth : parseInt(filterMonth);
+                if (dMonth !== targetMonth) return false;
+            }
+            return true;
+        });
+
+        if (sortedDates.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">No hay movimientos en el período seleccionado.</td></tr>`;
+            if(totalProfitEl) totalProfitEl.textContent = "$0.00";
+            if(totalSalesEl) totalSalesEl.textContent = "$0.00";
+            if(totalExpensesEl) totalExpensesEl.textContent = "$0.00";
+            return;
+        }
+
+        let sumProfit = 0;
+        let sumSales = 0;
+        let sumExpenses = 0;
+
+        // 3. Construir la tabla fila por fila
+        sortedDates.forEach(dateStr => {
+            // Sumar ventas de este día (Neto)
+            const dailySales = salesData
+                .filter(s => s.date === dateStr)
+                .reduce((acc, curr) => acc + (parseFloat(curr.montoCobrado) || 0), 0);
+
+            // Sumar gastos de este día
+            const dailyExpenses = expensesData
+                .filter(e => e.date === dateStr)
+                .reduce((acc, curr) => acc + (parseFloat(curr.gastoTotal) || 0), 0);
+
+            const dailyProfit = dailySales - dailyExpenses;
+
+            // Acumuladores Totales
+            sumSales += dailySales;
+            sumExpenses += dailyExpenses;
+            sumProfit += dailyProfit;
+
+            // Estilos
+            const profitColor = dailyProfit >= 0 ? 'text-green-600' : 'text-red-600';
+            const profitSign = dailyProfit > 0 ? '+' : '';
+            
+            // Icono de estado
+            let statusIcon = '<span class="px-2 py-1 rounded-full bg-gray-100 text-gray-500 text-xs">Neutro</span>';
+            if (dailyProfit > 0) statusIcon = '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Positivo</span>';
+            if (dailyProfit < 0) statusIcon = '<span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">Negativo</span>';
+
+            const row = document.createElement('tr');
+            row.className = "hover:bg-gray-50 transition";
+            row.innerHTML = `
+                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-700">
+                    ${formatDate(dateStr)}
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-blue-600">
+                    $${dailySales.toLocaleString('es-ES', {minimumFractionDigits: 2})}
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-red-600">
+                    -$${dailyExpenses.toLocaleString('es-ES', {minimumFractionDigits: 2})}
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold ${profitColor}">
+                    ${profitSign}$${dailyProfit.toLocaleString('es-ES', {minimumFractionDigits: 2})}
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-center">
+                    ${statusIcon}
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // 4. Actualizar Totales Superiores
+        if(totalProfitEl) totalProfitEl.textContent = `$${sumProfit.toLocaleString('es-ES', {minimumFractionDigits: 2})}`;
+        if(totalSalesEl) totalSalesEl.textContent = `$${sumSales.toLocaleString('es-ES', {minimumFractionDigits: 2})}`;
+        if(totalExpensesEl) totalExpensesEl.textContent = `$${sumExpenses.toLocaleString('es-ES', {minimumFractionDigits: 2})}`;
+        
+        // Color del total principal
+        if(totalProfitEl) totalProfitEl.className = `text-2xl font-bold ${sumProfit >= 0 ? 'text-green-700' : 'text-red-600'}`;
+    };
+
+    // --- ACTIVAR BOTONES ---
+    // Coloca esto inmediatamente después de la función loadProfitHistory para asegurar que se registre
+    const setupProfitHistoryListeners = () => {
+        const openBtn = document.getElementById('openProfitHistoryBtn');
+        const filterBtn = document.getElementById('applyProfitFiltersBtn');
+        const monthSelect = document.getElementById('profitFilterMonth');
+        const yearSelect = document.getElementById('profitFilterYear');
+
+        if(openBtn) {
+            openBtn.addEventListener('click', () => {
+                if(monthSelect) monthSelect.value = 'current';
+                if(yearSelect) yearSelect.value = 'current';
+                loadProfitHistory('current', 'current');
+                openModal(document.getElementById('profitHistoryModal'));
+            });
+        }
+
+        if(filterBtn) {
+            filterBtn.addEventListener('click', () => {
+                loadProfitHistory(monthSelect.value, yearSelect.value);
+                alertMessage('Filtros aplicados correctamente.', 'success');
+            });
+        }
+    };
+    
+    // Ejecutar configuración de listeners una vez
+    // (Asegúrate de llamar a esta función dentro del DOMContentLoaded más abajo si lo prefieres, 
+    // pero como estamos en module, lo llamaremos directamente aquí abajo):
+    setTimeout(setupProfitHistoryListeners, 1000); // Pequeño delay para asegurar que el DOM exista
 
     // Carga la tabla principal del modal de Inventario (MODIFICADA: Solución del ReferenceError)
     const loadInventoryData = (filterMonth = 'all', filterYear = 'all') => {
