@@ -279,7 +279,7 @@
             <!-- Fila de Tarjetas de Métricas Principales -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 
-                <!-- Tarjeta 1: Ventas - Métrica Protegida (REQUIERE PIN) -->
+                <!-- Tarjeta 1: Ventas - Métrica Protegida -->
                 <div class="bg-white rounded-xl shadow-lg p-6 card-ventas-border transition hover:shadow-xl relative">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex items-center space-x-3">
@@ -295,11 +295,10 @@
                     <button type="button" data-auth-for="revealVentas" class="absolute top-6 right-6 text-blue-500 text-sm font-semibold hover:text-blue-700 transition flex items-center">
                         <i id="VentasEyeIcon" class="fas fa-eye mr-1"></i> <span id="VentasToggleText">Ver</span>
                     </button>
-                    <!-- /BOTÓN DE REVELACIÓN UNIFICADO -->
 
                     <p class="text-sm text-gray-400 mb-2">DETALLE DE INGRESOS</p>
                     
-                    <!-- Ventas de Hoy (NUEVO) -->
+                    <!-- Ventas de Hoy -->
                     <div class="mb-2">
                         <h4 class="text-sm font-medium text-gray-500">Ventas de Hoy</h4>
                         <p class="text-xl font-bold text-blue-600">
@@ -308,7 +307,7 @@
                         </p>
                     </div>
 
-                    <!-- Ventas del Mes (NUEVO) -->
+                    <!-- Ventas del Mes -->
                     <div class="mb-2">
                         <h4 class="text-sm font-medium text-gray-500">Ventas del Mes</h4>
                         <p class="text-3xl font-bold text-blue-600">
@@ -317,7 +316,7 @@
                         </p>
                     </div>
 
-                    <!-- Ventas del Año (NUEVO) -->
+                    <!-- Ventas del Año -->
                     <div class="mb-4">
                         <h4 class="text-sm font-medium text-gray-500">Ventas del Año</h4>
                         <p class="text-xl font-bold text-blue-600">
@@ -331,7 +330,7 @@
                     <p class="text-sm text-gray-500"><span id="totalProductsCount">0</span> productos en inventario</p>
                 </div>
 
-                <!-- Tarjeta 2: Ganancias - Métrica Protegida (AHORA REAL: Ventas - Gastos) -->
+                <!-- Tarjeta 2: Ganancias - Métrica Protegida (AHORA CON HOY/MES/AÑO) -->
                 <div id="gananciasCard" class="bg-white rounded-xl shadow-lg p-6 card-ganancias-border transition hover:shadow-xl relative">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex items-center space-x-3">
@@ -348,16 +347,38 @@
                         <i id="GananciasEyeIcon" class="fas fa-eye mr-1"></i> <span id="GananciasToggleText">Ver</span>
                     </button>
 
-                    <p class="text-sm text-gray-400 mb-2">DATOS DEL MES</p>
-                    <h4 class="text-lg font-medium text-gray-500">Resultados Netos del mes</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <p class="text-3xl font-bold text-green-600">
-                            <span id="gananciasDisplayValue" class="hidden">$0.00</span>
-                            <span id="gananciasProtectedValue">******</span>
+                    <p class="text-sm text-gray-400 mb-2">DETALLE DE GANANCIAS NETAS</p>
+                    
+                    <!-- Ganancias de Hoy (NUEVO) -->
+                    <div class="mb-2">
+                        <h4 class="text-sm font-medium text-gray-500">Ganancias de Hoy</h4>
+                        <p class="text-xl font-bold text-green-600">
+                            <span id="gananciasTodayDisplayValue" class="hidden">$0.00</span>
+                            <span id="gananciasTodayProtectedValue">******</span>
                         </p>
-                        <!-- El botón de ver/ocultar se movió a la esquina superior -->
                     </div>
-                    <div class="h-4"></div> <!-- Espacio ajustado para alineación visual -->
+
+                    <!-- Ganancias del Mes (REEMPLAZA EL VALOR GRANDE) -->
+                    <div class="mb-2">
+                        <h4 class="text-sm font-medium text-gray-500">Ganancias del Mes</h4>
+                        <p class="text-3xl font-bold text-green-600">
+                            <span id="gananciasMonthDisplayValue" class="hidden">$0.00</span>
+                            <span id="gananciasMonthProtectedValue">******</span>
+                        </p>
+                    </div>
+
+                    <!-- Ganancias del Año (NUEVO) -->
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium text-gray-500">Ganancias del Año</h4>
+                        <p class="text-xl font-bold text-green-600">
+                            <span id="gananciasYearDisplayValue" class="hidden">$0.00</span>
+                            <span id="gananciasYearProtectedValue">******</span>
+                        </p>
+                    </div>
+                    
+                    <!-- Métrica auxiliar no protegida (Gastos/Ventas Mes) -->
+                    <p class="text-xs text-gray-500 border-t pt-2">Ventas: $<span id="totalVentasMesValue">0.00</span> | Gastos: $<span id="totalGastosMesValue">0.00</span></p>
+
                 </div>
 
                 <!-- Tarjeta 3: Finanzas (Caja Protegida) -->
@@ -1323,7 +1344,6 @@
                                         <option>Vendedor 2</option>
                                     </select>
                                 </div>
-                                <!-- FORMA DE PAGO ORIGINAL ELIMINADA (REEMPLAZADA POR TIPO DE PAGO ARRIBA) -->
                                 <!-- Forma de Envío -->
                                 <div>
                                     <label for="formaEnvio" class="block text-sm font-medium text-gray-700">Forma de Envío - Optativo</label>
@@ -1709,24 +1729,20 @@
         }, 3000);
     }
 
-    // FUNCIÓN PRINCIPAL DE CÁLCULO DE GANANCIAS NETAS 
+    // FUNCIÓN PRINCIPAL DE CÁLCULO DE MÉTRICAS Y ACTUALIZACIÓN DEL DASHBOARD (MODIFICADA)
     const updateDashboardMetrics = () => {
-        // Cálculo: Ventas Totales del Mes - Gastos Totales del Mes
-        const ganancias = totalVentasDelMes - totalGastosDelMes;
-        const gananciasDisplayValueEl = document.getElementById('gananciasDisplayValue');
-        const gananciasCard = document.getElementById('gananciasCard');
-        const totalDailySalesCountValueDisplayEl = document.getElementById('totalDailySalesCountValueDisplay'); 
-        const dailyExpensesDisplay = document.getElementById('totalDailyExpensesCount'); 
+        
+        // CÁLCULOS DE GANANCIAS NETAS (Ganancia Neta = Ventas - Gastos)
+        const gananciasHoy = totalVentasDelDia - totalGastosDelDia;
+        const gananciasMes = totalVentasDelMes - totalGastosDelMes;
+        const gananciasAnio = totalVentasDelAnio - totalGastosDelAnio;
+        
+        // 1. UPDATE VENTAS CARD (Card 1)
         const salesTodayDisplayValueEl = document.getElementById('salesTodayDisplayValue');
         const salesMonthDisplayValueEl = document.getElementById('salesMonthDisplayValue');
         const salesYearDisplayValueEl = document.getElementById('salesYearDisplayValue');
+        const ticketPromedioValueEl = document.getElementById('ticketPromedioValue');
         
-        // 1. Actualizar métricas protegidas de Ventas
-        if (salesTodayDisplayValueEl) salesTodayDisplayValueEl.textContent = `$${totalVentasDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-        if (salesMonthDisplayValueEl) salesMonthDisplayValueEl.textContent = `$${totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-        if (salesYearDisplayValueEl) salesYearDisplayValueEl.textContent = `$${totalVentasDelAnio.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-        
-        // 2. Actualizar Ticket Promedio (Métrica secundaria no protegida)
         const ventasEnElMes = salesData.filter(s => {
             if (!s.date) return false;
             const saleDate = new Date(s.date + 'T00:00:00'); 
@@ -1734,34 +1750,53 @@
             return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
         });
         const ticketPromedio = ventasEnElMes.length > 0 ? (totalVentasDelMes / ventasEnElMes.length) : 0;
-        const ticketPromedioValueEl = document.getElementById('ticketPromedioValue');
+
+        if (salesTodayDisplayValueEl) salesTodayDisplayValueEl.textContent = `$${totalVentasDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (salesMonthDisplayValueEl) salesMonthDisplayValueEl.textContent = `$${totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (salesYearDisplayValueEl) salesYearDisplayValueEl.textContent = `$${totalVentasDelAnio.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         if (ticketPromedioValueEl) ticketPromedioValueEl.textContent = ticketPromedio.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+        
+        
+        // 2. UPDATE GANANCIAS CARD (Card 2) (MÉTRICAS AMPLIADAS)
+        const gTodayEl = document.getElementById('gananciasTodayDisplayValue');
+        const gMonthEl = document.getElementById('gananciasMonthDisplayValue');
+        const gYearEl = document.getElementById('gananciasYearDisplayValue');
+        const gananciasCard = document.getElementById('gananciasCard'); 
+        
+        if (gTodayEl) gTodayEl.textContent = `$${gananciasHoy.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (gMonthEl) gMonthEl.textContent = `$${gananciasMes.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        if (gYearEl) gYearEl.textContent = `$${gananciasAnio.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        
+        // Lógica de color de Ganancias Card Border Color (basado en Ganancias del Mes)
+        if(gananciasCard) {
+            gananciasCard.classList.remove('card-ganancias-border', 'card-ganancias-border-red');
+            const colorClass = gananciasMes < 0 ? 'card-ganancias-border-red' : 'card-ganancias-border';
+            gananciasCard.classList.add(colorClass);
 
-
-        // 3. Actualizar Ganancias (y su color)
-        if (gananciasDisplayValueEl) {
-             gananciasDisplayValueEl.textContent = `$${ganancias.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-             
-             if(gananciasCard) {
-                 gananciasCard.classList.remove('card-ganancias-border', 'card-ganancias-border-red');
-                 if (ganancias < 0) {
-                     gananciasCard.classList.add('card-ganancias-border-red');
-                     gananciasDisplayValueEl.classList.remove('text-green-600');
-                     gananciasDisplayValueEl.classList.add('text-red-600');
-                 } else {
-                     gananciasCard.classList.add('card-ganancias-border'); 
-                     gananciasDisplayValueEl.classList.remove('text-red-600');
-                     gananciasDisplayValueEl.classList.add('text-green-600');
-                 }
-             }
+            // Ajustar el color del texto de las métricas (usando solo los DisplayValue ID's)
+            const textElements = [gTodayEl, gMonthEl, gYearEl];
+            textElements.forEach(el => {
+                if (el) {
+                    el.classList.remove('text-green-600', 'text-red-600');
+                    el.classList.add(gananciasMes < 0 ? 'text-red-600' : 'text-green-600');
+                }
+            });
         }
         
-        // 4. Actualizar el resumen de Ventas del día en el Action Card
+        // Update Ganancias auxiliary values (Ventas/Gastos Mes)
+        const totalVentasMesValueEl = document.getElementById('totalVentasMesValue');
+        const totalGastosMesValueEl = document.getElementById('totalGastosMesValue');
+        if (totalVentasMesValueEl) totalVentasMesValueEl.textContent = totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+        if (totalGastosMesValueEl) totalGastosMesValueEl.textContent = totalGastosDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+
+        
+        // 3. Update Action Card Summaries (no protegidas)
+        const totalDailySalesCountValueDisplayEl = document.getElementById('totalDailySalesCountValueDisplay');
+        const dailyExpensesDisplay = document.getElementById('totalDailyExpensesCount');
+
         if (totalDailySalesCountValueDisplayEl) {
              totalDailySalesCountValueDisplayEl.textContent = `$${totalVentasDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         }
-        
-        // 5. Actualizar el resumen de Gastos del día en el Action Card
         if (dailyExpensesDisplay) {
              dailyExpensesDisplay.textContent = `$${totalGastosDelDia.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         }
@@ -1889,7 +1924,7 @@
         });
     };
 
-    // --- Real-Time Listener for Sales (MODIFICADO) ---
+    // --- Real-Time Listener for Sales ---
     const setupRealtimeSalesListener = () => { 
         const salesRef = getCollectionRef('sales');
         if (!salesRef) return; 
@@ -1954,7 +1989,7 @@
         });
     };
 
-    // --- Real-Time Listener for Expenses (MODIFICADO) ---
+    // --- Real-Time Listener for Expenses ---
     const setupRealtimeExpensesListener = () => { 
         const expensesRef = getCollectionRef('expenses');
         if (!expensesRef) return; 
@@ -2767,15 +2802,18 @@
     };
 
 
-    // --- LÓGICA DE PROTECCIÓN DE MÉTRICAS ---
+    // --- LÓGICA DE PROTECCIÓN DE MÉTRICAS (ACTUALIZADA) ---
     const PROTECTED_METRICS = {
         'Ventas': [
             { display: 'salesTodayDisplayValue', protected: 'salesTodayProtectedValue' },
             { display: 'salesMonthDisplayValue', protected: 'salesMonthProtectedValue' },
             { display: 'salesYearDisplayValue', protected: 'salesYearProtectedValue' }
         ],
+        // NUEVAS ENTRADAS PARA GANANCIAS (Hoy, Mes, Año)
         'Ganancias': [
-            { display: 'gananciasDisplayValue', protected: 'gananciasProtectedValue' }
+            { display: 'gananciasTodayDisplayValue', protected: 'gananciasTodayProtectedValue' },
+            { display: 'gananciasMonthDisplayValue', protected: 'gananciasMonthProtectedValue' },
+            { display: 'gananciasYearDisplayValue', protected: 'gananciasYearProtectedValue' }
         ],
         'Caja': [
             { display: 'cajaDisplayValue', protected: 'cajaProtectedValue' }
@@ -2790,6 +2828,15 @@
         metrics.forEach(item => {
             const displayEl = document.getElementById(item.display);
             const protectedEl = document.getElementById(item.protected);
+            
+            // Si es Ganancias y el color es rojo (negativo), asegurar que se vea rojo al mostrar
+            if (metricType === 'Ganancias' && show) {
+                const isNegative = document.getElementById('gananciasCard').classList.contains('card-ganancias-border-red');
+                if (displayEl) {
+                    displayEl.classList.remove('text-green-600', 'text-red-600');
+                    displayEl.classList.add(isNegative ? 'text-red-600' : 'text-green-600');
+                }
+            }
             
             if (displayEl && protectedEl) {
                 displayEl.classList.toggle('hidden', !show);
@@ -2833,7 +2880,6 @@
         const metricType = actionTarget.replace('reveal', '');
         
         // Check if the metric is already revealed and if so, hide it immediately
-        // Uses the first element of the metric group to check visibility
         const firstDisplayId = PROTECTED_METRICS[metricType][0].display;
         const isVisible = firstDisplayId ? !document.getElementById(firstDisplayId)?.classList.contains('hidden') : false;
         
