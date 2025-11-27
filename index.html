@@ -3996,7 +3996,30 @@
 
 
         // --- Listeners de Eventos (Botones y Lógica Principal) ---
-        
+                // LÓGICA BOTÓN "HISTORIAL GANANCIAS" (Reemplaza al OpenProductoCard anterior)
+        const openProfitHistoryBtn = document.getElementById('openProfitHistoryBtn');
+        const applyProfitFiltersBtn = document.getElementById('applyProfitFiltersBtn');
+        const profitFilterMonth = document.getElementById('profitFilterMonth');
+        const profitFilterYear = document.getElementById('profitFilterYear');
+
+        if (openProfitHistoryBtn) {
+            openProfitHistoryBtn.addEventListener('click', () => {
+                // Por defecto cargar mes actual y año actual
+                if(profitFilterMonth) profitFilterMonth.value = 'current';
+                if(profitFilterYear) profitFilterYear.value = 'current';
+                loadProfitHistory('current', 'current');
+                openModal(document.getElementById('profitHistoryModal'));
+            });
+        }
+
+        if (applyProfitFiltersBtn) {
+            applyProfitFiltersBtn.addEventListener('click', () => {
+                const m = profitFilterMonth.value;
+                const y = profitFilterYear.value;
+                loadProfitHistory(m, y);
+                alertMessage('Filtros de ganancias aplicados.', 'success');
+            });
+        }
         // ** NUEVO: Manejador de Novedades de WhatsApp **
         document.getElementById('sendUpdatesWhatsappBtn').addEventListener('click', sendWhatsAppNotification);
 
