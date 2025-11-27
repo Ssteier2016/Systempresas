@@ -2741,11 +2741,12 @@
     };
 
 
-    // Carga la tabla principal del modal de Inventario (MODIFICADA: Agrega lógica de filtrado)
+    // Carga la tabla principal del modal de Inventario (MODIFICADA: Solución del ReferenceError)
     const loadInventoryData = (filterMonth = 'all', filterYear = 'all') => {
+        // Aseguramos la declaración de variables al inicio de la función
         const tbody = document.getElementById('inventarioTablaContenido');
-        const totalStockDisplayEl = document.getElementById('stockTotalDisplay');
-        const stockTotalInModalDisplayEl = document.getElementById('stockTotalInModalDisplay');
+        const totalStockDisplayEl = document.getElementById('stockTotalDisplay'); 
+        const stockTotalInModalDisplayEl = document.getElementById('stockTotalInModalDisplay'); 
         const ventasFilterHeader = document.getElementById('ventasFilterHeader');
         
         if (!tbody) return;
@@ -2818,7 +2819,7 @@
         });
         
         // 3. Actualizar el stock total en el dashboard y el modal
-        if (stockTotalDisplayEl) stockTotalDisplayEl.textContent = currentTotalStock.toLocaleString('es-ES');
+        if (totalStockDisplayEl) totalStockDisplayEl.textContent = currentTotalStock.toLocaleString('es-ES');
         if (stockTotalInModalDisplayEl) stockTotalInModalDisplayEl.textContent = currentTotalStock.toLocaleString('es-ES');
         
         // Asignar listeners a los nuevos botones de historial de stock
@@ -3561,7 +3562,6 @@
         const openGastoBtn = document.getElementById('openGastoModal');
         const openGananciasBtnAction = document.getElementById('openGananciasModal');
         const openInventarioModalTrigger = document.getElementById('openInventarioModalTrigger'); // Tarjeta "Ver Inventario"
-        const openVentaModalDirect = document.getElementById('openVentaModalDirect');
         const openClientesModalTrigger = document.getElementById('openClientesModalTrigger'); 
         
         const productoForm = document.getElementById('productoForm');
@@ -3690,6 +3690,13 @@
         
         // Botón de Cerrar Sesión (Logout)
         document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        
+        // ** ABRIR MODAL DE CLIENTES (Reforzado para carga)**
+        openClientesModalTrigger.addEventListener('click', () => { 
+             loadClientHistory(); 
+             openModal(document.getElementById('clientesModal'));
+        }); 
+        // ** FIN ABRIR MODAL DE CLIENTES **
 
         // Producto: Lógica de Guardado (Firestore)
         if (productoForm) {
