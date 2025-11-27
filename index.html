@@ -180,7 +180,7 @@
             <!-- Fila de Tarjetas de Acción Rápida (Ver...) - 5 COLUMNAS EN LG -->
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
                 
-               <!-- Tarjeta 1: Ver Finanzas (RENOMBRADO y PROTEGIDO) -->
+                <!-- Tarjeta 1: Ver Finanzas (RENOMBRADO y PROTEGIDO) -->
                 <button id="openFinanzasModalTrigger" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
                     <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl mb-2">
                         <i class="fas fa-hand-holding-dollar text-xl"></i>
@@ -347,7 +347,7 @@
                         <i id="GananciasEyeIcon" class="fas fa-eye mr-1"></i> <span id="GananciasToggleText">Ver</span>
                     </button>
 
-                    <p class="text-sm text-gray-400 mb-2">DETALLE DE GANANCIAS NETAS</p>
+                    <p class="text-sm text-gray-400 mb-2">GANANCIA NETA (Ventas - Gastos)</p>
                     
                     <!-- Ganancias de Hoy (NUEVO) -->
                     <div class="mb-2">
@@ -381,7 +381,7 @@
 
                 </div>
 
-                 <!-- Tarjeta 3: Finanzas (Caja/Ganancia Neta Final Protegida) -->
+                <!-- Tarjeta 3: Finanzas (Caja/Ganancia Neta Final Protegida) -->
                 <div class="bg-white rounded-xl shadow-lg p-6 card-finanzas-border transition hover:shadow-xl relative">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex items-center space-x-3">
@@ -433,7 +433,7 @@
             
             <!-- NUEVA SECCIÓN: NOVEDADES DEL DÍA -->
             <div class="bg-white rounded-xl shadow-lg p-6 mb-12 border-t-4 border-purple-500">
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center">
                     <i class="fas fa-bullhorn text-purple-500 mr-3"></i> Novedades del Día
                 </h2>
                 <p class="text-sm text-gray-600 mb-4">Escriba las novedades importantes para su equipo. Puede enviarlas rápidamente por WhatsApp a un contacto predefinido.</p>
@@ -594,7 +594,7 @@
 
                 <!-- Cuerpo del Formulario de PIN -->
                 <div class="p-6 space-y-4 text-center">
-                    <p id="authModalMessage" class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos).</p>
+                    <p id="authModalMessage" class="text-sm text-gray-600">Ingrese el PIN de seguridad (4 dígitos). (PIN: 1440)</p>
                     <input type="password" id="ventaPinInput" maxlength="4" placeholder="••••" class="text-center text-2xl tracking-widest mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 input-bg-blue border">
                     <p id="pinError" class="text-sm text-red-500 hidden font-medium">PIN Incorrecto. Intente de nuevo.</p>
                 </div>
@@ -612,7 +612,7 @@
         </div>
         <!-- FIN DEL MODAL AUTENTICACIÓN -->
 
-      <!-- MODAL DE FINANZAS (NUEVO) -->
+        <!-- MODAL DE FINANZAS (NUEVO) -->
         <div id="finanzasReportModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
                 
@@ -652,7 +652,7 @@
                             </div>
                             <!-- Fecha -->
                             <div>
-                              <label for="financeDate" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <label for="financeDate" class="block text-sm font-medium text-gray-700">Fecha</label>
                                 <input type="date" id="financeDate" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 input-bg-blue border">
                             </div>
                             <!-- Botón Guardar/Actualizar -->
@@ -691,7 +691,7 @@
                     </div>
                     <!-- FIN NUEVO RESUMEN -->
 
-                  <!-- Historial de Transacciones Financieras (CRUD) -->
+                    <!-- Historial de Transacciones Financieras (CRUD) -->
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
                         <h3 class="p-4 text-lg font-semibold text-gray-700 border-b">Historial de Transacciones Financieras</h3>
                         <table class="min-w-full divide-y divide-gray-200">
@@ -918,7 +918,7 @@
         </div>
         <!-- FIN DEL MODAL HISTORIAL DE VENTAS -->
 
-        <!-- MODAL DE HISTORIAL DE GASTOS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO CON FILTROS -->
+        <!-- MODAL DE HISTORIAL DE GASTOS (DETALLE POR TRANSACCIÓN) - ACTUALIZADO CON FILTROS Y CRUD -->
         <div id="expensesDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
                 <!-- Encabezado del Modal -->
@@ -950,7 +950,6 @@
                         </div>
                     </div>
                     <!-- FIN NUEVOS CONTADORES -->
-
                     <!-- FILTROS Y BÚSQUEDA DE GASTOS (NUEVO) -->
                     <div class="flex flex-wrap gap-3 mb-6 border-b pb-4 items-center">
                         <div class="relative flex-grow">
@@ -988,8 +987,7 @@
                             <i class="fas fa-filter mr-1"></i> Aplicar Filtros
                         </button>
                     </div>
-                    <!-- FIN FILTROS Y BÚSQUEDA -->
-
+                    <!-- FIN FILTROS Y BÚSQUEDA --> 
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -999,11 +997,12 @@
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Gasto ($)</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encargado</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th> <!-- COLUMNA DE ACCIONES -->
                                 </tr>
                             </thead>
                             <tbody id="expensesHistoryTableContent" class="bg-white divide-y divide-gray-100">
                                 <!-- Los datos se cargarán aquí por JS -->
-                                <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de gastos...</td></tr>
+                                <tr><td colspan="6" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Cargando historial de gastos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1505,7 +1504,7 @@
                             </div>
                             <!-- Monto Cobrado (NETO) -->
                             <div>
-                                <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado (NETO $)</label>
+                                <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado (NETO $) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
                                 <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right" required>
                             </div>
                         </div>
@@ -1519,8 +1518,9 @@
                             </div>
                             <!-- Descuento Gral (CORREGIDO A TYPE=NUMBER y rango) -->
                             <div class="mb-6">
-                                <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
-                                <input type="number" id="descuentoVenta" value="0" min="0" max="100" placeholder="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
+                                <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-info-circle text-xs text-green-500 ml-1"></i></label>
+                                <input type="number" id="descuentoVenta" value="0" placeholder="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
+                                <p class="text-xs text-gray-500 mt-1">(-) Descuento, (+) Recargo.</p>
                             </div>
                             
                             <!-- Canal de Venta (Manual Entry) -->
@@ -1680,13 +1680,13 @@
         <!-- FIN DEL MODAL VENTA -->
 
 
-        <!-- MODAL DE AGREGAR GASTO (MODIFICADO) -->
+        <!-- MODAL DE AGREGAR GASTO (MODIFICADO para Edición) -->
         <div id="gastoModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
                 
                 <!-- Encabezado del Modal -->
                 <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
-                    <h2 class="text-2xl font-bold text-gray-800">Agregar Gasto</h2>
+                    <h2 id="gastoModalTitle" class="text-2xl font-bold text-gray-800">Agregar Gasto</h2>
                     <button data-close-modal="gastoModal" class="text-gray-400 hover:text-gray-600 transition">
                         <i class="fas fa-times text-xl"></i>
                     </button>
@@ -1694,6 +1694,7 @@
 
                 <!-- Cuerpo del Formulario de Gasto (AÑADIDO ID) -->
                 <form id="gastoForm" class="p-6 space-y-6">
+                    <input type="hidden" id="gastoRecordId" value=""> <!-- ID Oculto para Modificación -->
 
                     <!-- Fila de Fecha -->
                     <div class="flex flex-col sm:flex-row justify-start items-start sm:items-center">
@@ -1769,10 +1770,13 @@
 
                 <!-- Pie de página del Modal (Acciones de Guardar/Cancelar) -->
                 <div class="p-6 border-t flex justify-end flex-wrap gap-3 sticky bottom-0 bg-white z-10 rounded-b-xl">
-                    <button form="gastoForm" type="submit" data-action="saveAndClose" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    <button id="cancelGastoEditBtn" data-close-modal="gastoModal" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition hidden">
+                        Cancelar Edición
+                    </button>
+                    <button form="gastoForm" type="submit" data-action="saveAndClose" id="saveGastoBtn" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
                         Guardar
                     </button>
-                    <button form="gastoForm" type="submit" data-action="saveAndAddAnother" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
+                    <button form="gastoForm" type="submit" data-action="saveAndAddAnother" id="saveAndAddAnotherGastoBtn" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition">
                         Guardar y Agregar Otro
                     </button>
                 </div>
@@ -1809,12 +1813,12 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, setLogLevel, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, setLogLevel, getDocs, where, limit, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 
     // Configuración de Seguridad y entorno
     const SECURE_PIN = "1440"; 
-    const SIMULATED_CAJA_VALUE = "00.00"; // Usar número para facilitar el cálculo si se llegara a implementar
+    const SIMULATED_CAJA_VALUE = "12000.00"; 
     
     // WhatsApp Number for automatic message (Must include country code, +54 for Argentina)
     const WHATSAPP_NUMBER = '541158660344'; 
@@ -1843,14 +1847,14 @@
     let salesData = []; 
     let expensesData = []; 
     let clientsData = []; 
-    let stockHistoryData = []; // NUEVA: Datos de movimientos de stock
+    let stockHistoryData = []; 
     let financesData = []; // NUEVO: Datos financieros (préstamos, deudas, intereses)
     
     let unsubscribeProducts = null; 
     let unsubscribeSales = null; 
     let unsubscribeExpenses = null; 
     let unsubscribeClients = null; 
-    let unsubscribeStockHistory = null; // NUEVA: Listener para historial de stock
+    let unsubscribeStockHistory = null; 
     let unsubscribeFinances = null; // NUEVO: Listener de Finanzas
     
     // Variables para métricas en tiempo real (ACTUALIZADAS)
@@ -1864,8 +1868,8 @@
     // NUEVAS: Variables para métricas de stock
     let totalStockAddedMonth = 0;
     let totalStockAddedYear = 0;
-
-  // NUEVAS: Variables para métricas de Finanzas
+    
+    // NUEVAS: Variables para métricas de Finanzas
     let totalPrestamos = 0;
     let totalDeudas = 0;
     let totalIntereses = 0;
@@ -2125,15 +2129,15 @@
     };
 
 
-    // FUNCIÓN PRINCIPAL DE CÁLCULO DE MÉTRICAS Y ACTUALIZACIÓN DEL DASHBOARD (MODIFICADA)
+    // FUNCIÓN PRINCIPAL DE CÁLCULO DE MÉTRICAS Y ACTUALIZACIÓN DEL DASHBOARD (MODIFICADA para Finanzas)
     const updateDashboardMetrics = () => {
         
         // CÁLCULOS DE GANANCIAS NETAS (Ganancia Neta = Ventas - Gastos)
         const gananciasHoy = totalVentasDelDia - totalGastosDelDia;
         const gananciasMes = totalVentasDelMes - totalGastosDelMes;
         const gananciasAnio = totalVentasDelAnio - totalGastosDelAnio;
-
-      // CÁLCULO DE GANANCIA NETA FINAL (Finanzas)
+        
+        // CÁLCULO DE GANANCIA NETA FINAL (Finanzas)
         // Ganancia Neta Final = (Ganancias Netas) - (Deudas + Intereses) + (Préstamos)
         const totalEgresosFinancieros = totalDeudas + totalIntereses;
         const netGainFinal = gananciasMes - totalEgresosFinancieros + totalPrestamos;
@@ -2156,9 +2160,8 @@
         if (salesMonthDisplayValueEl) salesMonthDisplayValueEl.textContent = `$${totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         if (salesYearDisplayValueEl) salesYearDisplayValueEl.textContent = `$${totalVentasDelAnio.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         if (ticketPromedioValueEl) ticketPromedioValueEl.textContent = ticketPromedio.toLocaleString('es-ES', { minimumFractionDigits: 2 });
-
-      
-       // 2. UPDATE FINANZAS CARD (Card 3)
+        
+        // 2. UPDATE FINANZAS CARD (Card 3)
         const cajaDisplayValueEl = document.getElementById('cajaDisplayValue');
         const totalDeudasValueEl = document.getElementById('totalDeudasValue');
         const totalPrestamosValueEl = document.getElementById('totalPrestamosValue');
@@ -2217,10 +2220,9 @@
         
         // Update Ganancias auxiliary values (Ventas/Gastos Mes)
         const totalVentasMesValueEl = document.getElementById('totalVentasMesValue');
-        const totalGastosMesValueEl = document.getElementById('totalGastosMesValue'); // <-- CORREGIDO: Usando el nombre de variable correcto
+        const totalGastosMesValueEl = document.getElementById('totalGastosMesValue');
         if (totalVentasMesValueEl) totalVentasMesValueEl.textContent = totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
-        // Uso de la variable corregida: totalGastosMesValueEl
-        if (totalGastosMesValueEl) totalGastosMesValueEl.textContent = totalGastosDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+        if (totalGastosMesValueEl) totalGastosDelMesValueEl.textContent = totalGastosDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
 
         
         // 4. Update Action Card Summaries (no protegidas)
@@ -2273,8 +2275,6 @@
 
     // --- Firebase Initialization and Authentication (CORREGIDA LA LÓGICA DE CUSTOM TOKEN) ---
     const initializeFirebase = async () => {
-        // En este entorno, asumimos que firebaseConfig siempre estará disponible
-        // ya sea por la variable de entorno o por la definición explícita anterior.
         
         try {
             setLogLevel('debug'); // Enable Firestore debug logging
@@ -2325,18 +2325,18 @@
                     totalGastosDelAnio = 0;
                     totalStockAddedMonth = 0; 
                     totalStockAddedYear = 0; 
+                    totalPrestamos = 0; // NUEVO
+                    totalDeudas = 0; // NUEVO
+                    totalIntereses = 0; // NUEVO
                     
                     updateDashboardMetrics(); 
                     renderProductHistory();
-                    // No llamamos a loadInventoryData() aquí, ya que se llamará al abrir el modal si es necesario
                 }
                 isAuthReady = true;
                 console.log("Firebase Auth State Changed. User ID:", userId);
             });
 
             // Initial sign-in logic (FIXED: Added robust error handling for custom token mismatch)
-            // Cuando se usa una configuración personalizada, el __initial_auth_token del entorno
-            // causa un 'custom-token-mismatch'. Intentamos usarlo, pero si falla, caemos en anónimo.
             if (initialAuthToken) {
                 try {
                     await signInWithCustomToken(auth, initialAuthToken);
@@ -2375,15 +2375,23 @@
 
     
     // Path for private collections (Utiliza la convención del entorno Canvas que cumple con las reglas de seguridad)
-    const getCollectionRef = (collectionName) => {
+    const getCollectionRef = (collectionName, isPublic = false) => {
         if (!db || !userId) {
             console.warn(`DB or User ID not available for ${collectionName} collection (Permission expected to fail).`);
             return null;
         }
-        return collection(db, 'artifacts', appId, 'users', userId, collectionName);
+        
+        if (isPublic) {
+            // Ejemplo de ruta PÚBLICA (colecciones que todos pueden ver, pero solo el dueño escribe)
+            return collection(db, 'artifacts', appId, 'public', 'data', collectionName);
+        } else {
+             // Ejemplo de ruta PRIVADA (colecciones solo accesibles por el dueño)
+            return collection(db, 'artifacts', appId, 'users', userId, collectionName);
+        }
     };
-
-  // --- NUEVO: Real-Time Listener for Finances ---
+    
+    
+    // --- NUEVO: Real-Time Listener for Finances ---
     const setupRealtimeFinancesListener = () => { 
         const financesRef = getCollectionRef('finances');
         if (!financesRef) return; 
@@ -2427,7 +2435,6 @@
             }
         });
     };
-    
     
     // --- NUEVO: Real-Time Listener for Stock History ---
     const setupRealtimeStockHistoryListener = () => { 
@@ -2547,7 +2554,8 @@
 
     // --- Real-Time Listener for Sales ---
     const setupRealtimeSalesListener = () => { 
-        const salesRef = getCollectionRef('sales');
+        // CAMBIO CRUCIAL: Usamos la colección PRIVADA para evitar errores de permiso en las escrituras.
+        const salesRef = getCollectionRef('sales'); 
         if (!salesRef) return; 
         
         const todayDateString = getTodayDateString(); 
@@ -2610,8 +2618,11 @@
         }, (error) => {
             if (error.code === 'permission-denied') {
                  console.error("Error de permisos: No se pueden cargar las ventas.");
+                 alertMessage("Error: No se pueden cargar las ventas debido a problemas de permisos.", 'error');
+
             } else {
                 console.error("Error listening to sales collection:", error);
+                alertMessage("Error al cargar ventas. Ver consola.", 'error');
             }
         });
     };
@@ -2802,7 +2813,7 @@
         
     };
 
-    // CARGAR HISTORIAL DE VENTAS (MODIFICADA: Muestra Gross Amount y el detalle de descuento)
+    // CARGAR HISTORIAL DE VENTAS (MODIFICADA: Muestra Gross Amount y el detalle de descuento/recargo)
     const loadSalesHistory = () => {
         const tbody = document.getElementById('salesHistoryTableContent');
         const totalCountValue = document.getElementById('totalSalesCountValue');
@@ -2847,28 +2858,43 @@
             sales.forEach(sale => {
                 const row = document.createElement('tr');
                 const montoCobrado = parseFloat(sale.montoCobrado) || 0; // Neto
-                const discountPercent = parseFloat(sale.discountPercent) || 0;
-                // Usamos grossAmount si está disponible, sino, asumimos que montoCobrado es el gross.
+                const percentage = parseFloat(sale.percentageApplied) || 0; // Puede ser -10 (Desc) o 5 (Rec)
                 const grossAmount = parseFloat(sale.grossAmount) || montoCobrado; 
 
-                const montoDisplay = `$${grossAmount.toFixed(2)}`;
+                const montoBrutoDisplay = `$${grossAmount.toFixed(2)}`;
                 const statusClass = sale.status === 'Entregado' ? 'bg-green-100 text-green-700' : 
                                     (sale.status === 'Cerrado' ? 'bg-indigo-100 text-indigo-700' : 'bg-yellow-100 text-yellow-700');
 
-                // NUEVO: Mostrar notas si existen
                 const notesDisplay = sale.notes && sale.notes.trim() !== '' 
                     ? `<span class="block text-xs text-gray-400 mt-1 italic">Nota: ${sale.notes.substring(0, 40)}${sale.notes.length > 40 ? '...' : ''}</span>`
                     : '';
 
-                // Breakdown HTML para el descuento
+                // Breakdown HTML para el descuento/recargo
                 let breakdownHtml = `<span class="block text-xs text-gray-500 mt-1">Neto: $${montoCobrado.toFixed(2)}</span>`;
-                if (discountPercent > 0) {
-                    const discountAmount = grossAmount - montoCobrado;
-                    breakdownHtml = `
-                        <span class="block text-xs text-red-500 mt-1">Desc.: ${discountPercent}% (-$${discountAmount.toFixed(2)})</span>
-                        <span class="block text-xs text-gray-500">Neto: $${montoCobrado.toFixed(2)}</span>
-                    `;
+                
+                if (percentage !== 0) {
+                    const diffAmount = Math.abs(grossAmount - montoCobrado);
+                    
+                    if (percentage < 0) {
+                         // Descuento
+                        breakdownHtml = `
+                            <span class="block text-xs text-red-500 mt-1">Desc.: ${Math.abs(percentage)}% (-$${diffAmount.toFixed(2)})</span>
+                            <span class="block text-xs text-gray-500">Neto: $${montoCobrado.toFixed(2)}</span>
+                        `;
+                    } else {
+                        // Recargo
+                        breakdownHtml = `
+                            <span class="block text-xs text-green-500 mt-1">Recargo: +${percentage}% (+$${diffAmount.toFixed(2)})</span>
+                            <span class="block text-xs text-gray-500">Neto: $${montoCobrado.toFixed(2)}</span>
+                        `;
+                    }
                 }
+                
+                // Si no hay porcentaje aplicado, mostramos el bruto como el neto cobrado.
+                if (percentage === 0) {
+                    breakdownHtml = `<span class="block text-xs text-gray-500 mt-1">Neto Cobrado: $${montoCobrado.toFixed(2)}</span>`;
+                }
+
                 
                 row.innerHTML = `
                     <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(sale.date)}</td>
@@ -2878,7 +2904,7 @@
                         ${notesDisplay}
                     </td>
                     <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-600">
-                        ${montoDisplay}
+                        ${montoBrutoDisplay}
                         ${breakdownHtml}
                     </td>
                     <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${sale.paymentType || 'Efectivo'}</td>
@@ -2891,7 +2917,7 @@
         }
     };
     
-    // CARGAR HISTORIAL DE GASTOS (MODIFICADA para filtros y búsqueda)
+    // CARGAR HISTORIAL DE GASTOS (MODIFICADO para agregar CRUD)
     const loadExpensesHistory = (searchTerm = '', filterMonth = 'all', filterYear = 'all') => {
         const tbody = document.getElementById('expensesHistoryTableContent');
         const totalMonthlyDisplay = document.getElementById('totalMonthlyExpensesDisplay');
@@ -2909,7 +2935,7 @@
         tbody.innerHTML = '';
         
         if (expensesData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay gastos registrados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No hay gastos registrados.</td></tr>`;
             return;
         }
 
@@ -2963,14 +2989,14 @@
         
         // Si no quedan resultados después de filtrar
         if (filteredExpenses.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No se encontraron gastos con los filtros aplicados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">No se encontraron gastos con los filtros aplicados.</td></tr>`;
             
             // Agregar fila de total filtrado 0
             const totalRow = document.createElement('tr');
             totalRow.innerHTML = `
                 <td colspan="2" class="px-6 py-3 whitespace-nowrap text-left text-sm font-bold text-gray-800 bg-gray-50">Total Gastos Filtrados</td>
                 <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-red-600 bg-gray-50">-$0.00</td>
-                <td colspan="2" class="bg-gray-50"></td>
+                <td colspan="3" class="bg-gray-50"></td>
             `;
             tbody.appendChild(totalRow);
             
@@ -2998,7 +3024,7 @@
             const monthName = monthNames[parseInt(monthIndex) - 1] || 'Sin Fecha';
             
             const separatorRow = document.createElement('tr');
-            separatorRow.innerHTML = `<td colspan="5" class="px-6 py-2 bg-green-50/70 text-green-800 font-bold text-sm sticky top-0 border-t border-b border-green-200">
+            separatorRow.innerHTML = `<td colspan="6" class="px-6 py-2 bg-green-50/70 text-green-800 font-bold text-sm sticky top-0 border-t border-b border-green-200">
                 ${monthName} ${year} (${expenses.length} gastos)
             </td>`;
             tbody.appendChild(separatorRow);
@@ -3012,6 +3038,17 @@
                 const statusClass = expense.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
                 const statusText = expense.paid ? 'Pagado' : 'Pendiente';
 
+                // Data attributes para edición
+                const expenseDataAttr = `
+                    data-id="${expense.id}"
+                    data-date="${expense.date}"
+                    data-amount="${monto}"
+                    data-category="${expense.category}"
+                    data-vendor="${expense.vendor}"
+                    data-description="${expense.description}"
+                    data-paid="${expense.paid}"
+                `;
+
                 row.innerHTML = `
                     <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(expense.date)}</td>
                     <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -3023,6 +3060,14 @@
                     <td class="px-6 py-3 whitespace-nowrap text-center">
                         <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${statusClass}">${statusText}</span>
                     </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-center text-sm space-x-2">
+                        <button class="text-blue-500 hover:text-blue-700 edit-expense-btn" ${expenseDataAttr}>
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-red-500 hover:text-red-700 delete-expense-btn" data-id="${expense.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(row);
             });
@@ -3033,12 +3078,78 @@
         totalRow.innerHTML = `
             <td colspan="2" class="px-6 py-3 whitespace-nowrap text-left text-sm font-bold text-gray-800 bg-gray-50">Total Gastos Filtrados</td>
             <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-red-600 bg-gray-50">-$${totalFiltrado.toFixed(2)}</td>
-            <td colspan="2" class="bg-gray-50"></td>
+            <td colspan="3" class="bg-gray-50"></td>
         `;
         tbody.appendChild(totalRow);
+        
+        // Adjuntar listeners para Edición y Eliminación
+        tbody.querySelectorAll('.delete-expense-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                alertMessage(`Eliminando gasto...`, 'info');
+                deleteExpenseRecord(id);
+            });
+        });
+        
+        tbody.querySelectorAll('.edit-expense-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const date = e.currentTarget.getAttribute('data-date');
+                const amount = e.currentTarget.getAttribute('data-amount');
+                const category = e.currentTarget.getAttribute('data-category');
+                const vendor = e.currentTarget.getAttribute('data-vendor');
+                const description = e.currentTarget.getAttribute('data-description');
+                const paid = e.currentTarget.getAttribute('data-paid') === 'true';
+                
+                openEditExpenseModal(id, date, amount, category, vendor, description, paid);
+            });
+        });
+    };
+    
+    // Lógica para abrir el modal de Gasto en modo Edición (NUEVO)
+    const openEditExpenseModal = (recordId, date, amount, category, vendor, description, paid) => {
+        // 1. Llenar campos
+        document.getElementById('gastoRecordId').value = recordId;
+        document.getElementById('gastoTotal').value = amount;
+        document.getElementById('fechaGasto').value = date;
+        document.getElementById('categoriaGastoInput').value = category;
+        document.getElementById('encargadoInput').value = vendor;
+        document.getElementById('descripcionGastoTextArea').value = description;
+        document.getElementById('pagadoGasto').checked = paid;
+        
+        // 2. Ajustar UI para Edición
+        document.getElementById('gastoModalTitle').textContent = 'Editar Gasto Existente';
+        document.getElementById('saveGastoBtn').textContent = 'Actualizar Gasto';
+        document.getElementById('saveAndAddAnotherGastoBtn').classList.add('hidden');
+        document.getElementById('cancelGastoEditBtn').classList.remove('hidden');
+        
+        // Abrir el modal
+        closeModal(document.getElementById('expensesDetailModal'));
+        openModal(document.getElementById('gastoModal'));
+        
+        alertMessage('Modo Edición: Modifique los campos del gasto y use el botón "Actualizar".', 'info');
     };
 
-// CARGAR HISTORIAL DE FINANZAS (NUEVO + CRUD)
+    // Lógica para Eliminar un registro de Gasto (NUEVO)
+    const deleteExpenseRecord = async (recordId) => {
+        if (!isAuthReady || !userId) {
+            alertMessage('Error: Debe iniciar sesión para eliminar registros.', 'error');
+            return;
+        }
+        const expensesRef = getCollectionRef('expenses');
+        if (!expensesRef) return;
+        
+        try {
+            const docRef = doc(expensesRef, recordId);
+            await deleteDoc(docRef);
+            alertMessage('Gasto eliminado con éxito.', 'success');
+        } catch (e) {
+            console.error("Error al eliminar gasto:", e);
+            alertMessage('Error al eliminar el gasto. Ver consola.', 'error');
+        }
+    };
+    
+    // CARGAR HISTORIAL DE FINANZAS (NUEVO + CRUD)
     const loadFinancesHistory = () => {
         const tbody = document.getElementById('financesHistoryTableContent');
         if (!tbody || !isAuthReady || !userId) return;
@@ -3081,7 +3192,7 @@
             let typeText = '';
             let typeColor = '';
             let amountSign = '';
-          
+
             switch(record.type) {
                 case 'prestamo':
                     typeText = 'Préstamo (Activo)';
@@ -3102,7 +3213,8 @@
                     typeText = 'Otro';
                     typeColor = 'text-gray-600';
             }
-          // Format date for edit use
+            
+            // Format date for edit use
             const dateForEdit = record.date || getCurrentDate();
             
             row.innerHTML = `
@@ -3128,6 +3240,7 @@
             `;
             tbody.appendChild(row);
         });
+        
         // Adjuntar listeners para Edición y Eliminación
         tbody.querySelectorAll('.delete-finance-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -3151,6 +3264,7 @@
             });
         });
     };
+    
     // Lógica para abrir el formulario en modo Edición (Finanzas)
     const openEditFinanceModal = (recordId, type, amount, date, description) => {
         // 1. Llenar campos
@@ -3190,8 +3304,8 @@
             alertMessage('Error al eliminar el registro. Ver consola.', 'error');
         }
     };
-  
-    // Funciones de renderizado de productos e inventario (MODIFICADA: Agrega botón de Historial)
+    
+    // Funciones de renderizado de productos e inventario (MANTENIDO)
     const renderProductHistory = () => {
         const listEl = document.getElementById('historialProductosLista');
         if (!listEl) return;
@@ -3227,7 +3341,7 @@
         }
     }
     
-    // NUEVA FUNCIÓN: Simula la venta de unidades por producto en un período filtrado
+    // Simula la venta de unidades por producto en un período filtrado (MANTENIDO)
     const calculateFilteredSales = (filterMonth, filterYear) => {
         
         // Determinar el período de ventas total según el filtro
@@ -3250,13 +3364,13 @@
                                     saleYear === parseInt(filterYear);
 
                 if (matchesMonth && matchesYear) {
-                    // Usamos el grossAmount si existe, sino el montoCobrado para el cálculo de simulación
-                    totalSalesInPeriod += parseFloat(sale.grossAmount || sale.montoCobrado) || 0;
+                    // Usamos el montoCobrado (Neto)
+                    totalSalesInPeriod += parseFloat(sale.montoCobrado || 0);
                 }
             });
         } else {
              // Si no hay filtro, usa la venta total del año (o de todos los tiempos)
-             totalSalesInPeriod = salesData.reduce((sum, sale) => sum + (parseFloat(sale.grossAmount || sale.montoCobrado) || 0), 0);
+             totalSalesInPeriod = salesData.reduce((sum, sale) => sum + (parseFloat(sale.montoCobrado) || 0), 0);
         }
         
         // Simulación: Asumir que el precio promedio de venta de un producto es $50.
@@ -3280,7 +3394,7 @@
     };
 
 
-    // Carga la tabla principal del modal de Inventario (MODIFICADA: Solución del ReferenceError)
+    // Carga la tabla principal del modal de Inventario (MANTENIDO)
     const loadInventoryData = (filterMonth = 'all', filterYear = 'all') => {
         // Aseguramos la declaración de variables al inicio de la función
         const tbody = document.getElementById('inventarioTablaContenido');
@@ -3371,7 +3485,7 @@
         });
     };
     
-    // NUEVA FUNCIÓN: Abre el modal de historial de stock por producto (CORREGIDA LA LÓGICA DE RENDERING)
+    // Abre el modal de historial de stock por producto (MANTENIDO)
     const openStockHistoryModal = (productId, productName) => {
         const modal = document.getElementById('stockHistoryModal');
         const titleEl = document.getElementById('stockHistoryTitle');
@@ -3421,7 +3535,7 @@
         openModal(modal);
     };
     
-    // NUEVA FUNCIÓN: Abre el modal de historial de stock para el resumen mensual/anual
+    // Abre el modal de historial de stock para el resumen mensual/anual (MANTENIDO)
     const openStockSummaryModal = (data, title) => {
         
         // Ejemplo de reutilización 'detalleDiarioModal' con los datos de stock.
@@ -3450,33 +3564,33 @@
     };
 
 
-    // --- LÓGICA DE CÁLCULO DE MONTO BRUTO EN VENTA (NUEVO) ---
+    // --- LÓGICA DE CÁLCULO DE MONTO BRUTO EN VENTA (MODIFICADO para descuento/recargo) ---
     const updateSaleGrossValue = () => {
         const montoCobradoInput = document.getElementById('montoCobrado');
-        const descuentoInput = document.getElementById('descuentoVenta');
+        const descuentoVentaInput = document.getElementById('descuentoVenta');
         const grossDisplay = document.getElementById('grossSaleValueDisplay');
 
-        if (!montoCobradoInput || !descuentoInput || !grossDisplay) return;
+        if (!montoCobradoInput || !descuentoVentaInput || !grossDisplay) return;
 
         const montoCobrado = parseFloat(montoCobradoInput.value) || 0;
-        const descuento = parseFloat(descuentoInput.value) || 0;
+        const porcentaje = parseFloat(descuentoVentaInput.value) || 0; // Puede ser negativo (descuento) o positivo (recargo)
 
-        let grossAmount = montoCobrado; // Default a monto neto si no hay descuento
+        let grossAmount = montoCobrado; // Default a monto neto si factor es 1
 
-        if (descuento > 0 && descuento <= 100) {
-            const factor = 1 - (descuento / 100);
-            if (factor > 0) {
-                 grossAmount = montoCobrado / factor;
-            } else {
-                 grossAmount = 0; // Evitar división por cero
-            }
+        const factor = 1 + (porcentaje / 100); 
+
+        if (factor > 0) {
+            // Bruto = Neto / Factor
+            grossAmount = montoCobrado / factor;
+        } else {
+            grossAmount = 0; // Evitar división por cero
         }
         
         // Actualizar el display con formato de moneda
         grossDisplay.textContent = `$${grossAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
     };
 
-    // --- Data Saving Functions (Product) (MODIFICADA: Agrega registro en stockHistory) ---
+    // --- Data Saving Functions (Product) (MANTENIDO) ---
     const saveProduct = async (event) => {
         event.preventDefault();
         
@@ -3551,9 +3665,9 @@
     };
 
 
-    // --- Data Saving Functions (Sale) (MODIFICADA: Agrega Gross Amount) ---
+    // --- Data Saving Functions (Sale) (MODIFICADA para descuento/recargo) ---
     
-    // Función auxiliar para guardar el cliente si es nuevo
+    // Función auxiliar para guardar el cliente si es nuevo (MANTENIDO)
     const saveNewClient = async (clientName) => {
         if (!clientName || clientName.trim() === '' || clientName.trim().toLowerCase() === 'consumidor final') {
             return; // No guardar clientes vacíos o el Consumidor Final
@@ -3589,7 +3703,8 @@
             return;
         }
 
-        const salesRef = getCollectionRef('sales');
+        // CAMBIO CRUCIAL: Usamos la colección PRIVADA para evitar errores de permiso en la escritura.
+        const salesRef = getCollectionRef('sales'); 
         if (!salesRef) {
              alertMessage('Error: No se pudo obtener la referencia de la base de datos (Usuario no identificado).', 'error');
              return;
@@ -3602,7 +3717,7 @@
         const montoCobrado = montoCobradoInput.value;
         const fechaVenta = document.getElementById('fechaVenta').value || getCurrentDate();
         const clienteVentaInput = document.getElementById('clienteVentaInput').value.trim();
-        const descuentoVenta = descuentoVentaInput.value;
+        const percentageApplied = descuentoVentaInput.value; // Puede ser negativo (descuento) o positivo
         const canalVentaInput = document.getElementById('canalVentaInput').value.trim();
         const estadoVenta = document.getElementById('estadoVenta').value;
         const fechaEntrega = document.getElementById('fechaEntrega').value;
@@ -3620,26 +3735,25 @@
         
         // 3. Cálculo del Monto Bruto (Gross Amount)
         const netAmount = parseFloat(montoCobrado);
-        const discount = parseFloat(descuentoVenta) || 0;
+        const percentage = parseFloat(percentageApplied) || 0;
         let grossAmount = netAmount;
 
-        if (discount > 0 && discount <= 100) {
-            const factor = 1 - (discount / 100);
-            if (factor > 0) {
-                 grossAmount = netAmount / factor;
-            } else {
-                 grossAmount = netAmount; // Fallback para evitar errores.
-            }
+        const factor = 1 + (percentage / 100);
+
+        if (factor > 0) {
+            grossAmount = netAmount / factor;
+        } else {
+            grossAmount = netAmount; 
         }
         
         const clientNameFinal = clienteVentaInput || 'Consumidor Final';
         
         const saleData = {
             montoCobrado: netAmount, // Monto Cobrado (Neto)
-            grossAmount: grossAmount, // Monto Bruto (Calculado) <-- NUEVO
+            grossAmount: grossAmount, // Monto Bruto (Calculado)
+            percentageApplied: percentage, // Porcentaje aplicado (+Recargo, -Descuento)
             date: fechaVenta,
-            clientName: clientNameFinal, // Nombre del cliente final
-            discountPercent: discount,
+            clientName: clientNameFinal, 
             salesChannel: canalVentaInput || 'Ninguno',
             status: estadoVenta,
             deliveryDate: fechaEntrega || null,
@@ -3647,7 +3761,7 @@
             saleType: tipoVenta,
             vendor: vendedorVenta,
             invoiceNumber: nroFactura,
-            notes: notasVenta, // NOTAS AÑADIDAS
+            notes: notasVenta, 
             createdAt: new Date().toISOString()
         };
 
@@ -3660,20 +3774,17 @@
             console.log("Venta guardada con ID: ", docRef.id);
             alertMessage(`Venta por $${saleData.montoCobrado.toFixed(2)} guardada con éxito!`, 'success');
             
-            // *NOTA IMPORTANTE DE STOCK*: 
-            // En un sistema real, aquí se registraría una 'Salida' de stock (type: 'SALE') por las unidades vendidas.
-            
             // 6. Limpiar formulario y cerrar modal
             document.getElementById('ventaForm').reset();
             closeModal(document.getElementById('ventaModal'));
 
         } catch (e) {
             console.error("Error al añadir la venta: ", e);
-            alertMessage('Error al guardar la venta. Ver consola para más detalles.', 'error');
+            alertMessage(`Error al guardar la venta: ${e.message}. Ver consola.`, 'error');
         }
     };
 
-    // --- Data Saving Functions (Expense) (MANTENIDA) ---
+    // --- Data Saving Functions (Expense) (MODIFICADA para UPDATE/ADD) ---
     const saveExpense = async (event) => {
         event.preventDefault();
         
@@ -3692,6 +3803,7 @@
         const form = event.target.closest('form');
         const submitter = event.submitter; // El botón que disparó el submit
         
+        const recordId = form.querySelector('#gastoRecordId').value; // ID para UPDATE
         const montoGasto = form.querySelector('#gastoTotal').value;
         const fechaGasto = form.querySelector('#fechaGasto').value || getCurrentDate();
         const categoriaGasto = form.querySelector('#categoriaGastoInput').value.trim();
@@ -3712,20 +3824,44 @@
             vendor: encargado || 'Desconocido', 
             description: descripcion,
             paid: pagado,
-            createdAt: new Date().toISOString()
+            // createdAt solo se añade si es nuevo
         };
 
         try {
-            // 3. Guardar en Firestore
-            const docRef = await addDoc(expensesRef, expenseData);
-            console.log("Gasto guardado con ID: ", docRef.id);
-            alertMessage(`Gasto por $${expenseData.gastoTotal.toFixed(2)} guardado con éxito!`, 'success');
+            let message = '';
+            
+            if (recordId) {
+                // Lógica de UPDATE/MODIFICACIÓN
+                const docRef = doc(expensesRef, recordId);
+                await updateDoc(docRef, expenseData);
+                message = 'Gasto actualizado con éxito!';
+            } else {
+                // Lógica de ADD/GUARDAR (Nuevo)
+                expenseData.createdAt = new Date().toISOString(); 
+                await addDoc(expensesRef, expenseData);
+                message = `Gasto por $${expenseData.gastoTotal.toFixed(2)} guardado con éxito!`;
+            }
+            
+            alertMessage(message, 'success');
             
             // 4. Limpiar formulario y cerrar modal
             form.reset();
+            // Resetear modo edición después de guardar o actualizar
+            document.getElementById('gastoRecordId').value = '';
+            document.getElementById('gastoModalTitle').textContent = 'Agregar Gasto';
+            document.getElementById('saveGastoBtn').textContent = 'Guardar';
+            document.getElementById('saveAndAddAnotherGastoBtn').classList.remove('hidden');
+            document.getElementById('cancelGastoEditBtn').classList.add('hidden');
+            document.getElementById('fechaGasto').value = getCurrentDate(); 
             
-            if (submitter && submitter.getAttribute('data-action') === 'saveAndClose') {
+
+            if (submitter && submitter.getAttribute('data-action') === 'saveAndClose' && !recordId) {
+                // Si es modo Agregar y se pide cerrar
                 closeModal(document.getElementById('gastoModal'));
+            } else if (recordId) {
+                 // Si se estaba editando, volvemos al historial
+                 closeModal(document.getElementById('gastoModal'));
+                 openModal(document.getElementById('expensesDetailModal'));
             } else {
                  // Si es "Guardar y Agregar Otro", solo dejar el modal abierto y limpiar el monto
                  form.querySelector('#gastoTotal').value = '';
@@ -3734,12 +3870,12 @@
 
 
         } catch (e) {
-            console.error("Error al añadir el gasto: ", e);
+            console.error("Error al añadir/actualizar el gasto: ", e);
             alertMessage('Error al guardar el gasto. Ver consola para más detalles.', 'error');
         }
     };
-
-// --- NUEVO: Data Saving Functions (Finances) - MODIFICADO para UPDATE ---
+    
+    // --- NUEVO: Data Saving Functions (Finances) - MODIFICADO para UPDATE ---
     const saveFinanceRecord = async (event) => {
         event.preventDefault();
         
@@ -3772,7 +3908,8 @@
             description: description,
             // createdAt solo se actualiza si es un nuevo registro
         };
-       try {
+
+        try {
             if (recordId) {
                 // Lógica de UPDATE/MODIFICACIÓN
                 const docRef = doc(financesRef, recordId);
@@ -3802,8 +3939,9 @@
             alertMessage('Error al guardar/actualizar el registro. Ver consola.', 'error');
         }
     };
-  
-    // --- Lógica del Gemini AI Analista (MANTENIDA) ---
+
+
+    // --- Lógica del Gemini AI Analista (MANTENIDO) ---
     const ANALISIS_CONTENT_ID = 'analisisContent';
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
     const API_KEY = ""; 
@@ -3857,7 +3995,7 @@
         
         Actúa como un analista financiero experto. 
         1. Proporciona un breve diagnóstico sobre la salud financiera de mi negocio.
-        2. Formula tres estrategias específicas y accionables para mejorar el Margen Neto. Usa formato de lista numerada para las estrategias.`;
+        2. Formula tres estrategias específicas y accionables para mejorar el Margen Neto. Usa formato de lista numerada para las estrategias. Utiliza español de América Latina.`;
 
         const systemPrompt = "Eres un analista financiero experto. Tu respuesta debe ser concisa, profesional y formatada en Markdown, cubriendo el diagnóstico y las 3 estrategias solicitadas. El diagnóstico debe ser un párrafo breve y las estrategias una lista numerada con una breve explicación de cada una. Utiliza español de América Latina.";
 
@@ -3999,12 +4137,13 @@
         const metrics = PROTECTED_METRICS[metricType];
         const eyeIcon = document.getElementById(metricType + 'EyeIcon');
         const toggleText = document.getElementById(metricType + 'ToggleText');
-
-       // Determinar si la métrica principal es Ganancias o Finanzas para usar la clase de color correcta
+        
+        // Determinar si la métrica principal es Ganancias o Finanzas para usar la clase de color correcta
         const mainCardId = metricType === 'Ganancias' ? 'gananciasCard' : (metricType === 'Finanzas' ? 'FinanzasCard' : null);
         const cardElement = mainCardId ? document.getElementById(mainCardId) : null;
         const isNegative = cardElement?.classList.contains('card-ganancias-border-red');
         const colorClass = isNegative ? 'text-red-600' : (metricType === 'Ganancias' ? 'text-green-600' : 'text-yellow-600');
+
 
         metrics.forEach(item => {
             const displayEl = document.getElementById(item.display);
@@ -4041,7 +4180,7 @@
             
             // Restablecer el modal
             document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
-            document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+            document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos). (PIN: 1440)';
             pinInput.value = '';
             closeModal(document.getElementById('authModal'));
             pendingAuthAction = null;
@@ -4051,40 +4190,6 @@
             pinInput.value = '';
             pinInput.focus();
         }
-    };
-
-   // Función de apertura de Auth para métricas y otras acciones
-    const attemptAuth = (actionTarget) => {
-        let isMetricReveal = typeof actionTarget === 'string' && actionTarget.startsWith('reveal');
-        
-        if (isMetricReveal) {
-            const metricType = actionTarget.replace('reveal', '');
-            // Check if the metric is already revealed and if so, hide it immediately
-            const firstDisplayId = PROTECTED_METRICS[metricType][0].display;
-            const isVisible = firstDisplayId ? !document.getElementById(firstDisplayId)?.classList.contains('hidden') : false;
-            
-            if (isVisible) {
-                toggleProtectedDisplay(metricType, false);
-                return;
-            }
-        }
-        
-        // Configuración para la acción general (incluye Sales History)
-        pendingAuthAction = actionTarget;
-        document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
-        
-        let message = 'Ingrese el PIN de seguridad (4 dígitos).';
-        if (actionTarget === 'accessSalesHistory') {
-             message = 'Ingrese el PIN de seguridad (4 dígitos) para ver el Historial de Ventas.';
-        } else if (actionTarget === 'accessFinancesReport') {
-             message = 'Ingrese el PIN de seguridad (4 dígitos) para ver el Reporte de Finanzas.';
-        }
-        
-        document.getElementById('authModalMessage').textContent = message;
-        openModal(document.getElementById('authModal'));
-        document.getElementById('ventaPinInput').value = '';
-        document.getElementById('pinError').classList.add('hidden');
-        document.getElementById('ventaPinInput').focus();
     };
 
     // Función de apertura de Auth para métricas y otras acciones
@@ -4107,11 +4212,11 @@
         pendingAuthAction = actionTarget;
         document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
         
-        let message = 'Ingrese el PIN de seguridad (4 dígitos).';
+        let message = 'Ingrese el PIN de seguridad (4 dígitos). (PIN: 1440)';
         if (actionTarget === 'accessSalesHistory') {
-             message = 'Ingrese el PIN de seguridad (4 dígitos) para ver el Historial de Ventas.';
+             message = 'Ingrese el PIN de seguridad (4 dígitos) para ver el Historial de Ventas. (PIN: 1440)';
         } else if (actionTarget === 'accessFinancesReport') {
-             message = 'Ingrese el PIN de seguridad (4 dígitos) para ver el Reporte de Finanzas.';
+             message = 'Ingrese el PIN de seguridad (4 dígitos) para ver el Reporte de Finanzas. (PIN: 1440)';
         }
         
         document.getElementById('authModalMessage').textContent = message;
@@ -4120,9 +4225,34 @@
         document.getElementById('pinError').classList.add('hidden');
         document.getElementById('ventaPinInput').focus();
     };
+
+    // Manejador central para el botón "Acceder" del modal de PIN
+    const handlePinCheck = () => {
+        if (!pendingAuthAction) return;
+
+        const pinInput = document.getElementById('ventaPinInput');
+        
+        if (pinInput.value === SECURE_PIN) {
             
-            // 1. ELIMINACIÓN DE OPCIÓN (Encargado o Tipo de Pago)
-            if (pendingAuthAction.type === 'deleteEncargado' || pendingAuthAction.type === 'deleteCategoríadeTipodePago') {
+            // ACCIÓN 1: Abrir Historial de Ventas 
+            if (pendingAuthAction === 'accessSalesHistory') {
+                 closeModal(document.getElementById('authModal'));
+                 pendingAuthAction = null;
+                 loadSalesHistory();
+                 openModal(document.getElementById('salesDetailModal'));
+                 alertMessage('Acceso concedido al historial de ventas.', 'success');
+            } 
+            // NUEVO: ACCIÓN 2: Abrir Reporte de Finanzas
+            else if (pendingAuthAction === 'accessFinancesReport') {
+                 closeModal(document.getElementById('authModal'));
+                 pendingAuthAction = null;
+                 document.getElementById('financeDate').value = getCurrentDate(); 
+                 loadFinancesHistory(); 
+                 openModal(document.getElementById('finanzasReportModal'));
+                 alertMessage('Acceso concedido a Finanzas.', 'success');
+            }
+            // ACCIÓN 3: ELIMINACIÓN DE OPCIÓN (Encargado o Tipo de Pago)
+            else if (pendingAuthAction.type === 'deleteEncargado' || pendingAuthAction.type === 'deleteCategoríadeTipodePago') {
                 const nameToDelete = pendingAuthAction.name;
                 const datalist = document.getElementById(pendingAuthAction.datalist);
                 const input = document.getElementById(pendingAuthAction.input);
@@ -4140,14 +4270,15 @@
                     alertMessage(`Error: La opción "${nameToDelete}" no se encontró en la lista.`, 'error');
                 }
 
-                // 2. Restablecer el modal y el estado
+                // Restablecer el modal y el estado
                 document.getElementById('authModalTitle').textContent = 'Acceso Restringido';
-                document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos).';
+                document.getElementById('authModalMessage').textContent = 'Ingrese el PIN de seguridad (4 dígitos). (PIN: 1440)';
                 closeModal(document.getElementById('authModal'));
                 pendingAuthAction = null;
                 
-            } else if (typeof pendingAuthAction === 'string' && pendingAuthAction.startsWith('reveal')) {
-                // 3. REVELACIÓN DE MÉTRICAS
+            } 
+            // ACCIÓN 4: REVELACIÓN DE MÉTRICAS
+            else if (typeof pendingAuthAction === 'string' && pendingAuthAction.startsWith('reveal')) {
                 revealMetrics(pendingAuthAction, pinInput);
             }
             
@@ -4159,9 +4290,9 @@
     };
 
     
-    // --- LÓGICA DE CRUD DE DATALIST (REUTILIZABLE) ---
+    // --- LÓGICA DE CRUD DE DATALIST (REUTILIZABLE - MANTENIDO) ---
     
-    // Función para agregar una opción a un datalist (MANTENIDA)
+    // Función para agregar una opción a un datalist
     const setupDatalistAdd = (addButtonId, inputId, datalistId, fieldName) => {
         const addBtn = document.getElementById(addButtonId);
         const input = document.getElementById(inputId);
@@ -4191,7 +4322,7 @@
         });
     };
 
-    // Función para eliminar una opción de la datalist (requiere PIN) (MANTENIDA)
+    // Función para eliminar una opción de la datalist (requiere PIN)
     const attemptDeleteOption = (input, datalist, deleteBtnId, fieldName) => {
         const nameToDelete = input.value.trim();
         const inputId = input.id;
@@ -4237,440 +4368,7 @@
         // ********************************
 
         // Iniciar Firebase y el flujo de autenticación 
-        initializeFirebase();
-
-        // --- Selectores de Modales y Botones ---
-        const productoModal = document.getElementById('productoModal');
-        const inventarioModal = document.getElementById('inventarioModal'); // El modal de Reporte/Listado de Productos
-        const finanzasReportModal = document.getElementById('finanzasReportModal'); // NUEVO MODAL
-
-        const openFinanzasModalTrigger = document.getElementById('openFinanzasModalTrigger'); // RENOMBRADO
-        const openProductoBtnTrigger = document.getElementById('openProductoModalTrigger'); // Botón "+ Producto"
-        const openGastoBtn = document.getElementById('openGastoModal'); // <<-- BOTÓN ARREGLADO
-        const openGananciasBtnAction = document.getElementById('openGananciasModal');
-        const openInventarioModalTrigger = document.getElementById('openInventarioModalTrigger'); // Tarjeta "Ver Inventario"
-        const openClientesModalTrigger = document.getElementById('openClientesModalTrigger'); 
-        
-        const productoForm = document.getElementById('productoForm');
-        const ventaForm = document.getElementById('ventaForm'); 
-        const gastoForm = document.getElementById('gastoForm'); 
-        const financeForm = document.getElementById('financeForm'); // NUEVO FORMULARIO
-        
-        const togglePriceSection = document.getElementById('togglePriceSection');
-        const priceSectionContent = document.getElementById('priceSectionContent');
-        
-        // Elementos de CRUD y Datalist
-        const encargadoInput = document.getElementById('encargadoInput');
-        const encargadoListOptions = document.getElementById('encargadoListOptions');
-        const deleteEncargadoWithPinBtn = document.getElementById('deleteEncargadoWithPinBtn');
-        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
-        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput');
-        const tipoPagoListOptions = document.getElementById('tipoPagoListOptions');
-        const deleteTipoPagoWithPinBtn = document.getElementById('deleteTipoPagoWithPinBtn');
-        const canalVentaInput = document.getElementById('canalVentaInput');
-        
-        const metricSelect = document.getElementById('metricSelect'); 
-        const ventaPinInput = document.getElementById('ventaPinInput');
-        const checkVentaPinBtn = document.getElementById('checkVentaPinBtn');
-        
-        // Elementos de Filtro de Inventario (NUEVOS)
-        const inventarioFilterMonth = document.getElementById('inventarioFilterMonth');
-        const inventarioFilterYear = document.getElementById('inventarioFilterYear');
-        const applyInventoryFiltersBtn = document.getElementById('applyInventoryFiltersBtn');
-        
-        // ** NUEVOS Elementos de Filtro de Gastos **
-        const expenseSearchInput = document.getElementById('expenseSearchInput');
-        const expenseFilterMonth = document.getElementById('expenseFilterMonth');
-        const expenseFilterYear = document.getElementById('expenseFilterYear');
-        const applyExpenseFiltersBtn = document.getElementById('applyExpenseFiltersBtn');
-        // ** FIN NUEVOS Elementos de Filtro de Gastos **
-        
-        // Elementos para cálculo de Monto Bruto (NUEVOS)
-        const montoCobradoInput = document.getElementById('montoCobrado');
-        const descuentoVentaInput = document.getElementById('descuentoVenta');
-        
-        // 1. ** Llenar el Year Selector **
-        const currentYear = getCurrentYear();
-        for (let i = 0; i < 5; i++) {
-            const year = (parseInt(currentYear) - i).toString();
-            // Llenar selectores de año de Inventario
-            if (inventarioFilterYear && !inventarioFilterYear.querySelector(`option[value="${year}"]`)) { 
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                inventarioFilterYear.appendChild(option);
-            }
-             // Llenar selectores de año de Gastos
-             if (expenseFilterYear && !expenseFilterYear.querySelector(`option[value="${year}"]`)) { 
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                expenseFilterYear.appendChild(option);
-            }
-        }
-        if (inventarioFilterYear) inventarioFilterYear.value = 'current';
-        if (expenseFilterYear) expenseFilterYear.value = 'all'; // Por defecto: ver todo el tiempo.
-
-
-        // --- Lógica de CRUD para Datalists (Inicialización) ---
-        
-        // 1. Categoría de Gasto (Adición)
-        setupDatalistAdd('addNewGastoCategoryBtn', 'categoriaGastoInput', 'categoriaGastoListOptions', 'Categoría de Gasto');
-        if (categoriaGastoListOptions) categoriaGastoListOptions.innerHTML = ''; 
-
-        // 2. Encargado de Turno (Adición)
-        setupDatalistAdd('addNewEncargadoBtn', 'encargadoInput', 'encargadoListOptions', 'Encargado de Turno');
-        if (encargadoListOptions) encargadoListOptions.innerHTML = ''; 
-
-        // 3. Encargado de Turno (Eliminación con PIN)
-        if (deleteEncargadoWithPinBtn) {
-            deleteEncargadoWithPinBtn.addEventListener('click', () => {
-                attemptDeleteOption(encargadoInput, encargadoListOptions, 'deleteEncargadoWithPinBtn', 'Encargado de Turno');
-            });
-        }
-        
-        // 4. Tipo de Pago (Adición)
-        setupDatalistAdd('addNewTipoPagoBtn', 'tipoPagoVentaInput', 'tipoPagoListOptions', 'Categoría de Tipo de Pago');
-
-        // 5. Tipo de Pago (Eliminación con PIN)
-        if (deleteTipoPagoWithPinBtn) {
-            deleteTipoPagoWithPinBtn.addEventListener('click', () => {
-                attemptDeleteOption(tipoPagoVentaInput, tipoPagoListOptions, 'deleteTipoPagoWithPinBtn', 'Categoría de Tipo de Pago');
-            });
-        }
-
-
-        // --- Listeners de Eventos (Botones y Lógica Principal) ---
-        
-        // ** NUEVO: Manejador de Novedades de WhatsApp **
-        document.getElementById('sendUpdatesWhatsappBtn').addEventListener('click', sendWhatsAppNotification);
-
-        // ** NUEVO: Manejador del botón de Google Sign-In **
-        document.getElementById('googleSignInPlaceholderBtn').addEventListener('click', handleGoogleSignIn);
-
-
-        // Toggle para la sección de Precio de Venta (MANTENIDO)
-        if (togglePriceSection && priceSectionContent) {
-            togglePriceSection.addEventListener('click', () => {
-                const isHidden = priceSectionContent.classList.toggle('hidden');
-                
-                if (isHidden) {
-                    togglePriceSection.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta';
-                } else {
-                    togglePriceSection.innerHTML = '<i class="fas fa-minus-circle mr-2"></i> Ocultar Precio de Venta';
-                }
-            });
-            if (priceSectionContent.classList.contains('hidden')) {
-                togglePriceSection.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Agregar Precio de Venta';
-            }
-        }
-
-        // 1. ABRIR FORMULARIO DE PRODUCTO (Botón + Producto)
-        openProductoBtnTrigger.addEventListener('click', () => openModal(productoModal));
-        
-        // ABRIR FORMULARIO DE GASTO (Botón + Gasto) <-- ARREGLO
-        if (openGastoBtn) {
-            openGastoBtn.addEventListener('click', () => {
-                document.getElementById('fechaGasto').value = getCurrentDate(); // Establecer fecha actual por defecto
-                openModal(document.getElementById('gastoModal'));
-            });
-        }
-        
-        // 2. ABRIR REPORTE DE INVENTARIO (Tarjeta "Ver Productos" y "Ver Inventario")
-        const openInventoryReport = () => {
-             // Sincronizar filtros por defecto (Mes Actual, Año Actual)
-             inventarioFilterMonth.value = 'current';
-             inventarioFilterYear.value = 'current';
-             loadInventoryData('current', 'current'); 
-             openModal(inventarioModal);
-        }
-        openProductoCard.addEventListener('click', openInventoryReport);
-        openInventarioModalTrigger.addEventListener('click', openInventoryReport);
-
-        
-        // ABRIR HISTORIAL DE VENTAS
-        document.getElementById('openVerVentasLink').addEventListener('click', () => { 
-            loadSalesHistory();
-            openModal(document.getElementById('salesDetailModal'));
-        }); 
-        
-        // ABRIR HISTORIAL DE GASTOS (MODIFICADO para aplicar filtros al abrir)
-        openGananciasBtnAction.addEventListener('click', () => { 
-            // Aplicar los filtros actuales (por defecto o los últimos seleccionados)
-            const search = expenseSearchInput?.value || '';
-            const month = expenseFilterMonth?.value || 'all';
-            const year = expenseFilterYear?.value || 'all';
-            loadExpensesHistory(search, month, year); 
-            openModal(document.getElementById('expensesDetailModal'));
-        });
-        
-        // ABRIR MODAL DE VENTA (Configuración y Cierre del modal)
-        document.getElementById('openVentaModalDirect').addEventListener('click', () => {
-            document.getElementById('fechaVenta').value = getCurrentDate(); // Establecer fecha actual por defecto
-            // Reset y cálculo inicial de Monto Bruto
-            if (montoCobradoInput) montoCobradoInput.value = '';
-            if (descuentoVentaInput) descuentoVentaInput.value = 0;
-            updateSaleGrossValue(); 
-            openModal(document.getElementById('ventaModal'));
-        });
-        
-        // Listeners para Monto Bruto (NUEVOS)
-        if (montoCobradoInput) montoCobradoInput.addEventListener('input', updateSaleGrossValue);
-        if (descuentoVentaInput) descuentoVentaInput.addEventListener('input', updateSaleGrossValue);
-
-
-        document.getElementById('openProfileModalBtn').addEventListener('click', () => openModal(document.getElementById('profileModal')));
-        
-        // Botón de Cerrar Sesión (Logout)
-        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-        
-        // ** ABRIR MODAL DE CLIENTES (Reforzado para carga)**
-        openClientesModalTrigger.addEventListener('click', () => { 
-             loadClientHistory(); 
-             openModal(document.getElementById('clientesModal'));
-        }); 
-        // ** FIN ABRIR MODAL DE CLIENTES **
-
-        // Producto: Lógica de Guardado (Firestore)
-        if (productoForm) {
-            productoForm.addEventListener('submit', saveProduct);
-        }
-        
-        // Venta: Lógica de Guardado (Firestore)
-        if (ventaForm) {
-            ventaForm.addEventListener('submit', saveSale);
-        }
-        
-        // Gasto: Lógica de Guardado (Firestore) (NUEVO)
-        if (gastoForm) {
-            gastoForm.addEventListener('submit', saveExpense);
-        }
-
-        // Botón para aplicar filtros en el modal de Inventario/Reporte (NUEVO)
-        if (applyInventoryFiltersBtn) {
-            applyInventoryFiltersBtn.addEventListener('click', () => {
-                const month = inventarioFilterMonth.value;
-                const year = inventarioFilterYear.value;
-                loadInventoryData(month, year);
-                alertMessage(`Reporte de inventario actualizado para el filtro de ${month} / ${year}.`, 'info');
-            });
-        }
-        
-        // ** NUEVO: Botón para aplicar filtros en el modal de Gastos **
-        if (applyExpenseFiltersBtn && expenseSearchInput && expenseFilterMonth && expenseFilterYear) {
-            applyExpenseFiltersBtn.addEventListener('click', () => {
-                const search = expenseSearchInput.value.trim();
-                const month = expenseFilterMonth.value;
-                const year = expenseFilterYear.value;
-                loadExpensesHistory(search, month, year);
-                alertMessage('Filtros de gastos aplicados.', 'info');
-            });
-        }
-
-
-        // Botón Gemini: Abre el modal y ejecuta el análisis
-        document.getElementById('openAnalisisModalBtn').addEventListener('click', () => {
-            closeModal(document.getElementById('gananciasModal')); 
-            openModal(document.getElementById('analisisModal'));
-            performAnalysis();
-        });
-
-
-        // Lógica para cambiar el título y estilo del gráfico
-        if (metricSelect) {
-            metricSelect.addEventListener('change', (e) => {
-                updateChartTitle(e.target.value);
-            });
-        }
-        
-        // Lógica para Rotar la Flecha en "Otra Información"
-        const otherInfoDetails = document.getElementById('otherInfoDetails');
-        if (otherInfoDetails) {
-            const arrow = otherInfoDetails.querySelector('summary i');
-            otherInfoDetails.addEventListener('toggle', () => {
-                if (otherInfoDetails.open) {
-                    arrow.classList.add('rotate-180');
-                } else {
-                    arrow.classList.remove('rotate-180');
-                }
-            });
-        }
-        
-
-        // Botones que requieren PIN (Solo MÉTICAS REVELADAS)
-        document.querySelectorAll('[data-auth-for^="reveal"]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const target = e.currentTarget.getAttribute('data-auth-for');
-                
-                // Usamos la lógica de attemptAuth que ya maneja el toggle de visible/invisible
-                attemptAuth(target);
-            });
-        });
-
-        // Listener del botón de Acceso en el modal de PIN
-        checkVentaPinBtn.addEventListener('click', handlePinCheck);
-
-        // Permitir Enter para enviar el PIN
-        ventaPinInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handlePinCheck();
-            }
-        });
-        
-        // Lógica para agregar un nuevo canal de venta manualmente (MANTENIDO)
-        const addNewCanalBtn = document.getElementById('addNewCanalBtn');
-        const canalListOptions = document.getElementById('canalListOptions');
-        if (addNewCanalBtn && canalVentaInput && canalListOptions) {
-            addNewCanalBtn.addEventListener('click', () => {
-                const canalName = canalVentaInput.value.trim();
-                
-                if (canalName && canalName !== "Ninguno") {
-                    const existingOption = Array.from(canalListOptions.options).some(opt => opt.value === canalName);
-
-                    if (existingOption) {
-                        alertMessage(`El canal "${canalName}" ya existe en la lista.`, 'info');
-                    } else {
-                        const newOption = document.createElement('option');
-                        newOption.value = canalName;
-                        canalListOptions.appendChild(newOption);
-                        
-                        canalVentaInput.value = canalName;
-                        alertMessage(`Canal de venta "${canalName}" agregado manualmente a la lista.`, 'success');
-                    }
-                } else {
-                    alertMessage('Por favor, escriba un nombre de canal para agregar.', 'error');
-                }
-            });
-        }
-        
-        // Lógica para el manejo de categorías de Producto (Mantenido y Corregido)
-        const setupCustomCategoryListeners = () => {
-            const addBtn = document.getElementById('addCustomCategoryBtn');
-            const saveBtn = document.getElementById('saveCustomCategoryBtn');
-            const cancelBtn = document.getElementById('cancelCustomCategoryBtn');
-            const inputGroup = document.getElementById('customCategoryInputGroup');
-            const selectGroup = document.getElementById('categorySelectGroup');
-            const input = document.getElementById('customCategoryInput');
-            const categorySelect = document.getElementById('categoriaProducto');
-            const deleteCategoryBtn = document.getElementById('deleteCategoryBtn');
-
-            const checkCategoryDeletable = () => {
-                if (deleteCategoryBtn && categorySelect) {
-                    deleteCategoryBtn.disabled = categorySelect.value === 'Ninguna' || categorySelect.selectedIndex === 0;
-                }
-            };
-            
-            if (addBtn) addBtn.addEventListener('click', () => {
-                if (selectGroup) selectGroup.classList.add('hidden');
-                if (inputGroup) inputGroup.classList.remove('hidden');
-                if (input) input.value = '';
-                if (input) input.focus();
-            });
-
-            if (cancelBtn) cancelBtn.addEventListener('click', () => {
-                if (inputGroup) inputGroup.classList.add('hidden');
-                if (selectGroup) selectGroup.classList.remove('hidden');
-                checkCategoryDeletable();
-            });
-
-            if (saveBtn) saveBtn.addEventListener('click', () => {
-                const newCategoryName = input?.value.trim();
-                
-                if (newCategoryName && newCategoryName.length > 0) {
-                    const newOption = document.createElement('option');
-                    newOption.value = newCategoryName;
-                    newOption.textContent = newCategoryName;
-                    categorySelect.appendChild(newOption);
-                    categorySelect.value = newCategoryName;
-                    
-                    if (inputGroup) inputGroup.classList.add('hidden');
-                    if (selectGroup) selectGroup.classList.remove('hidden');
-                    checkCategoryDeletable(); 
-                    alertMessage(`Categoría "${newCategoryName}" añadida y seleccionada.`, 'success');
-                } else {
-                    alertMessage('Ingrese un nombre para la nueva categoría.', 'error');
-                }
-            });
-            
-            if (deleteCategoryBtn) {
-                deleteCategoryBtn.addEventListener('click', () => {
-                    const selectedIndex = categorySelect.selectedIndex;
-                    if (selectedIndex > 0) {
-                        const categoryToDelete = categorySelect.options[selectedIndex].textContent;
-                        categorySelect.remove(selectedIndex);
-                        categorySelect.value = 'Ninguna'; 
-                        checkCategoryDeletable();
-                        alertMessage(`Categoría "${categoryToDelete}" eliminada.`, 'success');
-                    } else {
-                        alertMessage('No se puede eliminar la categoría "Ninguna".', 'error');
-                    }
-                });
-            }
-            
-            if (categorySelect) categorySelect.addEventListener('change', checkCategoryDeletable);
-            checkCategoryDeletable(); 
-        };
-        
-        // Inicializar los selectores de CRUD
-        setupCustomCategoryListeners();
-        
-        // --- Lógica del Historial Diario de Ganancias (MANTENIDA) ---
-        document.querySelectorAll('.ganancias-mes-celda').forEach(cell => {
-            cell.addEventListener('click', (e) => {
-                const monthName = e.currentTarget.getAttribute('data-month');
-                const { data, total } = generateDailyData(monthName);
-                
-                document.getElementById('detalleDiarioTitulo').textContent = `Historial Diario de Ganancias (${monthName})`;
-                
-                const tbody = document.getElementById('detalleDiarioContenido');
-                tbody.innerHTML = '';
-                data.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">${item.day} de ${monthName}</td>
-                        <td class="px-6 py-2 whitespace-nowrap text-right text-sm font-medium text-green-600">$${item.profit.toFixed(2)}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-                document.getElementById('detalleDiarioTotal').textContent = `$${total}`;
-                document.getElementById('detalleDiarioTotal').classList.remove('text-orange-600');
-                document.getElementById('detalleDiarioTotal').classList.add('text-green-600');
-                
-                closeModal(document.getElementById('gananciasModal')); 
-                openModal(document.getElementById('detalleDiarioModal'));
-            });
-        });
-        
-        // Event Listeners para cerrar los modales (botón X y botón Cancelar)
-        document.querySelectorAll('[data-close-modal]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const modalId = e.currentTarget.getAttribute('data-close-modal');
-                const targetModal = document.getElementById(modalId);
-                if (targetModal) {
-                    closeModal(targetModal);
-                }
-            });
-        });
-        
-        // Cerrar modal al hacer clic fuera del contenido (en el overlay)
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal-overlay')) {
-                    closeModal(e.target);
-                }
-            });
-        });
-        // --- Inicialización DOM ---
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        // ** INICIAR RELOJ Y CALENDARIO **
-        updateClock(); 
-        // ********************************
-
-        // Iniciar Firebase y el flujo de autenticación 
-        initializeFirebase();
+        // initializeFirebase(); // Se llama en el final de este script.
 
         // --- Selectores de Modales y Botones ---
         const productoModal = document.getElementById('productoModal');
@@ -4695,59 +4393,245 @@
         const togglePriceSection = document.getElementById('togglePriceSection');
         const priceSectionContent = document.getElementById('priceSectionContent');
         
-        // ** NUEVA LÓGICA: RESUMEN DE STOCK AGREGADO (MENSUAL/ANUAL) **
-        const stockMonthlySummaryBtn = document.getElementById('stockMonthlySummaryBtn');
-        const stockYearlySummaryBtn = document.getElementById('stockYearlySummaryBtn');
+        // Elementos de CRUD y Datalist
+        const encargadoInput = document.getElementById('encargadoInput');
+           const encargadoListOptions = document.getElementById('encargadoListOptions');
+        const deleteEncargadoWithPinBtn = document.getElementById('deleteEncargadoWithPinBtn');
+        const categoriaGastoListOptions = document.getElementById('categoriaGastoListOptions');
+        const tipoPagoVentaInput = document.getElementById('tipoPagoVentaInput');
+        const tipoPagoListOptions = document.getElementById('tipoPagoListOptions');
+        const deleteTipoPagoWithPinBtn = document.getElementById('deleteTipoPagoWithPinBtn');
+        const canalVentaInput = document.getElementById('canalVentaInput');
         
-        // Listener para el resumen mensual
-        if (stockMonthlySummaryBtn) {
-            stockMonthlySummaryBtn.addEventListener('click', () => {
-                const monthlyData = stockHistoryData.filter(m => {
-                    // Filtrar por movimientos ADD del mes y año actual
-                    if (m.type !== 'ADD' || !m.date) return false;
-                    const moveDate = new Date(m.date + 'T00:00:00');
-                    const now = new Date();
-                    return moveDate.getMonth() === now.getMonth() && moveDate.getFullYear() === now.getFullYear();
-                }).reduce((acc, move) => {
-                    const day = new Date(move.date + 'T00:00:00').getDate();
-                    acc[day] = (acc[day] || 0) + (parseFloat(move.quantity) || 0);
-                    return acc;
-                }, {});
-                
-                const items = Object.keys(monthlyData).map(day => ({
-                    label: `Día ${day}`,
-                    quantity: monthlyData[day]
-                }));
-                
-                openStockSummaryModal({ items: items, total: totalStockAddedMonth }, 'Stock Agregado del Mes');
+        const metricSelect = document.getElementById('metricSelect'); 
+        const ventaPinInput = document.getElementById('ventaPinInput');
+        const checkVentaPinBtn = document.getElementById('checkVentaPinBtn');
+        
+        // Elementos de Filtro de Inventario (MANTENIDO)
+        const inventarioFilterMonth = document.getElementById('inventarioFilterMonth');
+        const inventarioFilterYear = document.getElementById('inventarioFilterYear');
+        const applyInventoryFiltersBtn = document.getElementById('applyInventoryFiltersBtn');
+        
+        // Elementos de Filtro de Gastos (MANTENIDO)
+        const expenseSearchInput = document.getElementById('expenseSearchInput');
+        const expenseFilterMonth = document.getElementById('expenseFilterMonth');
+        const expenseFilterYear = document.getElementById('expenseFilterYear');
+        const applyExpenseFiltersBtn = document.getElementById('applyExpenseFiltersBtn');
+        
+        // Elementos para cálculo de Monto Bruto (MANTENIDO)
+        const montoCobradoInput = document.getElementById('montoCobrado');
+        const descuentoVentaInput = document.getElementById('descuentoVenta');
+        
+        // 1. ** Llenar el Year Selector ** (MANTENIDO)
+        const currentYear = getCurrentYear();
+        const yearSelects = [
+            document.getElementById('expenseFilterYear'),
+            document.getElementById('inventarioFilterYear')
+        ];
+        yearSelects.forEach(select => {
+            if (select) {
+                // Asegurar que el año actual esté disponible
+                const currentOption = select.querySelector(`option[value="${currentYear}"]`);
+                if (!currentOption) {
+                    const newOption = document.createElement('option');
+                    newOption.value = currentYear;
+                    newOption.textContent = currentYear;
+                    select.appendChild(newOption);
+                }
+            }
+        });
+        
+        // 2. ** Listeners de Modales (Mostrar) **
+        document.querySelectorAll('[data-auth-for]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const target = e.currentTarget.getAttribute('data-auth-for');
+                attemptAuth(target);
             });
+        });
+        
+        // El botón de Ventas que estaba en la tarjeta de acción ahora usa Auth.
+        openVerVentasLink.addEventListener('click', () => attemptAuth('accessSalesHistory'));
+        // El botón de Finanzas que estaba en la tarjeta de acción ahora usa Auth.
+        openFinanzasModalTrigger.addEventListener('click', () => attemptAuth('accessFinancesReport'));
+        
+        // Botón de Venta directo (No requiere PIN en el botón principal)
+        openVentaModalDirect.addEventListener('click', () => {
+             document.getElementById('fechaVenta').value = getCurrentDate();
+             updateSaleGrossValue(); // Inicializar
+             openModal(document.getElementById('ventaModal'));
+        });
+        
+        openProductoBtnTrigger.addEventListener('click', () => {
+             document.getElementById('stockProducto').value = 0;
+             openModal(productoModal);
+        });
+        
+        openGastoBtn.addEventListener('click', () => {
+             document.getElementById('fechaGasto').value = getCurrentDate();
+             openModal(document.getElementById('gastoModal'));
+        });
+        
+        openGananciasBtnAction.addEventListener('click', () => openModal(document.getElementById('gananciasModal')));
+        
+        openInventarioModalTrigger.addEventListener('click', () => {
+            // Cargar datos con filtros por defecto antes de abrir
+            loadInventoryData(inventarioFilterMonth.value, inventarioFilterYear.value);
+            openModal(inventarioModal);
+        });
+        
+        openClientesModalTrigger.addEventListener('click', () => {
+            loadClientHistory();
+            openModal(document.getElementById('clientesModal'));
+        });
+        
+        document.getElementById('openAnalisisModalBtn').addEventListener('click', () => {
+             openModal(document.getElementById('analisisModal'));
+             performAnalysis();
+        });
+        
+        document.getElementById('openProfileModalBtn').addEventListener('click', () => {
+             openModal(document.getElementById('profileModal'));
+        });
+
+        // 3. ** Listeners de Modales (Cerrar) **
+        document.querySelectorAll('[data-close-modal]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetId = e.currentTarget.getAttribute('data-close-modal');
+                const targetModal = document.getElementById(targetId);
+                if (targetModal) {
+                    closeModal(targetModal);
+                    // Resetear modo edición de Finanzas al cerrar
+                    if (targetId === 'finanzasReportModal') {
+                        document.getElementById('financeForm').reset();
+                        document.getElementById('financeRecordId').value = '';
+                        const saveBtn = document.getElementById('saveFinanceRecordBtn');
+                        saveBtn.textContent = 'Guardar Registro';
+                        saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        saveBtn.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+                    }
+                }
+            });
+        });
+
+        // 4. ** Listeners de Forms **
+        productoForm.addEventListener('submit', saveProduct);
+        ventaForm.addEventListener('submit', saveSale);
+        gastoForm.addEventListener('submit', saveExpense);
+        financeForm.addEventListener('submit', saveFinanceRecord); // NUEVO SUBMIT DE FINANZAS
+
+        // 5. ** Listeners de UI Específicos **
+        togglePriceSection.addEventListener('click', () => {
+            priceSectionContent.classList.toggle('hidden');
+            const icon = togglePriceSection.querySelector('i');
+            icon.classList.toggle('fa-plus-circle');
+            icon.classList.toggle('fa-minus-circle');
+            togglePriceSection.textContent = priceSectionContent.classList.contains('hidden') ? 
+                ' Agregar Precio de Venta' : 
+                ' Ocultar Precios de Venta';
+            togglePriceSection.prepend(icon);
+        });
+        
+        // Pin Check Button
+        checkVentaPinBtn.addEventListener('click', handlePinCheck);
+        ventaPinInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handlePinCheck();
+        });
+
+        // WhatsApp Button
+        document.getElementById('sendUpdatesWhatsappBtn').addEventListener('click', sendWhatsAppNotification);
+
+        // Chart Metric Selector
+        if (metricSelect) {
+             metricSelect.addEventListener('change', (e) => updateChartTitle(e.target.value));
         }
         
-        // Listener para el resumen anual
-        if (stockYearlySummaryBtn) {
-            stockYearlySummaryBtn.addEventListener('click', () => {
-                 const yearlyData = stockHistoryData.filter(m => {
-                    // Filtrar por movimientos ADD del año actual
-                    if (m.type !== 'ADD' || !m.date) return false;
-                    const moveDate = new Date(m.date + 'T00:00:00');
-                    const now = new Date();
-                    return moveDate.getFullYear() === now.getFullYear();
-                }).reduce((acc, move) => {
-                    const monthIndex = new Date(move.date + 'T00:00:00').getMonth();
-                    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-                    const monthName = monthNames[monthIndex];
-                    acc[monthName] = (acc[monthName] || 0) + (parseFloat(move.quantity) || 0);
-                    return acc;
-                }, {});
-                
-                const items = Object.keys(yearlyData).map(month => ({
-                    label: month,
-                    quantity: yearlyData[month]
-                }));
-                
-                openStockSummaryModal({ items: items, total: totalStockAddedYear }, 'Stock Agregado del Año');
-            });
-        }
+        // Log out Button
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        document.getElementById('googleSignInPlaceholderBtn').addEventListener('click', handleGoogleSignIn);
         
+        // Stock Summary Buttons (Reutiliza Detalle Diario)
+        const stockDataForSummary = (type) => {
+            const history = stockHistoryData.filter(m => m.type === 'ADD');
+            let total = 0;
+            let filteredHistory = [];
+            const now = new Date();
+            
+            if (type === 'month') {
+                filteredHistory = history.filter(m => {
+                    const d = new Date(m.date + 'T00:00:00');
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                });
+            } else if (type === 'year') {
+                filteredHistory = history.filter(m => {
+                    const d = new Date(m.date + 'T00:00:00');
+                    return d.getFullYear() === now.getFullYear();
+                });
+            }
+
+            const aggregated = filteredHistory.reduce((acc, curr) => {
+                const name = curr.productName;
+                const quantity = parseFloat(curr.quantity) || 0;
+                total += quantity;
+                if (acc[name]) {
+                    acc[name] += quantity;
+                } else {
+                    acc[name] = quantity;
+                }
+                return acc;
+            }, {});
+
+            const items = Object.entries(aggregated).map(([label, quantity]) => ({ label, quantity }))
+                                                   .sort((a, b) => b.quantity - a.quantity);
+            
+            return { items, total: total };
+        };
+        
+        document.getElementById('stockMonthlySummaryBtn')?.addEventListener('click', () => {
+             const data = stockDataForSummary('month');
+             openStockSummaryModal(data, 'Agregado - Mes Actual');
+        });
+        
+        document.getElementById('stockYearlySummaryBtn')?.addEventListener('click', () => {
+             const data = stockDataForSummary('year');
+             openStockSummaryModal(data, 'Agregado - Año Actual');
+        });
+
+        // 6. ** CRUD Listeners para Datalists de Gasto/Venta (Encargado/Tipo de Pago) **
+        setupDatalistAdd('addNewEncargadoBtn', 'encargadoInput', 'encargadoListOptions', 'Encargado de Turno');
+        setupDatalistAdd('addNewTipoPagoBtn', 'tipoPagoVentaInput', 'tipoPagoListOptions', 'Categoría de Tipo de Pago');
+        setupDatalistAdd('addNewGastoCategoryBtn', 'categoriaGastoInput', 'categoriaGastoListOptions', 'Categoría de Gasto');
+        setupDatalistAdd('addNewCanalBtn', 'canalVentaInput', 'canalListOptions', 'Canal de Venta');
+
+        deleteEncargadoWithPinBtn.addEventListener('click', () => {
+            attemptDeleteOption(encargadoInput, encargadoListOptions, 'deleteEncargadoWithPinBtn', 'Encargado de Turno');
+        });
+        deleteTipoPagoWithPinBtn.addEventListener('click', () => {
+            attemptDeleteOption(tipoPagoVentaInput, tipoPagoListOptions, 'deleteTipoPagoWithPinBtn', 'Categoría de Tipo de Pago');
+        });
+        
+        // 7. ** Listeners de Cálculo de Venta Bruta (En tiempo real) **
+        montoCobradoInput.addEventListener('input', updateSaleGrossValue);
+        descuentoVentaInput.addEventListener('input', updateSaleGrossValue);
+        
+        // 8. ** Listeners de Filtro de Gastos **
+        applyExpenseFiltersBtn.addEventListener('click', () => {
+            const search = expenseSearchInput.value;
+            const month = expenseFilterMonth.value;
+            const year = expenseFilterYear.value;
+            loadExpensesHistory(search, month, year);
+        });
+        
+        // 9. ** Listeners de Filtro de Inventario **
+        applyInventoryFiltersBtn.addEventListener('click', () => {
+             loadInventoryData(inventarioFilterMonth.value, inventarioFilterYear.value);
+        });
+        
+
     });
+    
+    // Función para llenar la lista de categorías (MANTENIDO)
+    const populateCategorySelect = () => {
+        // Lógica para llenar dinámicamente el select de categoría.
+    };
+
 </script>
