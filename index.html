@@ -3273,54 +3273,73 @@
     };
     
     // NUEVA FUNCIÓN: Abre el modal de historial de stock por producto (CORREGIDA LA LÓGICA DE RENDERING)
-    const openStockHistoryModal = (productId, productName) => {
-        const modal = document.getElementById('stockHistoryModal');
-        const titleEl = document.getElementById('stockHistoryTitle');
-        const tbody = document.getElementById('stockHistoryTableContent');
+  // NUEVA FUNCIÓN: Abre el modal de historial de stock por producto (CORREGIDA LA LÓGICA DE RENDERING)
+const openStockHistoryModal = (productId, productName) => {
+    const modal = document.getElementById('stockHistoryModal');
+    const titleEl = document.getElementById('stockHistoryTitle');
+    const tbody = document.getElementById('stockHistoryTableContent');
 
-        if (!modal || !titleEl || !tbody) return;
+    if (!modal || !titleEl || !tbody) return;
 
-        titleEl.innerHTML = `<i class="fas fa-exchange-alt mr-2 text-orange-600"></i> Historial de Stock para ${productName}`;
-        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 whitespace-nowrap text-center text-gray-400">Cargando movimientos de stock...</td></tr>`;
+    titleEl.innerHTML = `<i class="fas fa-exchange-alt mr-2 text-orange-600"></i> Historial de Stock para ${productName}`;
+    tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 whitespace-nowrap text-center text-gray-400">Cargando movimientos de stock...</td></tr>`;
+
+    // 1. Filtrar y ordenar los movimientos del producto, más recientes primero
+    const historyForProduct = stockHistoryData.filter(m => m.productId === productId)
+                                          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    tbody.innerHTML = '';
+    if (historyForProduct.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 whitespace-nowrap text-center text-gray-400">No hay movimientos de stock registrados para este producto.</td></tr>`;
+    } else {
+        // 2. Obtener el stock actual del producto como punto de partida
+        const currentProduct = productsData.find(p => p.id === productId);
+        let simulatedStock = currentProduct?.stock || 0; // Se usará para simular el stock progresivamente
         
-        // 1. Filtrar y ordenar los movimientos del producto, más recientes primero
-        const historyForProduct = stockHistoryData.filter(m => m.productId === productId)
-                                                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        tbody.innerHTML = '';
-        if (historyForProduct.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 whitespace-nowrap text-center text-gray-400">No hay movimientos de stock registrados para este producto.</td></tr>`;
-        } else {
-            // 2. Obtener el stock actual del producto 
-            const currentProduct = productsData.find(p => p.id === productId);
-            const currentStock = currentProduct?.stock || 0; 
+        // 3. Crear una lista de movimientos y calcular el stock progresivamente (del más reciente al más antiguo)
+        const rows = [];
+        
+        historyForProduct.forEach(move => {
+            const isAddition = move.type === 'ADD';
+            const quantity = parseFloat(move.quantity) || 0;
             
-            // 3. Crear una lista de movimientos con un stock final simulado (solo para UI)
-            historyForProduct.forEach(move => {
-                const isAddition = move.type === 'ADD';
-                const quantity = parseFloat(move.quantity) || 0;
-                
-                const typeText = isAddition ? 'Entrada (Agregado)' : 'Salida (Venta)'; 
-                const typeClass = isAddition ? 'text-green-600' : 'text-red-600';
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(move.date)}</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-sm font-medium ${typeClass}">${typeText}</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold ${typeClass}">
-                        ${isAddition ? '+' : '-'}${quantity.toLocaleString('es-ES')}
-                    </td>
-                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">
-                        ${currentStock.toLocaleString('es-ES')}
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+            // El stock en esta fila es el stock después de este movimiento.
+            // Puesto que iteramos del más reciente al más antiguo, el 'simulatedStock' 
+            // siempre representará el stock ANTES de revertir este movimiento.
+            const stockAfterMove = simulatedStock;
 
-        closeModal(document.getElementById('inventarioModal')); // Cerrar el modal principal de inventario
-        openModal(modal);
-    };
+            // Revertir el efecto del movimiento para calcular el stock en el momento anterior.
+            if (isAddition) {
+                // Si fue una adición, el stock anterior era menor
+                simulatedStock -= quantity;
+            } else {
+                // Si fue una venta/salida, el stock anterior era mayor
+                simulatedStock += quantity;
+            }
+
+            const typeText = isAddition ? 'Entrada (Agregado)' : 'Salida (Venta)';
+            const typeClass = isAddition ? 'text-green-600' : 'text-red-600';
+
+            // Nota: Aquí se está mostrando el stock DESPUÉS del movimiento, 
+            // ya que la lista está ordenada del más reciente al más antiguo.
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(move.date)}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium ${typeClass}">${typeText}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold ${typeClass}">
+                    ${isAddition ? '+' : '-'}${quantity.toLocaleString('es-ES')}
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">
+                    ${stockAfterMove.toLocaleString('es-ES')}
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    closeModal(document.getElementById('inventarioModal')); // Cerrar el modal principal de inventario
+    openModal(modal);
+};
     
     // NUEVA FUNCIÓN: Abre el modal de historial de stock para el resumen mensual/anual
     const openStockSummaryModal = (data, title) => {
