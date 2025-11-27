@@ -503,7 +503,7 @@
             <i class="fab fa-whatsapp text-2xl"></i>
         </button>
         
-        <!-- MODAL DE PERFIL Y AUTENTICACIÓN -->
+        <!-- MODAL DE PERFIL Y AUTENTICACIÓN (ACTUALIZADO PARA CLARIFICAR SESIÓN LOCAL Y GOOGLE PLACEHOLDER) -->
         <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all">
                 
@@ -516,15 +516,44 @@
                 </div>
 
                 <!-- Cuerpo del Modal: Opciones de Login -->
-                <div class="p-6 space-y-4">
-                    <p class="text-sm text-gray-600 font-semibold mb-3">ID de Sesión (para compartir):</p>
-                    <p id="currentUserIdDisplay" class="text-xs text-gray-500 break-all bg-gray-100 p-2 rounded-lg">Cargando...</p>
+                <div class="p-6 space-y-6">
+                    
+                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Opciones de Acceso</h3>
 
-                    <!-- Estado del Usuario (Real) -->
+                    <!-- Opción 1: Google (Placeholder) -->
+                    <button id="googleSignInPlaceholderBtn" class="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-xl shadow-md text-gray-700 bg-white border border-gray-300 transition relative overflow-hidden">
+                        <i class="fab fa-google mr-2 text-red-500"></i>
+                        Iniciar Sesión con Google
+                        <span class="absolute inset-0 bg-gray-200/90 flex items-center justify-center text-sm font-extrabold text-gray-600 tracking-widest pointer-events-none rounded-xl">
+                            PRÓXIMAMENTE
+                        </span>
+                    </button>
+
+                    <!-- Separador -->
+                    <div class="flex items-center">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <span class="flex-shrink mx-4 text-gray-500 text-sm">O continuar</span>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+
+                    <!-- Opción 2: Sesión Local/Anónima (Actual) -->
+                    <div class="p-4 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
+                        <p class="text-sm font-bold text-blue-700 flex items-center">
+                            <i class="fas fa-desktop mr-2"></i> Sesión Local (Dispositivo)
+                        </p>
+                        <p class="text-xs text-gray-600">
+                            Sus datos están guardados en la nube bajo esta ID de sesión anónima, persistente en su dispositivo.
+                        </p>
+                        <p class="text-xs text-gray-500 break-all bg-white p-2 rounded-lg mt-2">
+                            ID: <span id="currentUserIdDisplay" class="font-mono font-semibold">Cargando...</span>
+                        </p>
+                    </div>
+
+                    <!-- Estado del Usuario (Real) y Logout -->
                     <div class="pt-4 border-t mt-4 space-y-3">
                         <p class="text-sm font-medium text-gray-700">Estado Actual: <span id="userStatus" class="font-bold text-red-500">Desconectado</span></p>
                         <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-xl shadow-sm text-white bg-red-500 hover:bg-red-600 transition disabled:opacity-50" disabled>
-                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión y Borrar Datos Locales
                         </button>
                     </div>
                 </div>
@@ -1910,7 +1939,7 @@
                 if (unsubscribeSales) { unsubscribeSales(); unsubscribeSales = null; }
                 if (unsubscribeExpenses) { unsubscribeExpenses(); unsubscribeExpenses = null; }
                 if (unsubscribeClients) { unsubscribeClients(); unsubscribeClients = null; } 
-                if (unsubscribeStockHistory) { unsubscribeStockHistory(); unsubscribeStockHistory = null; } // NUEVO
+                if (unsubscribeStockHistory) { unsubscribeStockHistory(); unsubscribeStockHistory = null; } 
                 
                 if (user) {
                     userId = user.uid;
@@ -1922,7 +1951,7 @@
                     setupRealtimeSalesListener();    
                     setupRealtimeExpensesListener(); 
                     setupRealtimeClientsListener(); 
-                    setupRealtimeStockHistoryListener(); // NUEVO
+                    setupRealtimeStockHistoryListener(); 
                 } else {
                     userId = null;
                     updateAuthStatus(false);
@@ -1933,7 +1962,7 @@
                     salesData = []; 
                     expensesData = []; 
                     clientsData = []; 
-                    stockHistoryData = []; // NUEVO
+                    stockHistoryData = []; 
                     
                     totalVentasDelMes = 0;
                     totalGastosDelMes = 0;
@@ -1941,8 +1970,8 @@
                     totalGastosDelDia = 0;
                     totalVentasDelAnio = 0;
                     totalGastosDelAnio = 0;
-                    totalStockAddedMonth = 0; // NUEVO
-                    totalStockAddedYear = 0; // NUEVO
+                    totalStockAddedMonth = 0; 
+                    totalStockAddedYear = 0; 
                     
                     updateDashboardMetrics(); 
                     renderProductHistory();
@@ -1965,6 +1994,20 @@
             isAuthReady = true; 
         }
     };
+    
+    // Función para cerrar sesión (logout)
+    const handleLogout = async () => {
+        if (!auth) return;
+        try {
+            await signOut(auth);
+            alertMessage('Sesión cerrada. Los datos locales pueden ser eliminados en la próxima carga.', 'success');
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+            alertMessage(`Error al cerrar sesión: ${error.message}`, 'error');
+        }
+        closeModal(document.getElementById('profileModal'));
+    };
+
     
     // Path for private collections
     const getCollectionRef = (collectionName) => {
@@ -3419,6 +3462,9 @@
 
         document.getElementById('openProfileModalBtn').addEventListener('click', () => openModal(document.getElementById('profileModal')));
         
+        // Botón de Cerrar Sesión (Logout)
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
         // Producto: Lógica de Guardado (Firestore)
         if (productoForm) {
             productoForm.addEventListener('submit', saveProduct);
