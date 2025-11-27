@@ -5,7 +5,7 @@ const CACHE_NAME = 'systempresas-cache-v1';
 // Asegúrate de que esta lista contenga TODOS los archivos que necesita la app para funcionar offline.
 const urlsToCache = [
   '/',
-  '/dashboard.html', // Tu archivo principal
+  '/index.html', // Tu archivo principal
   '/manifest.json',
   // Debes incluir las rutas de tus logos e íconos:
   '/logo192.png', 
