@@ -202,13 +202,12 @@
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
                 
                 <!-- Tarjeta 1: Ver Productos (AHORA ABRE EL INVENTARIO/REPORTE) -->
-                <button id="openProductoModal" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
-                    <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl mb-2">
-                        <i class="fas fa-tshirt text-xl"></i>
-                    </div>
-                    <span class="text-sm font-semibold text-gray-700">Ver Productos</span>
-                    <!-- NUEVO: Contador de Productos -->
-                    <p class="text-xs text-gray-500 mt-1">Total: <span id="totalProductsCount">0</span></p>
+                <button id="openProfitHistoryBtn" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
+    <div class="bg-purple-100 text-purple-600 p-3 rounded-xl mb-2">
+        <i class="fas fa-chart-pie text-xl"></i>
+    </div>
+    <span class="text-sm font-semibold text-gray-700">Historial Ganancias</span>
+    <p class="text-xs text-gray-500 mt-1">Ver Reporte</p>
                 </button>
                 <!-- Tarjeta 2: Ver Ventas (AHORA ABRE EL HISTORIAL DE TRANSACCIONES) -->
                 <button id="openVerVentasLink" class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center transition hover:shadow-lg">
@@ -633,6 +632,89 @@
         <!-- FIN DEL MODAL AUTENTICACIÓN -->
 
         <!-- MODAL DE ESTADOS MENSUALES (Ganancias) - MANTENIDO COMO RESUMEN MENSUAL SIMULADO -->
+        <div id="profitHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto transform transition-all">
+        <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-xl">
+            <h2 class="text-2xl font-bold text-purple-700 flex items-center">
+                <i class="fas fa-chart-line mr-3"></i> Historial Detallado de Ganancias
+            </h2>
+            <button data-close-modal="profitHistoryModal" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                    <p class="text-sm text-gray-500 font-medium">Ganancia Total (Período):</p>
+                    <p id="phTotalProfit" class="text-2xl font-bold text-green-700">$0.00</p>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                    <p class="text-sm text-gray-500 font-medium">Ventas Totales (Período):</p>
+                    <p id="phTotalSales" class="text-xl font-bold text-blue-700">$0.00</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-xl border border-red-200">
+                    <p class="text-sm text-gray-500 font-medium">Gastos Totales (Período):</p>
+                    <p id="phTotalExpenses" class="text-xl font-bold text-red-700">$0.00</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mb-6 border-b pb-4 items-center">
+                <div class="relative">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Mes</label>
+                    <select id="profitFilterMonth" class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:border-purple-500 shadow-sm text-sm">
+                        <option value="all">Todo el Año</option>
+                        <option value="current">Mes Actual</option>
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Año</label>
+                    <select id="profitFilterYear" class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:border-purple-500 shadow-sm text-sm">
+                        <option value="all">Historico</option>
+                        <option value="current">Año Actual</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+                <div class="flex items-end h-full pt-5">
+                     <button id="applyProfitFiltersBtn" class="px-6 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition shadow-md flex items-center h-10">
+                        <i class="fas fa-filter mr-2"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-blue-600 uppercase tracking-wider">Ventas (+)</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-red-600 uppercase tracking-wider">Gastos (-)</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Ganancia Neta</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profitHistoryTableContent" class="bg-white divide-y divide-gray-100">
+                        <tr><td colspan="5" class="px-6 py-12 whitespace-nowrap text-center text-gray-400">Seleccione filtros y busque...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
         <div id="gananciasModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto transform transition-all">
                 
