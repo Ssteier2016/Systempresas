@@ -793,7 +793,7 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente / Canal</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Cobrado ($)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Venta ($)</th> <!-- Modificado el encabezado -->
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Pago</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                                 </tr>
@@ -1400,19 +1400,24 @@
                                     <!-- Botón para agregar (Eliminado: se agrega al guardar la venta si es nuevo) -->
                                 </div>
                             </div>
-                            <!-- Monto Cobrado (MOVIDO AQUÍ) -->
+                            <!-- Monto Cobrado (NETO) -->
                             <div>
-                                <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
+                                <label for="montoCobrado" class="block text-sm font-medium text-gray-700">Monto Cobrado (NETO $)</label>
                                 <input type="number" id="montoCobrado" placeholder="0.00" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border font-bold text-right" required>
                             </div>
                         </div>
 
                         <!-- Tarjeta de Descuentos/Canal -->
                         <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                            <!-- Descuento Gral -->
+                             <!-- Monto Venta BRUTO (NUEVO) -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700">Monto Venta BRUTO ($)</label>
+                                <p id="grossSaleValueDisplay" class="text-lg font-bold text-gray-800 mt-1 p-2 bg-gray-100 rounded-lg text-right">$0.00</p>
+                            </div>
+                            <!-- Descuento Gral (CORREGIDO A TYPE=NUMBER y rango) -->
                             <div class="mb-6">
                                 <label for="descuentoVenta" class="block text-sm font-medium text-gray-700 mb-1">Descuento Gral (%) <i class="fas fa-redo text-xs text-gray-400 ml-1 cursor-pointer"></i></label>
-                                <input type="text" id="descuentoVenta" value="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
+                                <input type="number" id="descuentoVenta" value="0" min="0" max="100" placeholder="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 input-bg-blue border text-right">
                             </div>
                             
                             <!-- Canal de Venta (Manual Entry) -->
@@ -2071,9 +2076,10 @@
         
         // Update Ganancias auxiliary values (Ventas/Gastos Mes)
         const totalVentasMesValueEl = document.getElementById('totalVentasMesValue');
-        const totalGastosMesValueEl = document.getElementById('totalGastosMesValue');
+        const totalGastosMesValueEl = document.getElementById('totalGastosMesValue'); // <-- CORREGIDO: Usando el nombre de variable correcto
         if (totalVentasMesValueEl) totalVentasMesValueEl.textContent = totalVentasDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
-        if (totalGastosMesValueEl) totalGastosDelMesValueEl.textContent = totalGastosDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+        // Uso de la variable corregida: totalGastosMesValueEl
+        if (totalGastosMesValueEl) totalGastosMesValueEl.textContent = totalGastosDelMes.toLocaleString('es-ES', { minimumFractionDigits: 2 });
 
         
         // 4. Update Action Card Summaries (no protegidas)
@@ -2373,29 +2379,30 @@
             snapshot.forEach((doc) => {
                 const sale = { id: doc.id, ...doc.data() };
                 salesData.push(sale);
-                const monto = parseFloat(sale.montoCobrado) || 0;
+                // Usamos el monto cobrado (NETO) para el total de ventas
+                const montoCobrado = parseFloat(sale.montoCobrado) || 0;
                 
                 if (sale.date) {
                     const saleDate = new Date(sale.date + 'T00:00:00'); 
                     
                     // Acumular Ventas del Año
                     if (saleDate.getFullYear() === currentYear) {
-                        totalVentasDelAnio += monto;
+                        totalVentasDelAnio += montoCobrado;
                         
                         // Acumular Ventas del Mes
                         if (saleDate.getMonth() === currentMonth) {
-                            totalVentasDelMes += monto;
+                            totalVentasDelMes += montoCobrado;
                         }
                     }
                     
                     // Acumular Ventas del Día
                     if (sale.date === todayDateString) {
-                        totalVentasDelDia += monto;
+                        totalVentasDelDia += montoCobrado;
                     }
                 }
             });
 
-            console.log(`Sales data updated in real-time. Total Monthly Sale: $${totalVentasDelMes.toFixed(2)}`);
+            console.log(`Sales data updated in real-time. Total Monthly Sale (Neto): $${totalVentasDelMes.toFixed(2)}`);
             
             // 3. Recalcular Ganancias Netas y actualizar métricas de Ventas
             updateDashboardMetrics();
@@ -2606,7 +2613,7 @@
         
     };
 
-    // CARGAR HISTORIAL DE VENTAS (MODIFICADA: Eliminados contadores mensuales/anuales)
+    // CARGAR HISTORIAL DE VENTAS (MODIFICADA: Muestra Gross Amount y el detalle de descuento)
     const loadSalesHistory = () => {
         const tbody = document.getElementById('salesHistoryTableContent');
         const totalCountValue = document.getElementById('totalSalesCountValue');
@@ -2650,8 +2657,12 @@
 
             sales.forEach(sale => {
                 const row = document.createElement('tr');
-                const monto = parseFloat(sale.montoCobrado) || 0;
-                const montoDisplay = `$${monto.toFixed(2)}`;
+                const montoCobrado = parseFloat(sale.montoCobrado) || 0; // Neto
+                const discountPercent = parseFloat(sale.discountPercent) || 0;
+                // Usamos grossAmount si está disponible, sino, asumimos que montoCobrado es el gross.
+                const grossAmount = parseFloat(sale.grossAmount) || montoCobrado; 
+
+                const montoDisplay = `$${grossAmount.toFixed(2)}`;
                 const statusClass = sale.status === 'Entregado' ? 'bg-green-100 text-green-700' : 
                                     (sale.status === 'Cerrado' ? 'bg-indigo-100 text-indigo-700' : 'bg-yellow-100 text-yellow-700');
 
@@ -2660,6 +2671,16 @@
                     ? `<span class="block text-xs text-gray-400 mt-1 italic">Nota: ${sale.notes.substring(0, 40)}${sale.notes.length > 40 ? '...' : ''}</span>`
                     : '';
 
+                // Breakdown HTML para el descuento
+                let breakdownHtml = `<span class="block text-xs text-gray-500 mt-1">Neto: $${montoCobrado.toFixed(2)}</span>`;
+                if (discountPercent > 0) {
+                    const discountAmount = grossAmount - montoCobrado;
+                    breakdownHtml = `
+                        <span class="block text-xs text-red-500 mt-1">Desc.: ${discountPercent}% (-$${discountAmount.toFixed(2)})</span>
+                        <span class="block text-xs text-gray-500">Neto: $${montoCobrado.toFixed(2)}</span>
+                    `;
+                }
+                
                 row.innerHTML = `
                     <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(sale.date)}</td>
                     <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -2667,7 +2688,10 @@
                         <span class="text-xs text-gray-500">${sale.salesChannel || 'Directo'}</span>
                         ${notesDisplay}
                     </td>
-                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-600">${montoDisplay}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-600">
+                        ${montoDisplay}
+                        ${breakdownHtml}
+                    </td>
                     <td class="px-6 py-3 whitespace-nowrap text-right text-sm text-gray-700">${sale.paymentType || 'Efectivo'}</td>
                     <td class="px-6 py-3 whitespace-nowrap text-center">
                         <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${statusClass}">${sale.status || 'Sin Estado'}</span>
@@ -2884,12 +2908,13 @@
                                     saleYear === parseInt(filterYear);
 
                 if (matchesMonth && matchesYear) {
-                    totalSalesInPeriod += parseFloat(sale.montoCobrado) || 0;
+                    // Usamos el grossAmount si existe, sino el montoCobrado para el cálculo de simulación
+                    totalSalesInPeriod += parseFloat(sale.grossAmount || sale.montoCobrado) || 0;
                 }
             });
         } else {
              // Si no hay filtro, usa la venta total del año (o de todos los tiempos)
-             totalSalesInPeriod = salesData.reduce((sum, sale) => sum + (parseFloat(sale.montoCobrado) || 0), 0);
+             totalSalesInPeriod = salesData.reduce((sum, sale) => sum + (parseFloat(sale.grossAmount || sale.montoCobrado) || 0), 0);
         }
         
         // Simulación: Asumir que el precio promedio de venta de un producto es $50.
@@ -3083,6 +3108,31 @@
     };
 
 
+    // --- LÓGICA DE CÁLCULO DE MONTO BRUTO EN VENTA (NUEVO) ---
+    const updateSaleGrossValue = () => {
+        const montoCobradoInput = document.getElementById('montoCobrado');
+        const descuentoInput = document.getElementById('descuentoVenta');
+        const grossDisplay = document.getElementById('grossSaleValueDisplay');
+
+        if (!montoCobradoInput || !descuentoInput || !grossDisplay) return;
+
+        const montoCobrado = parseFloat(montoCobradoInput.value) || 0;
+        const descuento = parseFloat(descuentoInput.value) || 0;
+
+        let grossAmount = montoCobrado; // Default a monto neto si no hay descuento
+
+        if (descuento > 0 && descuento <= 100) {
+            const factor = 1 - (descuento / 100);
+            if (factor > 0) {
+                 grossAmount = montoCobrado / factor;
+            } else {
+                 grossAmount = 0; // Evitar división por cero
+            }
+        }
+        
+        // Actualizar el display con formato de moneda
+        grossDisplay.textContent = `$${grossAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+    };
 
     // --- Data Saving Functions (Product) (MODIFICADA: Agrega registro en stockHistory) ---
     const saveProduct = async (event) => {
@@ -3159,7 +3209,7 @@
     };
 
 
-    // --- Data Saving Functions (Sale) (MANTENIDA) ---
+    // --- Data Saving Functions (Sale) (MODIFICADA: Agrega Gross Amount) ---
     
     // Función auxiliar para guardar el cliente si es nuevo
     const saveNewClient = async (clientName) => {
@@ -3204,10 +3254,13 @@
         }
 
         // 1. Recoger datos del formulario de Venta
-        const montoCobrado = document.getElementById('montoCobrado').value;
+        const montoCobradoInput = document.getElementById('montoCobrado');
+        const descuentoVentaInput = document.getElementById('descuentoVenta');
+        
+        const montoCobrado = montoCobradoInput.value;
         const fechaVenta = document.getElementById('fechaVenta').value || getCurrentDate();
         const clienteVentaInput = document.getElementById('clienteVentaInput').value.trim();
-        const descuentoVenta = document.getElementById('descuentoVenta').value;
+        const descuentoVenta = descuentoVentaInput.value;
         const canalVentaInput = document.getElementById('canalVentaInput').value.trim();
         const estadoVenta = document.getElementById('estadoVenta').value;
         const fechaEntrega = document.getElementById('fechaEntrega').value;
@@ -3223,13 +3276,28 @@
             return;
         }
         
+        // 3. Cálculo del Monto Bruto (Gross Amount)
+        const netAmount = parseFloat(montoCobrado);
+        const discount = parseFloat(descuentoVenta) || 0;
+        let grossAmount = netAmount;
+
+        if (discount > 0 && discount <= 100) {
+            const factor = 1 - (discount / 100);
+            if (factor > 0) {
+                 grossAmount = netAmount / factor;
+            } else {
+                 grossAmount = netAmount; // Fallback para evitar errores.
+            }
+        }
+        
         const clientNameFinal = clienteVentaInput || 'Consumidor Final';
         
         const saleData = {
-            montoCobrado: parseFloat(montoCobrado),
+            montoCobrado: netAmount, // Monto Cobrado (Neto)
+            grossAmount: grossAmount, // Monto Bruto (Calculado) <-- NUEVO
             date: fechaVenta,
             clientName: clientNameFinal, // Nombre del cliente final
-            discountPercent: parseFloat(descuentoVenta) || 0,
+            discountPercent: discount,
             salesChannel: canalVentaInput || 'Ninguno',
             status: estadoVenta,
             deliveryDate: fechaEntrega || null,
@@ -3242,10 +3310,10 @@
         };
 
         try {
-            // 3. Guardar el cliente si es nuevo (No bloquea la venta)
+            // 4. Guardar el cliente si es nuevo (No bloquea la venta)
             await saveNewClient(clientNameFinal);
             
-            // 4. Guardar la venta en Firestore
+            // 5. Guardar la venta en Firestore
             const docRef = await addDoc(salesRef, saleData);
             console.log("Venta guardada con ID: ", docRef.id);
             alertMessage(`Venta por $${saleData.montoCobrado.toFixed(2)} guardada con éxito!`, 'success');
@@ -3253,7 +3321,7 @@
             // *NOTA IMPORTANTE DE STOCK*: 
             // En un sistema real, aquí se registraría una 'Salida' de stock (type: 'SALE') por las unidades vendidas.
             
-            // 5. Limpiar formulario y cerrar modal
+            // 6. Limpiar formulario y cerrar modal
             document.getElementById('ventaForm').reset();
             closeModal(document.getElementById('ventaModal'));
 
@@ -3731,7 +3799,7 @@
 
         const openProductoCard = document.getElementById('openProductoModal'); // Tarjeta "Ver Productos"
         const openProductoBtnTrigger = document.getElementById('openProductoModalTrigger'); // Botón "+ Producto"
-        const openGastoBtn = document.getElementById('openGastoModal');
+        const openGastoBtn = document.getElementById('openGastoModal'); // <<-- BOTÓN ARREGLADO
         const openGananciasBtnAction = document.getElementById('openGananciasModal');
         const openInventarioModalTrigger = document.getElementById('openInventarioModalTrigger'); // Tarjeta "Ver Inventario"
         const openClientesModalTrigger = document.getElementById('openClientesModalTrigger'); 
@@ -3768,6 +3836,10 @@
         const expenseFilterYear = document.getElementById('expenseFilterYear');
         const applyExpenseFiltersBtn = document.getElementById('applyExpenseFiltersBtn');
         // ** FIN NUEVOS Elementos de Filtro de Gastos **
+        
+        // Elementos para cálculo de Monto Bruto (NUEVOS)
+        const montoCobradoInput = document.getElementById('montoCobrado');
+        const descuentoVentaInput = document.getElementById('descuentoVenta');
         
         // 1. ** Llenar el Year Selector **
         const currentYear = getCurrentYear();
@@ -3848,6 +3920,14 @@
         // 1. ABRIR FORMULARIO DE PRODUCTO (Botón + Producto)
         openProductoBtnTrigger.addEventListener('click', () => openModal(productoModal));
         
+        // ABRIR FORMULARIO DE GASTO (Botón + Gasto) <-- ARREGLO
+        if (openGastoBtn) {
+            openGastoBtn.addEventListener('click', () => {
+                document.getElementById('fechaGasto').value = getCurrentDate(); // Establecer fecha actual por defecto
+                openModal(document.getElementById('gastoModal'));
+            });
+        }
+        
         // 2. ABRIR REPORTE DE INVENTARIO (Tarjeta "Ver Productos" y "Ver Inventario")
         const openInventoryReport = () => {
              // Sincronizar filtros por defecto (Mes Actual, Año Actual)
@@ -3876,10 +3956,20 @@
             openModal(document.getElementById('expensesDetailModal'));
         });
         
-        openVentaModalDirect.addEventListener('click', () => {
+        // ABRIR MODAL DE VENTA (Configuración y Cierre del modal)
+        document.getElementById('openVentaModalDirect').addEventListener('click', () => {
             document.getElementById('fechaVenta').value = getCurrentDate(); // Establecer fecha actual por defecto
+            // Reset y cálculo inicial de Monto Bruto
+            if (montoCobradoInput) montoCobradoInput.value = '';
+            if (descuentoVentaInput) descuentoVentaInput.value = 0;
+            updateSaleGrossValue(); 
             openModal(document.getElementById('ventaModal'));
         });
+        
+        // Listeners para Monto Bruto (NUEVOS)
+        if (montoCobradoInput) montoCobradoInput.addEventListener('input', updateSaleGrossValue);
+        if (descuentoVentaInput) descuentoVentaInput.addEventListener('input', updateSaleGrossValue);
+
 
         document.getElementById('openProfileModalBtn').addEventListener('click', () => openModal(document.getElementById('profileModal')));
         
