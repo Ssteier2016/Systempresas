@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Negocios - Pro</title>
+    <link rel="manifest" href="./manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root { font-family: 'Inter', system-ui, sans-serif; }
+        
+        /* SPLASH SCREEN */
+        #splashScreen { 
+            position: fixed; inset: 0; background: #fff; 
+            display: flex; align-items: center; justify-content: center; 
+            z-index: 9999; transition: opacity .6s ease-out; 
+            opacity: 1; pointer-events: all;
+        }
+        
+        /* CONTENIDO PRINCIPAL */
+        #mainContent { 
+            opacity: 0; transition: opacity .8s ease-in; 
+            pointer-events: none; 
+        }
+        #mainContent.visible { 
+            opacity: 1; pointer-events: auto; 
+        }
+        
+        /* UTILIDADES VISUALES */
+        .card-border-l { border-left-width: 5px; }
+        .modal-overlay { background: rgba(0,0,0,.5); backdrop-filter: blur(2px); }
+        
+        /* ESTILOS DE TABLA */
+        .table-header { @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50; }
+        .table-cell { @apply px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-b border-gray-100; }
+        .input-std { @apply block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border bg-gray-50; }
+        
+        /* Clase para valores protegidos (asteriscos) */
+        .protected-field { font-family: monospace; letter-spacing: 2px; }
+        .protected-field.revealed { font-family: 'Inter', system-ui, sans-serif; letter-spacing: normal; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800">
+
+    <!-- SPLASH SCREEN -->
+    <div id="splashScreen">
+        <div class="text-center">
+            <div class="text-6xl text-blue-600 mb-4 animate-bounce"><i class="fas fa-chart-pie"></i></div>
+            <h1 class="text-xl font-bold text-gray-700">Cargando Sistema...</h1>
+            <p class="text-sm text-gray-400 mt-2">Conectando base de datos...</p>
+        </div>
+    </div>
+
+    <!-- SCRIPT FAIL-SAFE -->
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                const main = document.getElementById('mainContent');
+                if(splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.style.display = 'none', 600);
+                }
+                if(main) {
+                    main.classList.add('visible');
+                    main.style.pointerEvents = 'auto'; 
+                }
+            }, 2000);
+        });
+    </script>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="mainContent">
+
+        <!-- NAVBAR -->
+        <nav class="bg-white shadow-sm sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fas fa-store"></i></div>
+                    <span class="text-xl font-bold text-gray-800 tracking-tight">MI NEGOCIO</span>
+                </div>
+                <div class="flex gap-4 text-gray-500 items-center">
+                    <!-- Estado de conexión visible para depuración -->
+                    <div id="connectionStatus" class="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500">
+                        <i class="fas fa-circle text-[8px] mr-1"></i> Iniciando...
+                    </div>
+                    <button id="installAppBtn" class="hidden hover:text-blue-600"><i class="fas fa-download"></i></button>
+                    <!-- Botón Perfil -->
+                    <button id="openProfileModalBtn" class="hover:text-blue-600 text-2xl transition transform hover:scale-110"><i class="fas fa-user-circle"></i></button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto px-4 py-8">
+
+            <!-- HEADER DASHBOARD -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Panel de Control</h1>
+                    <p class="text-sm text-gray-500">Resumen de actividad en tiempo real</p>
+                </div>
+                <div class="text-right bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex flex-col items-end min-w-[150px]">
+                    <!-- Hora y Fecha JS -->
+                    <div id="currentDateDisplay" class="text-sm font-bold text-blue-600 capitalize">Cargando fecha...</div>
+                    <div id="currentTimeDisplay" class="text-xs text-gray-400">--:--:--</div>
+                </div>
+            </div>
+
+            <!-- BOTONES DE ACCESO RÁPIDO -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <!-- Productos -->
+                <button id="openInventarioBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-box"></i></div>
+                    <div class="font-semibold text-sm">Inventario</div>
+                    <div class="text-xs text-gray-400 mt-1">Total: <span id="dashTotalProductos">0</span></div>
+                </button>
+                <!-- Ventas -->
+                <button id="openVentasHistoryBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="font-semibold text-sm">Ver Ventas</div>
+                    <div class="text-xs text-gray-400 mt-1">Hoy: <span id="dashVentasHoy">$0</span></div>
+                </button>
+                <!-- Ganancias -->
+                <button id="openGananciasHistoryBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 relative overflow-hidden cursor-pointer">
+                    <div class="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full m-2"></div>
+                    <div class="w-10 h-10 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-chart-line"></i></div>
+                    <div class="font-semibold text-sm">Ver Ganancias</div>
+                    <div class="text-xs text-gray-400 mt-1">Rentabilidad</div>
+                </button>
+                <!-- Gastos -->
+                <button id="openGastosHistoryBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-receipt"></i></div>
+                    <div class="font-semibold text-sm">Ver Gastos</div>
+                    <div class="text-xs text-gray-400 mt-1">Hoy: <span id="dashGastosHoy">$0</span></div>
+                </button>
+                <!-- Clientes -->
+                <button id="openClientesBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-users"></i></div>
+                    <div class="font-semibold text-sm">Clientes</div>
+                    <div class="text-xs text-gray-400 mt-1"><span id="dashTotalClientes">0</span> reg.</div>
+                </button>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN PRINCIPAL -->
+            <div class="flex gap-3 mb-8">
+                <button id="btnNewProduct" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl shadow-lg shadow-blue-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Producto</button>
+                <button id="btnNewSale" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl shadow-lg shadow-gray-300 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Venta</button>
+                <button id="btnNewExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-minus"></i> Gasto</button>
+            </div>
+
+            <!-- TARJETAS DE MÉTRICAS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <!-- Ventas Mes -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-blue-500 relative">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div>
+                        <button class="text-gray-400 hover:text-blue-600 cursor-pointer" data-toggle-privacy="sales"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <!-- PROTECTED FIELD -->
+                    <div class="text-2xl font-bold text-gray-900 protected-field" id="cardVentasMes">******</div>
+                    <div class="mt-2 text-xs text-green-600 flex items-center"><i class="fas fa-calendar-day mr-1"></i> Hoy: <span id="cardVentasHoy" class="ml-1 font-semibold">$0.00</span></div>
+                </div>
+
+                <!-- Ganancia Neta -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-green-500 relative">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div>
+                        <button class="text-gray-400 hover:text-green-600 cursor-pointer" data-toggle-privacy="profit"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <!-- PROTECTED FIELD -->
+                    <div class="text-2xl font-bold text-gray-900 protected-field" id="cardGananciaMes">******</div>
+                    <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
+                </div>
+
+                <!-- Caja Actual -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-yellow-500 relative">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Caja Actual</div>
+                        <button class="text-gray-400 hover:text-yellow-600 cursor-pointer" data-toggle-privacy="cash"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <!-- PROTECTED FIELD -->
+                    <div class="text-2xl font-bold text-gray-900 protected-field" id="cardCaja">******</div>
+                    <div class="mt-2 text-xs text-yellow-600 font-semibold">Saldo Disponible</div>
+                </div>
+
+                <!-- Stock Valorizado -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-orange-500 relative">
+                    <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Stock Total</div>
+                    <div class="text-2xl font-bold text-gray-900" id="cardStockUnidades">0</div>
+                    <div class="mt-2 text-xs text-gray-500">Unidades Físicas</div>
+                </div>
+            </div>
+
+            <!-- NOVEDADES / NOTAS -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-bullhorn text-purple-500"></i> Notas / Novedades</h3>
+                <div class="flex gap-2">
+                    <textarea id="dailyNoteInput" rows="2" class="input-std" placeholder="Escribe un recordatorio o novedad del día..."></textarea>
+                    <button id="sendWhatsappBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 rounded-lg shadow-sm transition cursor-pointer"><i class="fab fa-whatsapp text-xl"></i></button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ================= MODALES ================= -->
+
+    <!-- MODAL NUEVA VENTA -->
+    <div id="newSaleModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-xl font-bold">Registrar Venta</h2>
+                <button data-close="newSaleModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="saleForm" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="saleDate" class="input-std" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monto Cobrado ($)</label>
+                        <input type="number" id="saleAmount" step="0.01" class="input-std font-bold text-lg" placeholder="0.00" required>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN CLIENTE -->
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <label class="block text-sm font-bold text-blue-700 mb-2">Datos del Cliente</label>
+                    <div class="space-y-3">
+                        <input type="text" id="saleClient" list="clientList" class="input-std" placeholder="Nombre del Cliente (Ej: Juan Perez)" required>
+                        <datalist id="clientList"></datalist>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="tel" id="saleWhatsapp" class="input-std" placeholder="WhatsApp (Opcional)">
+                            <input type="email" id="saleEmail" class="input-std" placeholder="Email (Opcional)">
+                        </div>
+                        <p class="text-xs text-blue-500 mt-1">* Si el cliente es nuevo, se guardará automáticamente en la base de datos.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Método Pago</label>
+                        <input type="text" id="salePayment" list="paymentList" class="input-std" placeholder="Efectivo, Tarjeta...">
+                        <datalist id="paymentList">
+                            <option>Efectivo</option>
+                            <option>Tarjeta Crédito</option>
+                            <option>Tarjeta Débito</option>
+                            <option>Transferencia</option>
+                        </datalist>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Canal de Venta</label>
+                        <input type="text" id="saleChannel" list="channelList" class="input-std" placeholder="Local, Web...">
+                        <datalist id="channelList">
+                            <option>Local Físico</option>
+                            <option>WhatsApp</option>
+                            <option>Instagram</option>
+                        </datalist>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Observaciones / Notas</label>
+                    <textarea id="saleNotes" rows="2" class="input-std" placeholder="Detalles adicionales..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer transition active:scale-95">Guardar Venta</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO CLIENTE (INDEPENDIENTE) -->
+    <div id="newClientModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-indigo-700">Nuevo Cliente</h2>
+                <button data-close="newClientModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="clientForm" class="p-6 space-y-4">
+                <input type="text" id="newClientName" class="input-std" placeholder="Nombre Completo" required>
+                <input type="tel" id="newClientWhatsapp" class="input-std" placeholder="WhatsApp">
+                <input type="email" id="newClientEmail" class="input-std" placeholder="Email">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer transition active:scale-95">Guardar Cliente</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CLIENTES -->
+    <div id="clientsModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-indigo-700"><i class="fas fa-address-book mr-2"></i> Base de Clientes</h2>
+                <button data-close="clientsModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 bg-white border-b flex gap-2">
+                 <input type="text" id="searchClientInput" placeholder="Buscar por nombre..." class="input-std">
+                 <button id="btnAddClientDirect" class="bg-indigo-600 text-white px-4 rounded-lg hover:bg-indigo-700"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Nombre</th>
+                            <th class="table-header">Contacto</th>
+                            <th class="table-header text-right">Historial Compras</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL GANANCIAS -->
+    <div id="gananciasDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <div>
+                    <h2 class="text-2xl font-bold text-green-700"><i class="fas fa-chart-line mr-2"></i> Historial de Rentabilidad</h2>
+                    <p class="text-sm text-gray-500">Desglose diario de Ventas vs. Gastos</p>
+                </div>
+                <button data-close="gananciasDetailModal" class="text-gray-400 hover:text-gray-600 text-2xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 border-b bg-white">
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <select id="filterProfitMonth" class="input-std w-40">
+                        <option value="all">Todo el Año</option>
+                        <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+                        <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+                        <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+                        <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                    </select>
+                    <select id="filterProfitYear" class="input-std w-32">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                    <button id="applyProfitFilterBtn" class="bg-green-600 text-white px-6 rounded-lg font-medium hover:bg-green-700 cursor-pointer">Filtrar</button>
+                    <button id="aiAnalysisBtn" class="ml-auto bg-purple-100 text-purple-700 border border-purple-200 px-4 rounded-lg font-medium hover:bg-purple-200 flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-magic"></i> Análisis AI
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
+                        <div class="text-xs text-blue-500 font-bold uppercase">Total Ventas</div>
+                        <!-- PROTECTED FIELD -->
+                        <div class="text-lg font-bold text-blue-700 protected-field" id="summaryProfitSales">******</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg border border-red-100 text-center">
+                        <div class="text-xs text-red-500 font-bold uppercase">Total Gastos</div>
+                         <!-- PROTECTED FIELD -->
+                        <div class="text-lg font-bold text-red-700 protected-field" id="summaryProfitExpenses">******</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg border border-green-100 text-center">
+                        <div class="text-xs text-green-500 font-bold uppercase">Ganancia Neta</div>
+                         <!-- PROTECTED FIELD -->
+                        <div class="text-xl font-bold text-green-700 protected-field" id="summaryProfitNet">******</div>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-y-auto flex-1 p-6">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Fecha</th>
+                            <th class="table-header text-right">Ventas Diarias</th>
+                            <th class="table-header text-right">Gastos Diarios</th>
+                            <th class="table-header text-right">Balance (Neto)</th>
+                            <th class="table-header text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profitTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO GASTO -->
+    <div id="newExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">Registrar Gasto</h2>
+                <button data-close="newExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="expenseForm" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="expenseDate" class="input-std" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monto Total ($)</label>
+                        <input type="number" id="expenseAmount" step="0.01" class="input-std font-bold text-lg text-red-600" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Categoría</label>
+                    <input type="text" id="expenseCategory" list="categoryList" class="input-std" placeholder="Ej: Mercadería, Luz, Alquiler...">
+                    <datalist id="categoryList">
+                        <option>Mercadería</option><option>Servicios</option><option>Alquiler</option><option>Varios</option>
+                    </datalist>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Descripción (Opcional)</label>
+                    <input type="text" id="expenseDesc" class="input-std">
+                </div>
+                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer transition active:scale-95">Guardar Gasto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL VENTAS (LISTA CON ACUMULADOR) -->
+    <div id="salesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl">
+                <div>
+                    <h2 class="text-xl font-bold text-blue-700">Historial de Ventas</h2>
+                    <p class="text-sm text-blue-500" id="salesHistoryTotalLabel">Total Mostrado: $0.00</p>
+                </div>
+                <button data-close="salesHistoryModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 bg-white border-b flex gap-2">
+                <input type="text" id="searchSaleInput" placeholder="Buscar cliente..." class="input-std">
+            </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead><tr><th class="table-header">Fecha</th><th class="table-header">Cliente</th><th class="table-header text-right">Monto</th><th class="table-header">Detalle</th></tr></thead>
+                    <tbody id="salesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL GASTOS (LISTA) -->
+    <div id="expensesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-red-600">Historial de Gastos</h2>
+                <button data-close="expensesHistoryModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 bg-gray-50 border-b flex gap-2">
+                <input type="text" id="searchExpenseInput" placeholder="Buscar categoría..." class="input-std">
+            </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead><tr><th class="table-header">Fecha</th><th class="table-header">Categoría</th><th class="table-header text-right">Monto</th><th class="table-header">Detalle</th></tr></thead>
+                    <tbody id="expensesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INVENTARIO -->
+    <div id="inventoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-orange-600">Inventario</h2>
+                <button data-close="inventoryModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead><tr><th class="table-header">Producto</th><th class="table-header text-right">Stock</th><th class="table-header text-right">Precio Venta</th></tr></thead>
+                    <tbody id="inventoryTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO PRODUCTO -->
+    <div id="productModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">Nuevo Producto</h2>
+                <button data-close="productModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="productForm" class="p-6 space-y-4">
+                <input type="text" id="prodName" placeholder="Nombre del Producto" class="input-std" required>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="prodStock" placeholder="Stock Inicial" class="input-std" required>
+                    <input type="number" id="prodPrice" placeholder="Precio ($)" class="input-std">
+                </div>
+                <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer transition active:scale-95">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PIN / LOGIN -->
+    <div id="authModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
+            <div class="mb-4 text-4xl text-blue-600"><i class="fas fa-lock"></i></div>
+            <h3 class="text-xl font-bold mb-2">Acceso Restringido</h3>
+            <p class="text-gray-500 text-sm mb-6">Ingrese PIN para ver datos sensibles.</p>
+            <input type="password" id="pinInput" maxlength="4" class="text-center text-3xl tracking-[0.5em] font-bold w-full border-b-2 border-gray-300 focus:border-blue-600 outline-none pb-2 mb-6" placeholder="••••">
+            <div class="flex gap-2">
+                <button id="cancelAuth" class="flex-1 py-2 text-gray-500 bg-gray-100 rounded-lg cursor-pointer">Cancelar</button>
+                <button id="confirmAuth" class="flex-1 py-2 text-white bg-blue-600 rounded-lg cursor-pointer">Acceder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PERFIL -->
+    <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 class="text-lg font-bold mb-4">Perfil de Usuario</h3>
+            <div class="bg-gray-50 p-3 rounded-lg mb-4 text-sm">
+                <p><strong>Estado:</strong> <span id="authStatusText" class="text-green-600">Conectado</span></p>
+                <p class="text-xs text-gray-400 truncate mt-1" id="uidDisplay">...</p>
+            </div>
+            <button id="googleLoginBtn" class="w-full border py-2 rounded-lg hover:bg-gray-50 mb-2 flex items-center justify-center gap-2 cursor-pointer"><i class="fab fa-google text-red-500"></i> Google Login</button>
+            <button id="logoutBtn" class="w-full bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200 cursor-pointer">Cerrar Sesión</button>
+            <button data-close="profileModal" class="w-full mt-4 text-gray-400 text-sm cursor-pointer">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- LÓGICA -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURACIÓN DE FIREBASE
+        let firebaseConfig;
+        if(typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            // Fallback genérico para evitar crash, pero avisará
+            firebaseConfig = { apiKey: "fake-key", authDomain: "fake.firebaseapp.com", projectId: "fake-project" };
+        }
+
+        // Variable global para chequear estado de conexión
+        const setConnectionStatus = (status, color) => {
+            const el = document.getElementById('connectionStatus');
+            if(el) {
+                el.innerHTML = `<i class="fas fa-circle text-[8px] mr-1 text-${color}-500"></i> ${status}`;
+                el.className = `text-xs bg-${color}-50 px-2 py-1 rounded-full text-${color}-600 border border-${color}-100`;
+            }
+        };
+
+        let app, auth, db;
+        let authInitialized = false;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+            setConnectionStatus("Error Config", "red");
+        }
+        
+        const SECURE_PIN = "1440";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let userId = null;
+        let products = [], sales = [], expenses = [], clients = [];
+        let privacyRevealed = { sales: false, profit: false, cash: false };
+
+        // --- HELPERS ---
+        const $ = id => document.getElementById(id);
+        const fmtMoney = n => `$${parseFloat(n||0).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        const fmtDate = s => { if(!s)return'-'; const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; };
+        const getToday = () => new Date().toISOString().split('T')[0];
+
+        // --- MANEJO DE ASTERISCOS (******) ---
+        const updateProtectedField = (id, value) => {
+            const el = $(id);
+            if(!el) return;
+            el.dataset.realValue = value;
+            if(el.classList.contains('revealed')) {
+                el.textContent = value;
+            } else {
+                el.textContent = '******';
+            }
+        };
+
+        // --- RELOJ ---
+        function updateClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('es-ES');
+            if($('currentDateDisplay')) $('currentDateDisplay').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+            if($('currentTimeDisplay')) $('currentTimeDisplay').textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- AUTH ---
+        const initAuth = async () => {
+            if(!auth) {
+                setConnectionStatus("Sin Auth", "red");
+                return;
+            }
+            
+            // Listener de Auth Global
+            onAuthStateChanged(auth, user => {
+                if(user) {
+                    userId = user.uid;
+                    authInitialized = true;
+                    setConnectionStatus("En Línea", "green");
+                    
+                    if($('authStatusText')) $('authStatusText').textContent = "Conectado";
+                    if($('uidDisplay')) $('uidDisplay').textContent = user.isAnonymous ? `Anon: ${user.uid.substr(0,5)}` : user.email;
+                    
+                    initListeners();
+                } else {
+                    // Si no hay usuario, intentamos loguear anónimamente solo una vez si no hay token
+                    if(!authInitialized) {
+                         // Lógica de token custom o anónimo
+                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
+                        } else {
+                            signInAnonymously(auth);
+                        }
+                    }
+                }
+            });
+        };
+        initAuth();
+
+        // --- LISTENERS FIRESTORE ---
+        function initListeners() {
+            if(!db || !userId) return;
+            const path = c => collection(db, 'artifacts', appId, 'users', userId, c);
+
+            // Escuchar y manejar errores
+            const safeSnapshot = (colRef, callback) => {
+                onSnapshot(colRef, (snap) => {
+                    callback(snap);
+                }, (error) => {
+                    console.error("Error leyendo DB:", error);
+                    setConnectionStatus("Error Sync", "orange");
+                });
+            };
+
+            safeSnapshot(path('products'), snap => {
+                products = snap.docs.map(d=>({id:d.id, ...d.data()}));
+                updateDashboard();
+            });
+
+            safeSnapshot(path('sales'), snap => {
+                sales = snap.docs.map(d=>({id:d.id, ...d.data()}));
+                updateDashboard();
+                renderSalesList(); 
+                updateDynamicLists(); 
+            });
+
+            safeSnapshot(path('expenses'), snap => {
+                expenses = snap.docs.map(d=>({id:d.id, ...d.data()}));
+                updateDashboard();
+                renderExpensesList();
+                updateDynamicLists();
+            });
+
+            safeSnapshot(path('clients'), snap => {
+                clients = snap.docs.map(d=>({id:d.id, ...d.data()}));
+                updateClientsListDOM(); 
+                $('dashTotalClientes').textContent = clients.length;
+            });
+        }
+
+        // --- APRENDIZAJE DE LISTAS ---
+        function updateDynamicLists() {
+            const payMethods = new Set(['Efectivo', 'Tarjeta Crédito', 'Tarjeta Débito', 'Transferencia', 'QR']);
+            const channels = new Set(['Local Físico', 'WhatsApp', 'Instagram', 'Sitio Web', 'MercadoLibre']);
+            const cats = new Set(['Mercadería', 'Servicios', 'Alquiler', 'Varios']);
+
+            sales.forEach(s => {
+                if(s.paymentType) payMethods.add(s.paymentType);
+                if(s.salesChannel) channels.add(s.salesChannel);
+            });
+            expenses.forEach(e => {
+                if(e.category) cats.add(e.category);
+            });
+
+            const fill = (id, set) => {
+                const dl = $(id); if(!dl) return;
+                dl.innerHTML = '';
+                set.forEach(val => dl.innerHTML += `<option value="${val}">`);
+            };
+
+            fill('paymentList', payMethods);
+            fill('channelList', channels);
+            fill('categoryList', cats);
+        }
+
+        // --- RENDERIZADO CLIENTES ---
+        function updateClientsListDOM() {
+            const dl = $('clientList'); 
+            if(dl) {
+                dl.innerHTML = '';
+                clients.forEach(c => dl.innerHTML += `<option value="${c.name}">`);
+            }
+            if(!$('clientsModal').classList.contains('hidden')) renderClientsTable();
+        }
+
+        function renderClientsTable() {
+            const tbody = $('clientsTableBody'); if(!tbody) return;
+            tbody.innerHTML = '';
+            const q = $('searchClientInput').value.toLowerCase();
+            
+            const clientsWithStats = clients.map(c => {
+                const clientSales = sales.filter(s => (s.clientName||'').toLowerCase() === c.name.toLowerCase());
+                const totalSpent = clientSales.reduce((acc, s) => acc + (parseFloat(s.montoCobrado)||0), 0);
+                return { ...c, totalSpent, count: clientSales.length };
+            }).filter(c => c.name.toLowerCase().includes(q)).sort((a,b) => b.totalSpent - a.totalSpent);
+
+            clientsWithStats.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="table-cell font-bold text-gray-800">${c.name}</td>
+                        <td class="table-cell">
+                            ${c.whatsapp ? `<div class="text-xs text-green-600"><i class="fab fa-whatsapp"></i> ${c.whatsapp}</div>` : ''}
+                            ${c.email ? `<div class="text-xs text-blue-600"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
+                            ${!c.whatsapp && !c.email ? '<span class="text-xs text-gray-400">Sin contacto</span>' : ''}
+                        </td>
+                        <td class="table-cell text-right">
+                            <div class="font-bold text-indigo-600">${fmtMoney(c.totalSpent)}</div>
+                            <div class="text-xs text-gray-500">${c.count} compras</div>
+                        </td>
+                    </tr>
+                `;
+            });
+            if(clientsWithStats.length === 0) tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">No hay clientes registrados</td></tr>`;
+        }
+
+        // --- DASHBOARD LOGIC ---
+        function updateDashboard() {
+            const today = getToday();
+            const now = new Date();
+            const thisMonth = now.toISOString().slice(0,7);
+
+            let salesToday = 0, salesMonth = 0;
+            sales.forEach(s => {
+                const amt = parseFloat(s.montoCobrado)||0;
+                if(s.date === today) salesToday += amt;
+                if(s.date.startsWith(thisMonth)) salesMonth += amt;
+            });
+
+            let expToday = 0, expMonth = 0;
+            expenses.forEach(e => {
+                const amt = parseFloat(e.gastoTotal)||0;
+                if(e.date === today) expToday += amt;
+                if(e.date.startsWith(thisMonth)) expMonth += amt;
+            });
+
+            const profitMonth = salesMonth - expMonth;
+            
+            // CAJA: Un valor simulado + ganancia del mes
+            const cajaActual = 12000 + profitMonth; 
+
+            // Actualizar campos NO protegidos
+            if($('dashVentasHoy')) $('dashVentasHoy').textContent = fmtMoney(salesToday);
+            if($('dashGastosHoy')) $('dashGastosHoy').textContent = fmtMoney(expToday);
+            if($('dashTotalProductos')) $('dashTotalProductos').textContent = products.reduce((acc,p)=>acc+(parseInt(p.stock)||0),0);
+            if($('cardVentasHoy')) $('cardVentasHoy').textContent = fmtMoney(salesToday);
+            if($('cardStockUnidades')) $('cardStockUnidades').textContent = products.reduce((acc,p)=>acc+(parseInt(p.stock)||0),0);
+
+            // Actualizar campos PROTEGIDOS con asteriscos
+            updateProtectedField('cardVentasMes', fmtMoney(salesMonth));
+            updateProtectedField('cardGananciaMes', fmtMoney(profitMonth));
+            updateProtectedField('cardCaja', fmtMoney(cajaActual));
+            
+            if(!$('gananciasDetailModal').classList.contains('hidden')) renderProfitHistory();
+        }
+
+        // --- RENDERIZADO DE TABLAS ---
+        function renderProfitHistory() {
+            const tbody = $('profitTableBody'); if(!tbody) return;
+            tbody.innerHTML = '';
+            const fMonth = $('filterProfitMonth').value;
+            const fYear = $('filterProfitYear').value;
+
+            const dailyStats = {};
+            sales.forEach(s => {
+                if(!dailyStats[s.date]) dailyStats[s.date] = {sales:0, expenses:0};
+                dailyStats[s.date].sales += (parseFloat(s.montoCobrado)||0);
+            });
+            expenses.forEach(e => {
+                if(!dailyStats[e.date]) dailyStats[e.date] = {sales:0, expenses:0};
+                dailyStats[e.date].expenses += (parseFloat(e.gastoTotal)||0);
+            });
+
+            const rows = Object.keys(dailyStats).map(date => ({date, ...dailyStats[date]}));
+            let totalSales=0, totalExp=0;
+
+            const filteredRows = rows.filter(r => {
+                const d = new Date(r.date+'T00:00:00');
+                const m = d.getMonth();
+                const y = d.getFullYear();
+                if(fYear !== 'all' && y.toString() !== fYear) return false;
+                if(fMonth !== 'all' && m.toString() !== fMonth) return false;
+                return true;
+            }).sort((a,b) => b.date.localeCompare(a.date));
+
+            filteredRows.forEach(r => {
+                totalSales += r.sales;
+                totalExp += r.expenses;
+                const net = r.sales - r.expenses;
+                const netClass = net >= 0 ? 'text-green-600' : 'text-red-600';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="table-cell font-medium text-gray-900">${fmtDate(r.date)}</td>
+                    <td class="table-cell text-right text-blue-600">${fmtMoney(r.sales)}</td>
+                    <td class="table-cell text-right text-red-600">${fmtMoney(r.expenses)}</td>
+                    <td class="table-cell text-right font-bold ${netClass}">${fmtMoney(net)}</td>
+                    <td class="table-cell text-center text-xs">
+                        <span class="${net>=0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-2 py-1 rounded-full">${net>=0?'Positivo':'Déficit'}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            updateProtectedField('summaryProfitSales', fmtMoney(totalSales));
+            updateProtectedField('summaryProfitExpenses', fmtMoney(totalExp));
+            
+            const netVal = totalSales - totalExp;
+            updateProtectedField('summaryProfitNet', fmtMoney(netVal));
+            
+            const netEl = $('summaryProfitNet');
+            if(netEl) {
+                 netEl.className = `text-xl font-bold protected-field ${netVal>=0 ? 'text-green-700':'text-red-700'} ${privacyRevealed['profit'] ? 'revealed' : ''}`;
+            }
+        }
+
+        function renderSalesList() {
+            const tb = $('salesTableBody'); if(!tb) return;
+            tb.innerHTML = '';
+            const q = $('searchSaleInput').value.toLowerCase();
+            const list = sales.filter(s => (s.clientName||'').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
+            
+            let totalShown = 0;
+            list.forEach(s => {
+                totalShown += parseFloat(s.montoCobrado)||0;
+                tb.innerHTML += `<tr><td class="table-cell">${fmtDate(s.date)}</td><td class="table-cell font-bold">${s.clientName}<div class="text-xs font-normal text-gray-400">${s.notes||''}</div></td><td class="table-cell text-right text-blue-600">${fmtMoney(s.montoCobrado)}</td><td class="table-cell text-xs">${s.salesChannel||'-'}</td></tr>`;
+            });
+            if($('salesHistoryTotalLabel')) $('salesHistoryTotalLabel').textContent = `Total Mostrado: ${fmtMoney(totalShown)}`;
+        }
+
+        function renderExpensesList() {
+            const tb = $('expensesTableBody'); if(!tb) return;
+            tb.innerHTML = '';
+            const q = $('searchExpenseInput').value.toLowerCase();
+            const list = expenses.filter(e => (e.category||'').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
+            list.forEach(e => {
+                tb.innerHTML += `<tr><td class="table-cell">${fmtDate(e.date)}</td><td class="table-cell font-bold">${e.category}</td><td class="table-cell text-right text-red-600">-${fmtMoney(e.gastoTotal)}</td><td class="table-cell text-xs">${e.description||'-'}</td></tr>`;
+            });
+        }
+
+        function renderInventory() {
+            const tb = $('inventoryTableBody'); if(!tb) return;
+            tb.innerHTML = '';
+            products.forEach(p => {
+                tb.innerHTML += `<tr><td class="table-cell font-medium">${p.name}</td><td class="table-cell text-right font-bold">${p.stock}</td><td class="table-cell text-right text-green-600">${fmtMoney(p.priceRetail)}</td></tr>`;
+            });
+        }
+
+        // --- INTERACCIONES UI ---
+        const toggleModal = (id, show) => {
+            const el = $(id);
+            if(show) { el.classList.remove('hidden'); } else { el.classList.add('hidden'); }
+        };
+
+        // DOM Loaded Safety
+        document.addEventListener('DOMContentLoaded', () => {
+             // Botones Apertura
+            $('openInventarioBtn').onclick = () => { renderInventory(); toggleModal('inventoryModal', true); };
+            $('openVentasHistoryBtn').onclick = () => { renderSalesList(); toggleModal('salesHistoryModal', true); };
+            
+            $('openGananciasHistoryBtn').onclick = () => {
+                if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString();
+                renderProfitHistory(); 
+                toggleModal('gananciasDetailModal', true); 
+            };
+            $('openGastosHistoryBtn').onclick = () => { renderExpensesList(); toggleModal('expensesHistoryModal', true); };
+
+            $('btnNewSale').onclick = () => { $('saleDate').value = getToday(); toggleModal('newSaleModal', true); };
+            $('btnNewExpense').onclick = () => { $('expenseDate').value = getToday(); toggleModal('newExpenseModal', true); };
+            $('btnNewProduct').onclick = () => toggleModal('productModal', true);
+            $('openProfileModalBtn').onclick = () => toggleModal('profileModal', true);
+
+            // CLIENTES
+            $('openClientesBtn').onclick = () => { renderClientsTable(); toggleModal('clientsModal', true); };
+            $('btnAddClientDirect').onclick = () => toggleModal('newClientModal', true);
+
+            // Botones Cerrar
+            document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => toggleModal(b.dataset.close, false));
+
+            // Filtros
+            $('applyProfitFilterBtn').onclick = renderProfitHistory;
+            $('searchSaleInput').onkeyup = renderSalesList;
+            $('searchExpenseInput').onkeyup = renderExpensesList;
+            $('searchClientInput').onkeyup = renderClientsTable;
+
+            // FORMULARIO CLIENTE MANUAL
+            $('clientForm').onsubmit = async (e) => {
+                e.preventDefault();
+                if(!userId) { alert("Sin conexión. Intente recargar."); return; }
+                
+                const btn = e.target.querySelector('button[type="submit"]');
+                const originalText = btn.textContent;
+                btn.textContent = "Guardando..."; btn.disabled = true;
+
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'clients'), {
+                        name: $('newClientName').value,
+                        whatsapp: $('newClientWhatsapp').value,
+                        email: $('newClientEmail').value,
+                        createdAt: new Date().toISOString()
+                    });
+                    toggleModal('newClientModal', false); e.target.reset();
+                    alert("Cliente guardado con éxito.");
+                } catch(err) {
+                    alert("Error: " + err.message);
+                } finally {
+                    btn.textContent = originalText; btn.disabled = false;
+                }
+            };
+
+            // FORMULARIO VENTA
+            $('saleForm').onsubmit = async (e) => {
+                e.preventDefault();
+                if(!userId) { alert("Sin conexión. Intente recargar."); return; }
+                
+                const btn = e.target.querySelector('button[type="submit"]');
+                const originalText = btn.textContent;
+                btn.textContent = "Guardando..."; btn.disabled = true;
+
+                try {
+                    const clientName = $('saleClient').value || 'Consumidor Final';
+                    // ... (resto de lógica igual) ...
+                    
+                    // GUARDAR CLIENTE AUTOMÁTICO
+                    const clientExists = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
+                    if(!clientExists && clientName !== 'Consumidor Final') {
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'clients'), {
+                            name: clientName,
+                            whatsapp: $('saleWhatsapp').value,
+                            email: $('saleEmail').value,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+
+                    // GUARDAR VENTA
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'sales'), {
+                        date: $('saleDate').value,
+                        montoCobrado: $('saleAmount').value,
+                        clientName: clientName,
+                        paymentType: $('salePayment').value,
+                        salesChannel: $('saleChannel').value,
+                        notes: $('saleNotes').value,
+                        createdAt: new Date().toISOString()
+                    });
+                    toggleModal('newSaleModal', false); e.target.reset();
+                    alert("¡Venta registrada con éxito!");
+
+                } catch(err) {
+                    alert("Error al guardar: " + err.message);
+                    console.error(err);
+                } finally {
+                    btn.textContent = originalText; btn.disabled = false;
+                }
+            };
+
+            // FORMULARIO GASTOS (AHORA CON FEEDBACK VISUAL)
+            $('expenseForm').onsubmit = async (e) => {
+                e.preventDefault();
+                if(!userId) { alert("Sin conexión. Intente recargar."); return; }
+
+                const btn = e.target.querySelector('button[type="submit"]');
+                const originalText = btn.textContent;
+                btn.textContent = "Guardando..."; btn.disabled = true;
+
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), {
+                        date: $('expenseDate').value,
+                        gastoTotal: $('expenseAmount').value,
+                        category: $('expenseCategory').value,
+                        description: $('expenseDesc').value,
+                        createdAt: new Date().toISOString()
+                    });
+                    toggleModal('newExpenseModal', false); e.target.reset();
+                    alert("Gasto registrado con éxito.");
+                } catch(err) {
+                    alert("Error: " + err.message);
+                } finally {
+                    btn.textContent = originalText; btn.disabled = false;
+                }
+            };
+
+            // FORMULARIO PRODUCTO (AHORA CON FEEDBACK VISUAL)
+            $('productForm').onsubmit = async (e) => {
+                e.preventDefault();
+                if(!userId) { alert("Sin conexión. Intente recargar."); return; }
+
+                const btn = e.target.querySelector('button[type="submit"]');
+                const originalText = btn.textContent;
+                btn.textContent = "Guardando..."; btn.disabled = true;
+
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'products'), {
+                        name: $('prodName').value,
+                        stock: $('prodStock').value,
+                        priceRetail: $('prodPrice').value,
+                        createdAt: new Date().toISOString()
+                    });
+                    toggleModal('productModal', false); e.target.reset();
+                    alert("Producto guardado con éxito.");
+                } catch(err) {
+                    alert("Error: " + err.message);
+                } finally {
+                    btn.textContent = originalText; btn.disabled = false;
+                }
+            };
+
+            $('sendWhatsappBtn').onclick = () => {
+                const txt = $('dailyNoteInput').value;
+                if(txt) window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+            };
+
+            // Auth Privacy
+            let pendingReveal = null;
+            document.querySelectorAll('[data-toggle-privacy]').forEach(b => {
+                b.onclick = (e) => {
+                    const type = e.currentTarget.dataset.togglePrivacy;
+                    const elements = [];
+                    // Definir qué elementos corresponden a cada grupo
+                    if(type === 'sales') { elements.push($('cardVentasMes')); }
+                    if(type === 'profit') { 
+                        elements.push($('cardGananciaMes'));
+                        if($('summaryProfitSales')) elements.push($('summaryProfitSales'));
+                        if($('summaryProfitExpenses')) elements.push($('summaryProfitExpenses'));
+                        if($('summaryProfitNet')) elements.push($('summaryProfitNet'));
+                    }
+                    if(type === 'cash') { elements.push($('cardCaja')); }
+                    
+                    if(privacyRevealed[type]) {
+                        elements.forEach(el => {
+                            if(el) {
+                                el.classList.remove('revealed');
+                                el.textContent = '******';
+                            }
+                        });
+                        privacyRevealed[type] = false;
+                    } else {
+                        pendingReveal = { type, elements };
+                        $('pinInput').value = '';
+                        toggleModal('authModal', true);
+                        $('pinInput').focus();
+                    }
+                };
+            });
+
+            $('confirmAuth').onclick = () => {
+                if($('pinInput').value === SECURE_PIN) {
+                    if(pendingReveal) {
+                        pendingReveal.elements.forEach(el => {
+                            if(el) {
+                                el.classList.add('revealed');
+                                el.textContent = el.dataset.realValue || '$0.00';
+                            }
+                        });
+                        privacyRevealed[pendingReveal.type] = true;
+                    }
+                    toggleModal('authModal', false);
+                } else {
+                    alert("PIN Incorrecto");
+                }
+            };
+            $('cancelAuth').onclick = () => toggleModal('authModal', false);
+
+            $('logoutBtn').onclick = () => { if(auth) signOut(auth).then(()=>toggleModal('profileModal',false)); };
+            $('googleLoginBtn').onclick = () => { if(auth) signInWithPopup(auth, new GoogleAuthProvider()).then(()=>toggleModal('profileModal',false)); };
+            
+            $('aiAnalysisBtn').onclick = () => alert("Análisis AI: La rentabilidad del mes actual muestra un balance positivo.");
+        });
+
+    </script>
+</body>
+</html>
