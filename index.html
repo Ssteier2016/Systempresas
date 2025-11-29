@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Negocios - Pro v3.9.3</title>
+    <title>Gestión de Negocios - Pro v3.9.4</title>
     <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -359,7 +359,7 @@
         <div class="text-center">
             <div class="text-6xl text-blue-600 mb-4 animate-bounce"><i class="fas fa-chart-pie"></i></div>
             <h1 class="text-xl font-bold text-gray-700">Cargando Sistema...</h1>
-            <p class="text-sm text-gray-400 mt-2">v3.9.3 - Pro</p>
+            <p class="text-sm text-gray-400 mt-2">v3.9.4 - Pro</p>
         </div>
     </div>
 
@@ -389,7 +389,7 @@
             <form id="addEmployeeForm" class="flex gap-2 mb-4"><input type="text" id="newEmployeeInput" class="input-std text-sm" placeholder="Agregar nombre..." required><button type="submit" class="bg-blue-600 text-white px-3 rounded-lg"><i class="fas fa-plus"></i></button></form>
             <div id="employeeListContainer" class="space-y-2"></div>
         </div>
-        <div class="p-4 bg-gray-50 border-t text-center text-xs text-gray-400">Sistema v3.9.3 Pro</div>
+        <div class="p-4 bg-gray-50 border-t text-center text-xs text-gray-400">Sistema v3.9.4 Pro</div>
     </div>
 
     <div id="mainContent">
@@ -527,9 +527,41 @@
 
     <div id="employeeStatsModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl"><h2 class="text-xl font-bold text-indigo-800"><i class="fas fa-user-clock mr-2"></i> Rendimiento</h2><button data-close="employeeStatsModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div>
-            <div class="p-6 bg-white border-b"><div class="flex gap-2"><select id="filterStatsMonth" class="input-std w-40"><option value="all">Mes Actual</option><option value="all_year">Todo el Año</option></select><button id="refreshEmployeeStats" class="bg-indigo-600 text-white px-4 rounded-lg"><i class="fas fa-sync-alt"></i></button></div></div>
-            <div class="flex-1 overflow-y-auto p-0"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="table-header">Empleado</th><th class="table-header text-center">Turnos</th><th class="table-header text-center">Horas</th><th class="table-header text-right">Retiros</th></tr></thead><tbody id="employeeStatsTableBody" class="bg-white divide-y divide-gray-100"></tbody></table></div>
+            <div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl"><h2 class="text-xl font-bold text-indigo-800"><i class="fas fa-user-clock mr-2"></i> Rendimiento y Pagos</h2><button data-close="employeeStatsModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div>
+            <!-- BARRA DE FILTROS RENOVADA -->
+            <div class="p-6 bg-white border-b flex flex-wrap gap-2 items-center">
+                <span class="text-xs text-gray-400 font-bold uppercase mr-1">Filtrar por:</span>
+                <input type="date" id="filterStatsDate" class="input-std w-auto text-sm" title="Seleccionar día específico">
+                <span class="text-xs text-gray-300 mx-1">|</span>
+                <select id="filterStatsMonth" class="input-std w-32 text-sm">
+                    <option value="all">Mes: Todos</option>
+                    <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                </select>
+                <select id="filterStatsYear" class="input-std w-24 text-sm">
+                    <option value="all">Año</option>
+                    <option value="2025">2025</option><option value="2024">2024</option>
+                </select>
+                <button id="applyStatsFilter" class="bg-indigo-600 text-white px-3 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition" title="Aplicar Filtros"><i class="fas fa-filter"></i></button>
+                <button id="resetStatsFilter" class="bg-gray-100 text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-200 transition" title="Limpiar Filtros"><i class="fas fa-undo"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="table-header">Empleado</th>
+                            <th class="table-header text-center">Turnos</th>
+                            <th class="table-header text-center">Horas</th>
+                            <th class="table-header text-right">Retiros</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeStatsTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+            <!-- TOTALIZADOR DE RETIROS -->
+            <div class="p-4 bg-indigo-50 border-t flex justify-end items-center gap-4">
+                <span class="text-sm text-indigo-800 font-medium">Total Retiros (Periodo Seleccionado):</span>
+                <span class="text-xl font-bold text-red-600" id="statsTotalWithdrawals">$0.00</span>
+            </div>
         </div>
     </div>
 
@@ -869,28 +901,44 @@
             $('expensesHistoryTotalLabel').textContent = `Total: ${fmtMoney(total)}`;
         }
 
+        // --- FUNCION RENOVADA: ESTADÍSTICAS DE EMPLEADOS ---
         function renderEmployeeStats() {
             const tb = $('employeeStatsTableBody'); tb.innerHTML = '';
-            const mode = $('filterStatsMonth').value;
-            const today = getToday();
-            const thisMonth = today.slice(0,7);
+            const fDate = $('filterStatsDate').value;
+            const fMonth = $('filterStatsMonth').value;
+            const fYear = $('filterStatsYear').value;
+            
             const stats = {};
+            let totalPeriodWithdrawals = 0;
+
             const process = (list, field, isSale) => {
                 list.forEach(i => {
-                    if(mode === 'all' && !i.date.startsWith(thisMonth)) return;
+                    // Filtrar usando la función genérica
+                    if (!filterByDate(i, 'date', fDate, fMonth, fYear)) return;
+
                     const emp = i.employee; if(!emp) return;
                     if(!stats[emp]) stats[emp] = { shifts: new Set(), w:0 };
-                    if(isSale) stats[emp].shifts.add(`${i.date}_${i.shift||'D'}`);
-                    else stats[emp].w += (parseFloat(i.amount)||0);
+                    
+                    if(isSale) {
+                        stats[emp].shifts.add(`${i.date}_${i.shift||'D'}`);
+                    } else {
+                        const amount = parseFloat(i.amount)||0;
+                        stats[emp].w += amount;
+                        totalPeriodWithdrawals += amount;
+                    }
                 });
             };
+
             process(sales, 'employee', true);
             process(withdrawals, 'employee', false);
+
             Object.keys(stats).forEach(e => {
                 const s = stats[e];
                 let h = 0; s.shifts.forEach(x => h += (x.includes('Mañana')?6:(x.includes('Tarde')?5:1)));
                 tb.innerHTML += `<tr><td class="table-cell font-bold">${e}</td><td class="table-cell text-center">${s.shifts.size}</td><td class="table-cell text-center">${h}h</td><td class="table-cell text-right text-red-600">${fmtMoney(s.w)}</td></tr>`;
             });
+            
+            $('statsTotalWithdrawals').textContent = fmtMoney(totalPeriodWithdrawals);
         }
 
         function renderInventory() {
@@ -1006,9 +1054,25 @@
             $('applyInvFilter').onclick = renderInventory;
             $('resetInvFilter').onclick = () => { $('filterInvDate').value=''; $('filterInvMonth').value='all'; $('filterInvYear').value='all'; $('searchInventoryInput').value=''; renderInventory(); };
             $('applyClientFilter').onclick = renderClientsTable;
-            $('btnOpenEmployeeStats').onclick = () => { renderEmployeeStats(); $('employeeStatsModal').classList.remove('hidden'); };
-            $('refreshEmployeeStats').onclick = renderEmployeeStats;
-            $('filterStatsMonth').onchange = renderEmployeeStats;
+            
+            // --- NUEVOS LISTENERS PARA ESTADISTICAS ---
+            $('btnOpenEmployeeStats').onclick = () => { 
+                // Reset a mes actual al abrir si no hay filtros previos
+                if($('filterStatsMonth').value === 'all' && $('filterStatsYear').value === 'all' && !$('filterStatsDate').value) {
+                    $('filterStatsMonth').value = new Date().getMonth().toString();
+                    $('filterStatsYear').value = new Date().getFullYear().toString();
+                }
+                renderEmployeeStats(); 
+                $('employeeStatsModal').classList.remove('hidden'); 
+            };
+            $('applyStatsFilter').onclick = renderEmployeeStats;
+            $('resetStatsFilter').onclick = () => {
+                $('filterStatsDate').value = '';
+                $('filterStatsMonth').value = 'all';
+                $('filterStatsYear').value = 'all';
+                renderEmployeeStats();
+            };
+            // -----------------------------------------
 
             $('saleForm').onsubmit = async(e) => {
                 e.preventDefault(); if(!userId) return;
