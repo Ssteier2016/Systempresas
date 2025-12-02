@@ -292,11 +292,6 @@
             background: var(--text-secondary);
         }
         
-        /* Efectos para badges y etiquetas */
-        #connectionStatus:hover {
-            transform: scale(1.05);
-        }
-        
         /* Efecto para modales al aparecer */
         .modal-overlay > div {
             animation: slideUp 0.3s ease-out;
@@ -392,7 +387,7 @@
     <!-- CONTENEDOR DE TOASTS -->
     <div id="toastContainer"></div>
 
-    <!-- BANNER DE ACTUALIZACIÓN DE PWA -->
+    <!-- BANNER DE ACTUALIZACIÓN DE PWA (SOLICITADO POR EL USUARIO) -->
     <div id="updateNotification" class="hidden fixed bottom-0 left-0 right-0 p-3 bg-yellow-500 text-white z-[90] text-center shadow-lg flex justify-center items-center gap-4">
         <div class="flex items-center gap-2 font-bold"><i class="fas fa-sync-alt animate-spin"></i> Nueva versión disponible.</div>
         <button id="reloadUpdateBtn" class="bg-yellow-700 hover:bg-yellow-800 text-white font-bold py-1 px-3 rounded-full transition text-sm">Recargar y Actualizar</button>
@@ -521,9 +516,9 @@
                     <div class="text-2xl font-bold text-gray-900 protected-field" id="cardGananciaMes">******</div>
                     <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
                 </div>
-                <!-- CAMBIO: Se quita el toggle de privacidad aquí -->
+                <!-- CAMBIO: Ahora muestra Caja SÓLO EFECTIVO -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-yellow-500 relative">
-                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Caja Actual</div><button class="text-gray-400 hover:text-yellow-600 cursor-pointer" id="btnOpenCashModal"><i class="fas fa-external-link-alt"></i></button></div>
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Caja SÓLO EFECTIVO (HOY)</div><button class="text-gray-400 hover:text-yellow-600 cursor-pointer" id="btnOpenCashModal"><i class="fas fa-external-link-alt"></i></button></div>
                     <div class="text-2xl font-bold text-gray-900" id="cardCaja">$0.00</div>
                     <div class="mt-2 text-xs text-yellow-600 font-semibold">Click ícono para detalle</div>
                 </div>
@@ -858,7 +853,7 @@
                 <!-- ACTUALIZADO: Caja Real con PIN -->
                 <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200 relative">
                     <div class="text-xs text-yellow-600 font-bold uppercase">En Caja Real</div>
-                    <div class="text-2xl font-bold text-yellow-800 protected-field" id="cashModalNet" data-toggle-privacy="cashNet">******</div>
+                    <div class="2xl font-bold text-yellow-800 protected-field" id="cashModalNet" data-toggle-privacy="cashNet">******</div>
                     <button class="absolute top-1 right-1 text-gray-400 hover:text-yellow-600 cursor-pointer" data-toggle-privacy="cashNet"><i class="fas fa-eye text-xs"></i></button>
                 </div>
             </div>
@@ -1187,28 +1182,53 @@
         function updateDashboard() {
             const today = getToday();
             const thisMonth = today.slice(0,7);
-            let sToday = 0, sMonth = 0;
-            let salesCash = 0; // NUEVO: Ventas en efectivo
-            let expensesCash = 0; // NUEVO: Gastos en efectivo
+            
+            let salesTotal = 0; // Total sales (for Modal Gross/Net)
+            let expensesTotal = 0; // Total expenses (for Modal Gross/Net)
+            let sToday = 0; // Sales Today (for cards)
+            let sMonth = 0; // Sales Month (for cards)
+            
+            let salesCashTotal = 0; // Total Cash Sales (for Modal OnlyCash initialization)
+            let expensesCashTotal = 0; // Total Cash Expenses (for Modal OnlyCash initialization)
+            
+            let salesCashToday = 0; // Cash Sales Today (for main card)
+            let expensesCashToday = 0; // Cash Expenses Today (for main card)
 
             sales.forEach(s => { 
                 const a = parseFloat(s.montoCobrado)||0; 
-                if(s.date===today) sToday+=a; 
-                if(s.date.startsWith(thisMonth)) sMonth+=a; 
-                if((s.paymentType||'').toLowerCase() === 'efectivo') salesCash += a; // Contar ventas en efectivo
+                sToday += (s.date === today) ? a : 0; 
+                sMonth += (s.date.startsWith(thisMonth)) ? a : 0; 
+                salesTotal += a; 
+                
+                if((s.paymentType||'').toLowerCase() === 'efectivo') {
+                    salesCashTotal += a; 
+                    if(s.date === today) salesCashToday += a;
+                }
             });
+            
             let eToday = 0, eMonth = 0;
             expenses.forEach(e => { 
                 const a = parseFloat(e.gastoTotal)||0; 
                 if(e.date===today) eToday+=a; 
                 if(e.date.startsWith(thisMonth)) eMonth+=a; 
-                if((e.paymentMethod||'').toLowerCase() === 'efectivo') expensesCash += a; // Contar gastos en efectivo
+                expensesTotal += a;
+
+                if((e.paymentMethod||'').toLowerCase() === 'efectivo') {
+                    expensesCashTotal += a; 
+                    if(e.date === today) expensesCashToday += a;
+                }
             });
-            const wTotal = withdrawals.reduce((a,w)=>a+(parseFloat(w.amount)||0),0);
-            const sTotal = sales.reduce((a,s)=>a+(parseFloat(s.montoCobrado)||0),0);
-            const eTotal = expenses.reduce((a,e)=>a+(parseFloat(e.gastoTotal)||0),0);
             
-            const cashOnly = salesCash - expensesCash - wTotal; // NUEVO: Cálculo de Caja Solo Efectivo
+            const wTotal = withdrawals.reduce((a,w)=>a+(parseFloat(w.amount)||0),0); // Total withdrawals (for Modal Net initialization)
+            
+            // NEW: Total withdrawals for TODAY (for main card)
+            const wTotalToday = withdrawals.filter(w => w.date === today).reduce((a,w)=>a+(parseFloat(w.amount)||0),0);
+
+            // Calculations based on scope
+            const cashOnlyTotal = salesCashTotal - expensesCashTotal - wTotal; // Total (used for modal initialization)
+            const cashOnlyToday = salesCashToday - expensesCashToday - wTotalToday; // TODAY's calculation
+
+            // --- DASHBOARD UPDATES ---
 
             $('dashVentasHoy').textContent = fmtMoney(sToday);
             $('dashGastosHoy').textContent = fmtMoney(eToday);
@@ -1219,15 +1239,16 @@
             
             updateProtectedField('cardVentasMes', fmtMoney(sMonth));
             updateProtectedField('cardGananciaMes', fmtMoney(sMonth - eMonth));
-            // ACTUALIZADO: cardCaja ya no es protected field
-            $('cardCaja').textContent = fmtMoney(sTotal - eTotal - wTotal); 
             
-            // Campos en el Modal de Caja (ACTUALIZADO: usan protected field)
-            updateProtectedField('cashModalGross', fmtMoney(sTotal - eTotal));
-            updateProtectedField('cashModalNet', fmtMoney(sTotal - eTotal - wTotal));
+            // CORE CHANGE: Main Card shows TODAY's Cash Flow
+            $('cardCaja').textContent = fmtMoney(cashOnlyToday); 
             
-            // NUEVO: Caja Solo Efectivo
-            $('cashModalOnlyCash').textContent = fmtMoney(cashOnly); 
+            // --- MODAL CAJA UPDATES (Use TOTAL values for initialization) ---
+            updateProtectedField('cashModalGross', fmtMoney(salesTotal - expensesTotal));
+            updateProtectedField('cashModalNet', fmtMoney(salesTotal - expensesTotal - wTotal));
+            
+            // Initialize with total cash flow. This value is overridden in renderWithdrawalsList when the modal is filtered.
+            $('cashModalOnlyCash').textContent = fmtMoney(cashOnlyTotal); 
             
             $('cashModalWithdrawals').textContent = fmtMoney(wTotal);
         }
@@ -1700,10 +1721,10 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // REGISTRO DEL SERVICE WORKER
+            // REGISTRO DEL SERVICE WORKER (Esto debe ser lo primero)
             registerServiceWorker();
 
-            // Lógica para el botón de recargar y actualizar
+            // Lógica para el botón de recargar y actualizar (Usa SKIP_WAITING para forzar el cambio)
             $('reloadUpdateBtn').onclick = () => {
                 // Intentar enviar un mensaje al SW para que salte el estado "waiting"
                 if (navigator.serviceWorker.controller) {
@@ -1916,7 +1937,7 @@
                 showToast("Retiro registrado con éxito", 'success');
             };
             
-            $('saleTime').onchange = (e) => { const [h,m] = e.target.value.split(':').map(Number); const t = h+m/60; $('saleShift').value = (t>=10&&t<16)?'Turno Mañana':((t>=16&&t<=21)?'Turno Tarde':'Fuera de Horario'); };
+            $('saleTime').onchange = (e) => { const [h,m] = e.target.value.split(':').map(Number); const t = h+m/60; $('saleShift').value = (t>=10&&t<16)?'Turno Mañana':((t>=16&&t<21)?'Turno Tarde':'Fuera de Horario'); };
             $('searchSaleInput').oninput = renderSalesList;
             $('searchExpenseInput').oninput = renderExpensesList;
             $('searchInventoryInput').oninput = renderInventory;
@@ -1970,7 +1991,7 @@
             $('openGastosHistoryBtn').onclick = () => { renderExpensesList(); $('expensesHistoryModal').classList.remove('hidden'); };
             $('openClientesBtn').onclick = () => { renderClientsTable(); $('clientsModal').classList.remove('hidden'); };
             
-            // ACTUALIZADO: openCashModal ya no tiene lógica de PIN aquí. Se delega al toggle-privacy de los elementos internos.
+            // openCashModal ya no tiene lógica de PIN aquí. Se delega al toggle-privacy de los elementos internos.
             $('btnOpenCashModal').onclick = () => { 
                 // Resetear filtros antes de abrir para asegurar cálculo correcto
                 if($('searchWithdrawalInput')) $('searchWithdrawalInput').value=''; 
