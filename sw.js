@@ -1,5 +1,5 @@
 // Nombre de la caché para esta versión de la PWA. CAMBIAR EL NÚMERO DE VERSIÓN CADA VEZ QUE HAYA UN CAMBIO.
-const CACHE_NAME = 'systempresas-cache-v2';
+const CACHE_NAME = 'systempresas-cache-v3';
 
 // Lista de archivos esenciales que deben ser precargados e ir a la caché
 // He actualizado las URLs de Firebase a la versión 10.8.0
@@ -7,17 +7,17 @@ const urlsToCache = [
 	'/',
 	'/index.html', // Tu archivo principal
 	'/manifest.json',
-    '/sw.js', // Incluir el service worker para que se pueda actualizar
+    '/sw.js', // Incluir el service worker para que se pueda actualizar
 	// Rutas de íconos (asumiendo que existen en la raíz)
 	'/logo192.png',	
 	'/icon512.png',
 	// Enlaces a las librerías externas que se usan:
 	'https://cdn.tailwindcss.com',
 	'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-    'https://cdn.jsdelivr.net/npm/chart.js',
-    'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
-    'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js',
-    'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js'
+    'https://cdn.jsdelivr.net/npm/chart.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js'
 ];
 
 // Instalación del Service Worker
@@ -91,7 +91,7 @@ self.addEventListener('fetch', event => {
 					.catch(() => {
 						console.error(`[Service Worker] Error al obtener y no está en caché: ${event.request.url}`);
 						// Podrías devolver una página de fallback si es necesario
-						// return caches.match('/offline.html'); 
+						// return caches.match('/offline.html'); 
 					});
 			})
 	);
@@ -99,7 +99,7 @@ self.addEventListener('fetch', event => {
 
 // Listener para forzar la activación (utilizado por index.html para recargar)
 self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
