@@ -11,6 +11,7 @@ const urlsToCache = [
 	// Rutas de íconos (asumiendo que existen en la raíz)
 	'/logo192.png',	
 	'/icon512.png',
+	'/favicon.png',
 	// Enlaces a las librerías externas que se usan:
 	'https://cdn.tailwindcss.com',
 	'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
