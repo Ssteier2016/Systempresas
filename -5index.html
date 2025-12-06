@@ -2287,35 +2287,35 @@ function renderProfitChart() {
         }
     });
 }
+function renderInventoryChart() {
+    const ctx = document.getElementById('inventoryChart');
+    if (!ctx || $('inventoryChartWrapper').classList.contains('hidden')) return;
+    if (inventoryChart) { inventoryChart.destroy(); inventoryChart = null; }
 
-        function renderInventoryChart() {
-            const ctx = document.getElementById('inventoryChart');
-            if (!ctx || $('inventoryChartWrapper').classList.contains('hidden')) return;
-            if (inventoryChart) { inventoryChart.destroy(); inventoryChart = null; }
+    const typeCounts = {};
+    currentFilteredInventory.forEach(p => {
+        const t = p.prodType || 'Sin Tipo';
+        typeCounts[t] = (typeCounts[t] || 0) + parseInt(p.stock || 0);
+    });
 
-            const typeCounts = {};
-            currentFilteredInventory.forEach(p => {
-                const t = p.prodType || 'Sin Tipo';
-                typeCounts[t] = (typeCounts[t] || 0) + parseInt(p.stock || 0);
-            });
-
-            inventoryChart = new Chart(ctx, {
-                type: 'doughnut',
-                 { 
-                    labels: Object.keys(typeCounts), 
-                    datasets: [{ 
-                         Object.values(typeCounts), 
-                        backgroundColor: ['#3b82f6', '#f97316', '#10b981', '#6366f1', '#8b5cf6'], 
-                        borderWidth: 0 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { position: 'right' } } 
-                }
-            });
+    inventoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { 
+            labels: Object.keys(typeCounts), 
+            datasets: [{ 
+                data: Object.values(typeCounts), 
+                backgroundColor: ['#3b82f6', '#f97316', '#10b981', '#6366f1', '#8b5cf6'], 
+                borderWidth: 0 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { position: 'right' } } 
         }
+    });
+}
+        
 
         // === RENDER FUNCTIONS ===
         function renderProfitReport() {
