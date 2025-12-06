@@ -2192,7 +2192,7 @@
     reversedList.forEach(e => {
         const amount = parseFloat(e.gastoTotal) || 0;
         let key;
-        const [y, m d] = e.date.split('-');
+        const [y, m, d] = e.date.split('-');
         key = `\( {d}/ \){m}`;
         groupedData[key] = (groupedData[key] || 0) + amount;
     });
