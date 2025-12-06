@@ -2076,12 +2076,12 @@
             const orderedKeys = Object.keys(groupedData).reverse();
             const dataPoints = orderedKeys.map(k => groupedData[k]);
 
-            salesChart = new Chart(ctx, {
-                type: 'bar',
-                 { 
-                    labels: orderedKeys, 
-                    datasets: [{
-                        label: 'Ventas ($)', 
+            
+               salesChart = new Chart(ctx, {
+    type: 'bar',
+    data: { 
+        labels: orderedKeys, 
+        datasets: [{         label: 'Ventas ($)', 
                          dataPoints, 
                         backgroundColor: 'rgba(59, 130, 246, 0.5)', 
                         borderColor: 'rgb(59, 130, 246)', 
