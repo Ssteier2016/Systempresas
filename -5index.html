@@ -2102,46 +2102,46 @@
         }
 
         function renderPaymentTypeChart() {
-            const ctx = document.getElementById('paymentTypeChart');
-            if (!ctx || $('paymentTypeChartWrapper').classList.contains('hidden')) return;
-            if (paymentTypeChart) { paymentTypeChart.destroy(); paymentTypeChart = null; }
+    const ctx = document.getElementById('paymentTypeChart');
+    if (!ctx || $('paymentTypeChartWrapper').classList.contains('hidden')) return;
+    if (paymentTypeChart) { paymentTypeChart.destroy(); paymentTypeChart = null; }
 
-            const paymentCounts = {};
-            currentFilteredSales.forEach(s => {
-                const type = s.paymentType || 'Sin Pago';
-                const amount = parseFloat(s.montoCobrado) || 0;
-                paymentCounts[type] = (paymentCounts[type] || 0) + amount;
-            });
+    const paymentCounts = {};
+    currentFilteredSales.forEach(s => {
+        const type = s.paymentType || 'Sin Pago';
+        const amount = parseFloat(s.montoCobrado) || 0;
+        paymentCounts[type] = (paymentCounts[type] || 0) + amount;
+    });
 
-            paymentTypeChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    labels: Object.keys(paymentCounts), 
-                    datasets: [{ 
-                         Object.values(paymentCounts), 
-                        backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#6366f1', '#ef4444', '#f59e0b'], 
-                        borderWidth: 0 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'right' },
-                        tooltip: { 
-                            callbacks: { 
-                                label: (context) => {
-                                    let label = context.label || '';
-                                    if (label) label += ': ';
-                                    if (context.parsed) label += fmtMoney(context.parsed);
-                                    return label;
-                                }
-                            }
+    paymentTypeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { 
+            labels: Object.keys(paymentCounts), 
+            datasets: [{ 
+                data: Object.values(paymentCounts), 
+                backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#6366f1', '#ef4444', '#f59e0b'], 
+                borderWidth: 0 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { position: 'right' },
+                tooltip: { 
+                    callbacks: { 
+                        label: (context) => {
+                            let label = context.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed) label += fmtMoney(context.parsed);
+                            return label;
                         }
-                    } 
+                    }
                 }
-            });
+            } 
         }
+    });
+}
 
         function toggleSalesTimeChart() {
             const timeWrapper = $('salesChartWrapper');
@@ -2183,109 +2183,110 @@
         }
 
         function renderExpensesChart() {
-            const ctx = document.getElementById('expensesChart');
-            if (!ctx || $('expensesChartWrapper').classList.contains('hidden')) return;
-            if (expensesChart) { expensesChart.destroy(); expensesChart = null; }
+    const ctx = document.getElementById('expensesChart');
+    if (!ctx || $('expensesChartWrapper').classList.contains('hidden')) return;
+    if (expensesChart) { expensesChart.destroy(); expensesChart = null; }
 
-            const groupedData = {};
-            const reversedList = [...currentFilteredExpenses].reverse();
-            reversedList.forEach(e => {
-                const amount = parseFloat(e.gastoTotal) || 0;
-                let key;
-                const [y, m, d] = e.date.split('-');
-                key = `${d}/${m}`;
-                groupedData[key] = (groupedData[key] || 0) + amount;
-            });
+    const groupedData = {};
+    const reversedList = [...currentFilteredExpenses].reverse();
+    reversedList.forEach(e => {
+        const amount = parseFloat(e.gastoTotal) || 0;
+        let key;
+        const [y, m d] = e.date.split('-');
+        key = `\( {d}/ \){m}`;
+        groupedData[key] = (groupedData[key] || 0) + amount;
+    });
 
-            const labels = Object.keys(groupedData);
-            const dataPoints = Object.values(groupedData);
+    const labels = Object.keys(groupedData);
+    const dataPoints = Object.values(groupedData);
 
-            expensesChart = new Chart(ctx, {
-                type: 'bar',
-                 { 
-                    labels: labels, 
-                    datasets: [{
-                        label: 'Gastos ($)', 
-                         dataPoints, 
-                        backgroundColor: 'rgba(239, 68, 68, 0.5)', 
-                        borderColor: 'rgb(239, 68, 68)', 
-                        borderWidth: 1, 
-                        borderRadius: 4 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
-                    scales: { 
-                        y: { beginAtZero: true, grid: { display: false } }, 
-                        x: { grid: { display: false } } 
-                    } 
-                }
-            });
+    expensesChart = new Chart(ctx, {
+        type: 'bar',
+        data: { 
+            labels: labels, 
+            datasets: [{
+                label: 'Gastos ($)', 
+                data: dataPoints, 
+                backgroundColor: 'rgba(239, 68, 68, 0.5)', 
+                borderColor: 'rgb(239, 68, 68)', 
+                borderWidth: 1, 
+                borderRadius: 4 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                y: { beginAtZero: true, grid: { display: false } }, 
+                x: { grid: { display: false } } 
+            } 
         }
+    });
+}
 
-        function renderProfitChart() {
-            const ctx = document.getElementById('profitChart');
-            if (!ctx || $('profitChartWrapper').classList.contains('hidden')) return;
-            if (profitChart) { profitChart.destroy(); profitChart = null; }
+        
+function renderProfitChart() {
+    const ctx = document.getElementById('profitChart');
+    if (!ctx || $('profitChartWrapper').classList.contains('hidden')) return;
+    if (profitChart) { profitChart.destroy(); profitChart = null; }
 
-            const salesMap = {};
-            const expensesMap = {};
-            const allDates = new Set();
+    const salesMap = {};
+    const expensesMap = {};
+    const allDates = new Set();
 
-            currentFilteredProfit.sales.forEach(s => { 
-                const d = s.date; 
-                allDates.add(d); 
-                salesMap[d] = (salesMap[d] || 0) + (parseFloat(s.montoCobrado) || 0); 
-            });
-            currentFilteredProfit.expenses.forEach(e => { 
-                const d = e.date; 
-                allDates.add(d); 
-                expensesMap[d] = (expensesMap[d] || 0) + (parseFloat(e.gastoTotal) || 0); 
-            });
+    currentFilteredProfit.sales.forEach(s => { 
+        const d = s.date; 
+        allDates.add(d); 
+        salesMap[d] = (salesMap[d] || 0) + (parseFloat(s.montoCobrado) || 0); 
+    });
+    currentFilteredProfit.expenses.forEach(e => { 
+        const d = e.date; 
+        allDates.add(d); 
+        expensesMap[d] = (expensesMap[d] || 0) + (parseFloat(e.gastoTotal) || 0); 
+    });
 
-            const sortedDates = Array.from(allDates).sort();
-            const labels = sortedDates.map(d => { 
-                const [y, m, day] = d.split('-'); 
-                return `${day}/${m}`; 
-            });
-            const sData = sortedDates.map(d => salesMap[d] || 0);
-            const eData = sortedDates.map(d => expensesMap[d] || 0);
+    const sortedDates = Array.from(allDates).sort();
+    const labels = sortedDates.map(d => { 
+        const [y, m, day] = d.split('-'); 
+        return `\( {day}/ \){m}`; 
+    });
+    const sData = sortedDates.map(d => salesMap[d] || 0);
+    const eData = sortedDates.map(d => expensesMap[d] || 0);
 
-            profitChart = new Chart(ctx, {
-                type: 'line',
-                data: { 
-                    labels: labels, 
-                    datasets: [
-                        { 
-                            label: 'Ventas', 
-                             sData, 
-                            borderColor: 'rgb(34, 197, 94)', 
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)', 
-                            fill: true, 
-                            tension: 0.3 
-                        },
-                        { 
-                            label: 'Gastos', 
-                             eData, 
-                            borderColor: 'rgb(239, 68, 68)', 
-                            backgroundColor: 'transparent', 
-                            borderDash: [5, 5], 
-                            tension: 0.3 
-                        }
-                    ] 
+    profitChart = new Chart(ctx, {
+        type: 'line',
+        data: { 
+            labels: labels, 
+            datasets: [
+                { 
+                    label: 'Ventas', 
+                    data: sData, 
+                    borderColor: 'rgb(34, 197, 94)', 
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)', 
+                    fill: true, 
+                    tension: 0.3 
                 },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { 
-                        y: { beginAtZero: true, grid: { display: false } }, 
-                        x: { grid: { display: false } } 
-                    } 
+                { 
+                    label: 'Gastos', 
+                    data: eData, 
+                    borderColor: 'rgb(239, 68 68)', 
+                    backgroundColor: 'transparent', 
+                    borderDash: [5, 5], 
+                    tension: 0.3 
                 }
-            });
+            ] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            scales: { 
+                y: { beginAtZero: true, grid: { display: false } }, 
+                x: { grid: { display: false } } 
+            } 
         }
+    });
+}
 
         function renderInventoryChart() {
             const ctx = document.getElementById('inventoryChart');
