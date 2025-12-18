@@ -348,68 +348,44 @@
             font-size: 0.7rem;
             margin: 0 1px;
         }
-        /* Toggle switch para fecha automática/manual */
-        .date-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .toggle-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 20px;
-        }
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .toggle-slider {
-            background-color: #3b82f6;
-        }
-        input:checked + .toggle-slider:before {
-            transform: translateX(20px);
-        }
-        .auto-date-btn {
-            background-color: #10b981;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            margin-left: 8px;
-            cursor: pointer;
-        }
-        .auto-date-btn:hover {
-            background-color: #0da271;
+        /* Ajustes para mejor visualización en móvil */
+        @media (max-width: 640px) {
+            body {
+                overflow-x: hidden;
+            }
+            #mainContent {
+                width: 100%;
+                overflow-x: hidden;
+            }
+            .modal-overlay > div {
+                width: 95%;
+                margin: 0 auto;
+                max-height: 95vh;
+            }
+            /* Botones de zoom para móvil */
+            .zoom-controls {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .zoom-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: rgba(59, 130, 246, 0.9);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                cursor: pointer;
+                border: none;
+            }
         }
     </style>
 </head>
@@ -549,601 +525,355 @@
                 </div>
             </div>
         </main>
-  </div>
-  <!-- MODAL EDITAR VENTA -->
-<div id="editSaleModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-            <h2 class="text-xl font-bold">Editar Venta</h2>
-            <button data-close="editSaleModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="editSaleForm" class="p-6 space-y-4">
-            <input type="hidden" id="editSaleId">
-            <div class="date-toggle">
-                <span class="toggle-label">Fecha automática:</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="editSaleAutoDate" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-                <button type="button" id="editSaleSetToday" class="auto-date-btn">Hoy</button>
+    </div>
+
+    <!-- MODAL EDITAR VENTA -->
+    <div id="editSaleModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-xl font-bold">Editar Venta</h2>
+                <button data-close="editSaleModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
-                    <input type="date" id="editSaleDate" class="input-std" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Hora</label>
-                    <input type="time" id="editSaleTime" class="input-std" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Turno</label>
-                    <input type="text" id="editSaleShift" class="input-std bg-gray-100 text-gray-500" readonly>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="relative col-span-1 sm:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">Producto Vendido <span class="text-red-500">*</span></label>
-                    <select id="editSaleProduct" class="input-std" required>
-                        <option value="" disabled>Selecciona un producto</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Cantidad <span class="text-red-500">*</span></label>
-                    <input type="number" id="editSaleQuantity" class="input-std font-bold text-lg text-center" min="1" required>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Encargado</label>
-                    <input type="text" id="editSaleEmployee" list="managerList" class="input-std" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
-                    <div class="flex gap-2">
-                        <input type="number" id="editSaleAmount" step="0.01" class="input-std font-bold text-lg" required>
-                        <button type="button" id="editOpenCalcBtn" class="bg-gray-100 px-3 rounded-lg text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition" title="Calculadora de Porcentajes">
-                            <i class="fas fa-calculator"></i>
-                        </button>
+            <form id="editSaleForm" class="p-6 space-y-4">
+                <input type="hidden" id="editSaleId">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="editSaleDate" class="input-std" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Hora</label>
+                        <input type="time" id="editSaleTime" class="input-std" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Turno</label>
+                        <input type="text" id="editSaleShift" class="input-std bg-gray-100 text-gray-500" readonly>
                     </div>
                 </div>
-            </div>
-            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <label class="block text-sm font-bold text-blue-700 mb-2">Cliente (Opcional)</label>
-                <div class="space-y-3">
-                    <input type="text" id="editSaleClient" list="clientList" class="input-std" placeholder="Nombre">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input type="tel" id="editSaleWhatsapp" class="input-std" placeholder="WhatsApp">
-                        <input type="email" id="editSaleEmail" class="input-std" placeholder="Email">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="relative col-span-1 sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Producto Vendido <span class="text-red-500">*</span></label>
+                        <select id="editSaleProduct" class="input-std" required>
+                            <option value="" disabled>Selecciona un producto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Cantidad <span class="text-red-500">*</span></label>
+                        <input type="number" id="editSaleQuantity" class="input-std font-bold text-lg text-center" min="1" required>
                     </div>
                 </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700">Pago</label>
-                    <div class="flex gap-1">
-                        <input type="text" id="editSalePayment" list="paymentList" class="input-std">
-                        <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('paymentType')">
-                            <i class="fas fa-cog"></i>
-                        </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Encargado</label>
+                        <input type="text" id="editSaleEmployee" list="managerList" class="input-std" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="editSaleAmount" step="0.01" class="input-std font-bold text-lg" required>
+                            <button type="button" id="editOpenCalcBtn" class="bg-gray-100 px-3 rounded-lg text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition" title="Calculadora de Porcentajes">
+                                <i class="fas fa-calculator"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700">Canal</label>
-                    <div class="flex gap-1">
-                        <input type="text" id="editSaleChannel" list="channelList" class="input-std">
-                        <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('salesChannel')">
-                            <i class="fas fa-cog"></i>
-                        </button>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <label class="block text-sm font-bold text-blue-700 mb-2">Cliente (Opcional)</label>
+                    <div class="space-y-3">
+                        <input type="text" id="editSaleClient" list="clientList" class="input-std" placeholder="Nombre">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <input type="tel" id="editSaleWhatsapp" class="input-std" placeholder="WhatsApp">
+                            <input type="email" id="editSaleEmail" class="input-std" placeholder="Email">
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Notas</label>
-                <textarea id="editSaleNotes" rows="2" class="input-std"></textarea>
-            </div>
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Guardar Cambios
-                </button>
-                <button type="button" id="deleteSaleBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Eliminar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDITAR GASTO -->
-<div id="editExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
-        <div class="p-6 border-b flex justify-between items-center">
-            <h2 class="text-xl font-bold">Editar Gasto</h2>
-            <button data-close="editExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="editExpenseForm" class="p-6 space-y-4">
-            <input type="hidden" id="editExpenseId">
-            <div class="date-toggle">
-                <span class="toggle-label">Fecha automática:</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="editExpenseAutoDate" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-                <button type="button" id="editExpenseSetToday" class="auto-date-btn">Hoy</button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
-                    <input type="date" id="editExpenseDate" class="input-std" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
-                    <input type="number" id="editExpenseAmount" step="0.01" class="input-std font-bold text-lg text-red-600" required>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700">Categoría</label>
-                    <div class="flex gap-1">
-                        <input type="text" id="editExpenseCategory" list="categoryList" class="input-std">
-                        <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('category')">
-                            <i class="fas fa-cog"></i>
-                        </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">Pago</label>
+                        <div class="flex gap-1">
+                            <input type="text" id="editSalePayment" list="paymentList" class="input-std">
+                            <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('paymentType')">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">Canal</label>
+                        <div class="flex gap-1">
+                            <input type="text" id="editSaleChannel" list="channelList" class="input-std">
+                            <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('salesChannel')">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                    <input type="text" id="editExpensePaymentMethod" list="expensePaymentList" class="input-std" placeholder="Efectivo, Transferencia..." required>
-                </div>
-            </div>
-            <div class="relative">
-                <label class="block text-sm font-medium text-gray-700">Encargado</label>
-                <div class="flex gap-1">
-                    <input type="text" id="editExpenseManager" list="managerList" class="input-std">
-                    <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('manager')">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Descripción</label>
-                <input type="text" id="editExpenseDesc" class="input-std">
-            </div>
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Guardar Cambios
-                </button>
-                <button type="button" id="deleteExpenseBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Eliminar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDITAR PRODUCTO -->
-<div id="editProductModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-        <div class="p-6 border-b flex justify-between items-center">
-            <h2 class="text-xl font-bold">Editar Producto</h2>
-            <button data-close="editProductModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="editProductForm" class="p-6 space-y-4">
-            <input type="hidden" id="editProductId">
-            <div class="date-toggle">
-                <span class="toggle-label">Fecha automática:</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="editProductAutoDate" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-                <button type="button" id="editProductSetToday" class="auto-date-btn">Hoy</button>
-            </div>
-            <input type="text" id="editProdName" placeholder="Nombre" class="input-std" required>
-            <div class="relative">
-                <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                <div class="flex gap-1">
-                    <input type="text" id="editProdType" list="prodTypeList" class="input-std" required>
-                    <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('prodType')">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Precio ARS</label>
-                    <input type="number" id="editProdPrice" class="input-std">
+                    <label class="block text-sm font-medium text-gray-700">Notas</label>
+                    <textarea id="editSaleNotes" rows="2" class="input-std"></textarea>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Precio USD</label>
-                    <input type="number" id="editProdPriceUsd" class="input-std">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Stock</label>
-                <input type="number" id="editProdStock" class="input-std" required>
-            </div>
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold cursor-pointer">
-                    Guardar Cambios
-                </button>
-                <button type="button" id="deleteProductBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-xl font-bold cursor-pointer">
-                    Eliminar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDITAR MOVIMIENTO DE CAJA -->
-<div id="editCashMovementModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-        <div class="p-6 border-b flex justify-between items-center">
-            <h2 class="text-xl font-bold text-yellow-700">Editar Movimiento de Caja</h2>
-            <button data-close="editCashMovementModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="editCashMovementForm" class="p-6 space-y-4">
-            <input type="hidden" id="editCashMovementId">
-            <input type="hidden" id="editCashMovementType">
-            <div class="date-toggle">
-                <span class="toggle-label">Fecha automática:</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="editCashAutoDate" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-                <button type="button" id="editCashSetToday" class="auto-date-btn">Hoy</button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
-                    <input type="date" id="editCashMovementDate" class="input-std" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Hora</label>
-                    <input type="time" id="editCashMovementTime" class="input-std" required>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Tipo de Movimiento</label>
-                <input type="text" id="editCashMovementTypeDisplay" class="input-std bg-gray-100 text-gray-500" readonly>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
-                    <input type="number" id="editCashMovementAmount" step="0.01" class="input-std font-bold text-lg" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Encargado</label>
-                    <input type="text" id="editCashMovementEmployee" list="managerList" class="input-std" required>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Motivo / Descripción</label>
-                <input type="text" id="editCashMovementNote" class="input-std" required>
-            </div>
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Guardar Cambios
-                </button>
-                <button type="button" id="deleteCashMovementBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Eliminar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDITAR CAJITA -->
-<div id="editCajitaModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-        <div class="p-6 border-b flex justify-between items-center">
-            <h2 class="text-xl font-bold text-purple-700">Editar Cajita</h2>
-            <button data-close="editCajitaModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="editCajitaForm" class="p-6 space-y-4">
-            <input type="hidden" id="editCajitaId">
-            <div class="date-toggle">
-                <span class="toggle-label">Fecha automática:</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="editCajitaAutoDate" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-                <button type="button" id="editCajitaSetToday" class="auto-date-btn">Hoy</button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
-                    <input type="date" id="editCajitaDate" class="input-std" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Hora</label>
-                    <input type="time" id="editCajitaTime" class="input-std" required>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
-                    <input type="number" id="editCajitaAmount" step="0.01" class="input-std font-bold text-lg" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Encargado</label>
-                    <input type="text" id="editCajitaEmployee" list="managerList" class="input-std" required>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Descripción / Nota</label>
-                <input type="text" id="editCajitaNote" class="input-std" required>
-            </div>
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Guardar Cambios
-                </button>
-                <button type="button" id="deleteCajitaBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
-                    Eliminar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-  <!-- REST OF MODALS (v3.9.10 version with minor updates for edit) -->
-<div id="listManagerModal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
-            <h3 class="font-bold text-gray-700">Gestionar Lista</h3>
-            <button data-close="listManagerModal" class="text-gray-400"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="p-4">
-            <p class="text-xs text-gray-500 mb-2">Haz clic en el ícono de basura para **BLOQUEAR** un elemento de las listas desplegables (requiere recarga para aparecer en la lista de bloqueados).</p>
-            <ul id="listManagerItems" class="space-y-2 max-h-60 overflow-y-auto"></ul>
-        </div>
-    </div>
-</div>
-
-<div id="calculatorModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div class="p-4 bg-gray-900 text-white flex justify-between items-center">
-            <h3 class="font-bold text-lg"><i class="fas fa-calculator mr-2"></i> Calculadora</h3>
-            <button data-close="calculatorModal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="p-6 space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Monto Base</label>
-                <input type="number" id="calcBaseAmount" class="input-std font-bold text-lg text-center" step="0.01">
-            </div>
-            <div class="flex gap-2 items-center justify-center">
-                <button id="calcTypeSurcharge" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-blue-100 text-blue-700 font-bold text-sm hover:bg-blue-200 transition ring-2 ring-blue-500">
-                    RECARGO (+)
-                </button>
-                <button id="calcTypeDiscount" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-100 text-gray-600 font-bold text-sm hover:bg-green-100 hover:text-green-700 transition">
-                    DESCUENTO (-)
-                </button>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porcentaje (%)</label>
                 <div class="flex gap-2">
-                    <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=10; updateCalc();">
-                        10%
+                    <button type="submit" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
+                        Guardar Cambios
                     </button>
-                    <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=15; updateCalc();">
-                        15%
+                    <button type="button" id="deleteSaleBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
+                        Eliminar
                     </button>
-                    <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=21; updateCalc();">
-                        21%
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR GASTO -->
+    <div id="editExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">Editar Gasto</h2>
+                <button data-close="editExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editExpenseForm" class="p-6 space-y-4">
+                <input type="hidden" id="editExpenseId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="editExpenseDate" class="input-std" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
+                        <input type="number" id="editExpenseAmount" step="0.01" class="input-std font-bold text-lg text-red-600" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">Categoría</label>
+                        <div class="flex gap-1">
+                            <input type="text" id="editExpenseCategory" list="categoryList" class="input-std">
+                            <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('category')">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                        <input type="text" id="editExpensePaymentMethod" list="expensePaymentList" class="input-std" placeholder="Efectivo, Transferencia..." required>
+                    </div>
+                </div>
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700">Encargado</label>
+                    <div class="flex gap-1">
+                        <input type="text" id="editExpenseManager" list="managerList" class="input-std">
+                        <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('manager')">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                    <input type="text" id="editExpenseDesc" class="input-std">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
+                        Guardar Cambios
                     </button>
-                    <input type="number" id="calcPercentage" class="input-std text-center font-bold" placeholder="0" oninput="updateCalc()">
+                    <button type="button" id="deleteExpenseBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
+                        Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR PRODUCTO -->
+    <div id="editProductModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">Editar Producto</h2>
+                <button data-close="editProductModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editProductForm" class="p-6 space-y-4">
+                <input type="hidden" id="editProductId">
+                <input type="text" id="editProdName" placeholder="Nombre" class="input-std" required>
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                    <div class="flex gap-1">
+                        <input type="text" id="editProdType" list="prodTypeList" class="input-std" required>
+                        <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('prodType')">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Precio ARS</label>
+                        <input type="number" id="editProdPrice" class="input-std">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Precio USD</label>
+                        <input type="number" id="editProdPriceUsd" class="input-std">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Stock</label>
+                    <input type="number" id="editProdStock" class="input-std" required>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold cursor-pointer">
+                        Guardar Cambios
+                    </button>
+                    <button type="button" id="deleteProductBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-xl font-bold cursor-pointer">
+                        Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR MOVIMIENTO DE CAJA -->
+    <div id="editCashMovementModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-yellow-700">Editar Movimiento de Caja</h2>
+                <button data-close="editCashMovementModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editCashMovementForm" class="p-6 space-y-4">
+                <input type="hidden" id="editCashMovementId">
+                <input type="hidden" id="editCashMovementType">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="editCashMovementDate" class="input-std" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Hora</label>
+                        <input type="time" id="editCashMovementTime" class="input-std" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Movimiento</label>
+                    <input type="text" id="editCashMovementTypeDisplay" class="input-std bg-gray-100 text-gray-500" readonly>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
+                        <input type="number" id="editCashMovementAmount" step="0.01" class="input-std font-bold text-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Encargado</label>
+                        <input type="text" id="editCashMovementEmployee" list="managerList" class="input-std" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Motivo / Descripción</label>
+                    <input type="text" id="editCashMovementNote" class="input-std" required>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
+                        Guardar Cambios
+                    </button>
+                    <button type="button" id="deleteCashMovementBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">
+                        Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- REST OF MODALS (v3.9.10 version with minor updates for edit) -->
+    <div id="listManagerModal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="font-bold text-gray-700">Gestionar Lista</h3>
+                <button data-close="listManagerModal" class="text-gray-400"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4">
+                <p class="text-xs text-gray-500 mb-2">Haz clic en el ícono de basura para **BLOQUEAR** un elemento de las listas desplegables (requiere recarga para aparecer en la lista de bloqueados).</p>
+                <ul id="listManagerItems" class="space-y-2 max-h-60 overflow-y-auto"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="calculatorModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 bg-gray-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-calculator mr-2"></i> Calculadora</h3>
+                <button data-close="calculatorModal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Monto Base</label>
+                    <input type="number" id="calcBaseAmount" class="input-std font-bold text-lg text-center" step="0.01">
+                </div>
+                <div class="flex gap-2 items-center justify-center">
+                    <button id="calcTypeSurcharge" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-blue-100 text-blue-700 font-bold text-sm hover:bg-blue-200 transition ring-2 ring-blue-500">
+                        RECARGO (+)
+                    </button>
+                    <button id="calcTypeDiscount" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-100 text-gray-600 font-bold text-sm hover:bg-green-100 hover:text-green-700 transition">
+                        DESCUENTO (-)
+                    </button>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porcentaje (%)</label>
+                    <div class="flex gap-2">
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=10; updateCalc();">
+                            10%
+                        </button>
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=15; updateCalc();">
+                            15%
+                        </button>
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=21; updateCalc();">
+                            21%
+                        </button>
+                        <input type="number" id="calcPercentage" class="input-std text-center font-bold" placeholder="0" oninput="updateCalc()">
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
+                    <div class="text-xs text-gray-400 uppercase font-bold mb-1">Resultado Final</div>
+                    <div id="calcResultDisplay" class="text-3xl font-bold text-gray-800">$0.00</div>
+                </div>
+                <button id="applyCalcResultBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition transform active:scale-95">
+                    Aplicar Resultado
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="newsHistoryModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-bell text-blue-500 mr-2"></i> Historial de Novedades
+                </h2>
+                <button data-close="newsHistoryModal" class="text-gray-400 text-xl cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div id="newsListContainer" class="space-y-3">
+                    <div class="text-center text-gray-400 py-4">No hay novedades registradas.</div>
                 </div>
             </div>
-            <div class="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
-                <div class="text-xs text-gray-400 uppercase font-bold mb-1">Resultado Final</div>
-                <div id="calcResultDisplay" class="text-3xl font-bold text-gray-800">$0.00</div>
+            <div class="p-4 border-t bg-gray-50 text-right">
+                <button data-close="newsHistoryModal" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition">
+                    Cerrar
+                </button>
             </div>
-            <button id="applyCalcResultBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition transform active:scale-95">
-                Aplicar Resultado
-            </button>
         </div>
     </div>
-</div>
 
-<div id="newsHistoryModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
-            <h2 class="text-xl font-bold text-gray-800">
-                <i class="fas fa-bell text-blue-500 mr-2"></i> Historial de Novedades
-            </h2>
-            <button data-close="newsHistoryModal" class="text-gray-400 text-xl cursor-pointer">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4">
-            <div id="newsListContainer" class="space-y-3">
-                <div class="text-center text-gray-400 py-4">No hay novedades registradas.</div>
+    <div id="employeeStatsModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-indigo-800">
+                    <i class="fas fa-user-clock mr-2"></i> Rendimiento y Pagos
+                </h2>
+                <button data-close="employeeStatsModal" class="text-gray-400 text-xl cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-        </div>
-        <div class="p-4 border-t bg-gray-50 text-right">
-            <button data-close="newsHistoryModal" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition">
-                Cerrar
-            </button>
-        </div>
-    </div>
-</div>
-
-<div id="employeeStatsModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl">
-            <h2 class="text-xl font-bold text-indigo-800">
-                <i class="fas fa-user-clock mr-2"></i> Rendimiento y Pagos
-            </h2>
-            <button data-close="employeeStatsModal" class="text-gray-400 text-xl cursor-pointer">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-6 bg-white border-b filter-group">
-            <span class="text-xs text-gray-400 font-bold uppercase mr-1">Filtrar por:</span>
-            <input type="date" id="filterStatsDate" class="input-std w-auto text-sm" title="Seleccionar día específico">
-            <span class="text-xs text-gray-300 mx-1 hidden sm:inline">|</span>
-            <select id="filterStatsMonth" class="input-std w-32 text-sm">
-                <option value="all">Mes: Todos</option>
-                <option value="0">Enero</option>
-                <option value="1">Febrero</option>
-                <option value="2">Marzo</option>
-                <option value="3">Abril</option>
-                <option value="4">Mayo</option>
-                <option value="5">Junio</option>
-                <option value="6">Julio</option>
-                <option value="7">Agosto</option>
-                <option value="8">Septiembre</option>
-                <option value="9">Octubre</option>
-                <option value="10">Noviembre</option>
-                <option value="11">Diciembre</option>
-            </select>
-            <select id="filterStatsYear" class="input-std w-24 text-sm">
-                <option value="all">Año</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-            </select>
-            <button id="applyStatsFilter" class="bg-indigo-600 text-white px-3 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition" title="Aplicar Filtros">
-                <i class="fas fa-filter"></i>
-            </button>
-            <button id="resetStatsFilter" class="bg-gray-100 text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-200 transition" title="Limpiar Filtros">
-                <i class="fas fa-undo"></i>
-            </button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50 sticky top-0">
-                    <tr>
-                        <th class="table-header">Empleado</th>
-                        <th class="table-header text-center">Turnos</th>
-                        <th class="table-header text-center">Horas</th>
-                        <th class="table-header text-right">Comisión Estimada</th>
-                        <th class="table-header text-right">Retiros</th>
-                    </tr>
-                </thead>
-                <tbody id="employeeStatsTableBody" class="bg-white divide-y divide-gray-100"></tbody>
-            </table>
-        </div>
-        <div class="p-4 bg-indigo-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-2"><span class="text-sm text-indigo-800 font-medium">Comisión Est. (Período):</span><span class="text-xl font-bold text-green-600" id="statsTotalCommission">$0.00</span></div>
-            <div class="flex items-center gap-2"><span class="text-sm text-indigo-800 font-medium">Total Retiros (Período):</span><span class="text-xl font-bold text-red-600" id="statsTotalWithdrawals">$0.00</span></div>
-        </div>
-    </div>
-</div>
-
-<div id="tutorialsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
-        <div class="p-6 bg-blue-600 text-white flex justify-between items-center rounded-t-2xl">
-            <h2 class="text-2xl font-bold text-lg sm:text-2xl"><i class="fas fa-graduation-cap mr-2"></i> Tutorial de Uso Rápido</h2>
-            <button data-close="tutorialsModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-6 space-y-8">
-            <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Registro de Transacciones</h3>
-            <div class="border-b pb-4">
-                <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-shopping-cart mr-2"></i> 1. Registrar una Venta</h4>
-                <p class="text-gray-700 mb-3">La función principal es registrar cada venta de forma correcta para calcular comisiones y caja.</p>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-xl border border-blue-200">
-                    <li><span class="font-bold">Acceso:</span> Pulsa el botón grande que dice <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs font-mono">Venta</span> en el Panel de Control.</li>
-                    <li><span class="font-bold">Datos Cruciales:</span>
-                        <ul class="list-disc list-inside ml-5">
-                            <li><span class="font-medium">Monto ($):</span> El valor final cobrado.</li>
-                            <li><span class="font-medium">Producto y Cantidad:</span> Debes seleccionar el producto del **Inventario** y la **Cantidad Vendida** (esto resta del stock).</li>
-                            <li><span class="font-medium">Cliente:</span> Nombre (opcional).</li>
-                            <li><span class="font-medium">Encargado:</span> Tu nombre (¡Crucial para tu comisión!).</li>
-                            <li><span class="font-medium">Pago:</span> Tipo de pago (Efectivo, Tarjeta, Nave, etc.).</li>
-                        </ul>
-                    </li>
-                    <li><span class="font-bold text-red-600">Comisiones:</span> Si la encargada es Yael, se aplica un 3% para pagos con QR, Nave, T. Crédito o T. Débito, y 7% para los demás. Para otros encargados la comisión es 0%.</li>
-                </ul>
-            </div>
-            <div class="border-b pb-4">
-                <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-minus-circle mr-2"></i> 2. Registrar un Gasto</h4>
-                <p class="text-gray-700 mb-3">Si pagas algo del negocio con dinero de la caja, debe quedar registrado como Gasto.</p>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-red-50 p-4 rounded-xl border border-red-200">
-                    <li><span class="font-bold">Acceso:</span> Pulsa el botón rojo <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-mono">Gasto</span>.</li>
-                    <li><span class="font-bold">Monto y Categoría:</span> Indica el monto y selecciona una categoría (ej: 'Mercadería', 'Alquiler').</li>
-                    <li><span class="font-bold">Método de Pago:</span> Indica con qué se pagó (Efectivo, Transferencia, etc.).</li>
-                    <li><span class="font-bold">Efecto:</span> Esto resta del dinero disponible en la <span class="font-bold text-yellow-700">Caja Actual</span>.</li>
-                </ul>
-            </div>
-            <div class="border-b pb-4">
-                <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-box-open mr-2"></i> 3. Agregar/Actualizar Inventario</h4>
-                <p class="text-gray-700 mb-3">Registra nuevos productos o actualiza los existentes para tener control de stock y precios.</p>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-orange-50 p-4 rounded-xl border border-orange-200">
-                    <li><span class="font-bold">Acceso:</span> Pulsa el botón azul <span class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-mono">Producto</span>.</li>
-                    <li><span class="font-bold">Datos:</span> Ingresa el Nombre, Tipo, Precio ARS/USD y el Stock.</li>
-                    <li><span class="font-bold">Visualización:</span> Puedes ver todo el inventario en la tarjeta de <span class="font-bold text-orange-600">Inventario</span>.</li>
-                </ul>
-            </div>
-            <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Historiales y Consultas</h3>
-            <div class="border-b pb-4">
-                <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-history mr-2"></i> 4. Ver Historiales (Ventas, Gastos, Inventario, Clientes)</h4>
-                <p class="text-gray-700 mb-3">Los historiales se acceden haciendo clic en las tarjetas del Panel de Control (ej: 'Ver Ventas', 'Ver Gastos').</p>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <li><span class="font-bold">Uso de Filtros:</span> Todos los historiales tienen campos de filtro (<i class="fas fa-filter"></i>). Puedes filtrar por **Fecha, Mes o Año** y por palabras clave (ej: nombre del cliente o encargado).</li>
-                    <li><span class="font-bold">Gráficos:</span> Tienen un botón para mostrar un gráfico visual de la distribución (por tiempo o tipo de pago/producto).</li>
-                </ul>
-                <h5 class="text-lg font-bold text-blue-600 mt-3"><i class="fas fa-pencil-alt mr-2"></i> ¡Ahora puedes EDITAR y ELIMINAR!</h5>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-blue-100 p-4 rounded-xl border border-blue-200">
-                    <li>Cada fila de los historiales muestra botones de <span class="font-bold">Editar</span> y <span class="font-bold">Eliminar</span>.</li>
-                    <li>Al editar una venta, se recalcula la comisión y se ajusta el stock automáticamente.</li>
-                    <li>Al editar un producto, las ventas futuras usarán los nuevos datos.</li>
-                    <li>Al editar un movimiento de caja (retiro/ajuste), se actualiza el saldo automáticamente.</li>
-                </ul>
-            </div>
-            <div class="border-b pb-4">
-                <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-users-cog mr-2"></i> 5. Sueldos, Horas y Retiros de Empleados</h4>
-                <p class="text-gray-700 mb-3">Esta es una sección privada para ver el rendimiento del equipo y el estado de la Caja.</p>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-indigo-50 p-4 rounded-xl border border-indigo-200">
-                    <li><span class="font-bold">Retiros y Caja:</span>
-                        <ul>
-                            <li>Para ver el detalle de retiros, haz clic en el ícono <i class="fas fa-external-link-alt"></i> en la tarjeta <span class="font-bold text-yellow-700">Caja Actual</span>. Ahí también registras nuevos retiros.</li>
-                            <li><span class="font-bold">NUEVO:</span> Ahora puedes editar y eliminar movimientos de caja directamente desde el historial.</li>
-                        </ul>
-                    </li>
-                    <li><span class="font-bold">Sueldos y Horas:</span>
-                        <ul>
-                            <li>Desde el Menú Lateral, pulsa <span class="font-bold text-indigo-700">Ver Sueldos y Horas</span>.</li>
-                            <li>Aquí verás un resumen de la Comisión Estimada (calculada por el sistema) y el total de Retiros hechos por cada empleado en el período filtrado.</li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4 mt-6">Ajustes y Utilidades</h3>
-            <div class="border-b pb-4">
-                <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-sign-in-alt mr-2"></i> 6. Iniciar/Cerrar Sesión y Perfil</h4>
-                <p class="text-gray-700 mb-3">La aplicación utiliza tu cuenta para guardar tus datos de forma segura. Si ves datos de prueba, inicia sesión.</p>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <li><span class="font-bold">Acceso:</span> Pulsa el ícono de perfil (<i class="fas fa-user-circle"></i>) en la esquina superior derecha.</li>
-                    <li><span class="font-bold">Iniciar Sesión:</span> Usa el botón de Google para iniciar sesión con tu cuenta.</li>
-                </ul>
-            </div>
-            <div class="pb-4">
-                <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lightbulb mr-2"></i> 7. Cambiar Tema (Modo Oscuro/Claro)</h4>
-                <p class="text-gray-700 mb-3">Para mayor comodidad visual, puedes alternar entre el modo claro y oscuro.</p>
-                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <li><span class="font-bold">Ubicación:</span> Pulsa el ícono de la luna (<i class="fas fa-moon"></i>) o sol (<i class="fas fa-sun"></i>) en la barra superior de navegación.</li>
-                    <li>El cambio se guarda automáticamente.</li>
-                </ul>
-            </div>
-        </div>
-        <div class="p-4 border-t bg-gray-50 text-center">
-            <p class="text-xs text-gray-500">¡Recuerda mantener toda la información al día para un cálculo de comisiones perfecto!</p>
-        </div>
-    </div>
-</div>
-
-<div id="gananciasDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-green-50 rounded-t-2xl">
-            <div>
-                <h2 class="text-xl font-bold text-green-800">Historial de Rentabilidad</h2>
-                <div class="text-sm font-medium mt-1" id="profitHeaderSummary">Cargando...</div>
-            </div>
-            <button data-close="gananciasDetailModal" class="text-gray-400 text-xl">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
-            <div class="flex flex-wrap gap-2 items-center">
-                <select id="filterProfitMonth" class="input-std w-32 text-sm">
+            <div class="p-6 bg-white border-b filter-group">
+                <span class="text-xs text-gray-400 font-bold uppercase mr-1">Filtrar por:</span>
+                <input type="date" id="filterStatsDate" class="input-std w-auto text-sm" title="Seleccionar día específico">
+                <span class="text-xs text-gray-300 mx-1 hidden sm:inline">|</span>
+                <select id="filterStatsMonth" class="input-std w-32 text-sm">
                     <option value="all">Mes: Todos</option>
                     <option value="0">Enero</option>
                     <option value="1">Febrero</option>
@@ -1158,402 +888,155 @@
                     <option value="10">Noviembre</option>
                     <option value="11">Diciembre</option>
                 </select>
-                <select id="filterProfitYear" class="input-std w-24 text-sm">
-                    <option value="all">Año: Todos</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                </select>
-                <button id="applyProfitFilterBtn" class="bg-green-600 text-white px-3 py-2 rounded-lg">
-                    <i class="fas fa-filter"></i>
-                </button>
-            </div>
-            <button onclick="toggleChart('profit')" class="text-green-600 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition text-sm font-bold flex items-center gap-2">
-                <i class="fas fa-chart-area"></i> Ver Gráfico
-            </button>
-        </div>
-        <div id="profitChartWrapper" class="hidden p-4 bg-white border-b">
-            <div style="height: 220px; width: 100%; position: relative;">
-                <canvas id="profitChart"></canvas>
-            </div>
-        </div>
-        <div class="overflow-y-auto flex-1 p-0 mobile-scroll-x">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50 sticky top-0">
-                    <tr>
-                        <th class="table-header">Fecha</th>
-                        <th class="table-header text-right">Ventas</th>
-                        <th class="table-header text-right">Gastos</th>
-                        <th class="table-header text-right">Balance Neto</th>
-                    </tr>
-                </thead>
-                <tbody id="profitTableBody" class="bg-white divide-y divide-gray-100"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL HISTORIAL VENTAS (with edit/delete) -->
-<div id="salesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl">
-            <div>
-                <h2 class="text-xl font-bold text-blue-700">Historial de Ventas</h2>
-                <p class="text-sm text-blue-500" id="salesHistoryTotalLabel">Total: $0.00</p>
-            </div>
-            <button data-close="salesHistoryModal" class="text-gray-400 text-xl">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
-            <div class="flex flex-wrap gap-2 items-center">
-                <input type="text" id="searchSaleInput" placeholder="Cliente o Empleado..." class="input-std w-full sm:w-40">
-                <div class="border-l pl-2 flex flex-wrap gap-2 items-center">
-                    <span class="text-xs text-gray-400 font-bold">FECHA:</span>
-                    <input type="date" id="filterSaleDate" class="input-std w-auto text-sm">
-                    <span class="text-xs text-gray-400">O</span>
-                    <select id="filterSaleMonth" class="input-std w-32 text-sm">
-                        <option value="all">Mes: Todos</option>
-                        <option value="0">Enero</option>
-                        <option value="1">Febrero</option>
-                        <option value="2">Marzo</option>
-                        <option value="3">Abril</option>
-                        <option value="4">Mayo</option>
-                        <option value="5">Junio</option>
-                        <option value="6">Julio</option>
-                        <option value="7">Agosto</option>
-                        <option value="8">Septiembre</option>
-                        <option value="9">Octubre</option>
-                        <option value="10">Noviembre</option>
-                        <option value="11">Diciembre</option>
-                    </select>
-                    <select id="filterSaleYear" class="input-std w-24 text-sm">
-                        <option value="all">Año</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                    </select>
-                    <button id="applySalesFilter" class="bg-blue-600 text-white px-3 py-2 rounded-lg">
-                        <i class="fas fa-filter"></i>
-                    </button>
-                    <button id="resetSalesFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="flex gap-2 mt-2 sm:mt-0 w-full justify-end sm:w-auto">
-                <button id="toggleSalesTimeChart" class="flex-1 sm:flex-initial text-blue-600 border border-blue-200 px-3 py-1 rounded-lg hover:bg-blue-50 transition text-sm font-bold flex items-center justify-center gap-2">
-                    <i class="fas fa-chart-bar"></i> Ventas por Tiempo
-                </button>
-                <button id="togglePaymentTypeChart" class="flex-1 sm:flex-initial text-gray-600 border border-gray-200 px-3 py-1 rounded-lg hover:bg-gray-50 transition text-sm font-bold flex items-center justify-center gap-2">
-                    <i class="fas fa-chart-pie"></i> Pagos por Tipo
-                </button>
-            </div>
-        </div>
-        <div id="salesChartWrapper" class="hidden p-4 bg-white border-b">
-            <div class="flex justify-center mb-2 gap-2">
-                <button class="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600 font-bold hover:bg-blue-200 transition" onclick="updateChartMode('daily')">
-                    Diario
-                </button>
-                <button class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onclick="updateChartMode('monthly')">
-                    Mensual
-                </button>
-                <button class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onclick="updateChartMode('yearly')">
-                    Anual
-                </button>
-            </div>
-            <div style="height: 200px; position: relative; width: 100%;">
-                <canvas id="salesChart"></canvas>
-            </div>
-        </div>
-        <div id="paymentTypeChartWrapper" class="hidden p-4 bg-white border-b flex justify-center">
-            <div style="height: 250px; width: 100%; max-width: 400px; position: relative;">
-                <canvas id="paymentTypeChart"></canvas>
-            </div>
-        </div>
-        <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50 sticky top-0">
-                    <tr>
-                        <th class="table-header">Fecha / Hora</th>
-                        <th class="table-header">Cliente</th>
-                        <th class="table-header">Producto</th>
-                        <th class="table-header">Cantidad</th>
-                        <th class="table-header">Pago</th>
-                        <th class="table-header">Encargado</th>
-                        <th class="table-header text-right">Monto</th>
-                        <th class="table-header text-center w-28">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="salesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-  <!-- MODAL HISTORIAL GASTOS (with edit/delete) -->
-<div id="expensesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center">
-            <h2 class="text-xl font-bold text-red-600">Historial de Gastos</h2>
-            <p class="text-sm text-red-500" id="expensesHistoryTotalLabel">Total: $0.00</p>
-            <button data-close="expensesHistoryModal" class="text-gray-400 text-xl">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-4 bg-gray-50 border-b flex flex-wrap gap-2 items-center justify-between">
-            <div class="flex flex-wrap gap-2 items-center">
-                <input type="text" id="searchExpenseInput" placeholder="Cat. o Encargado..." class="input-std w-full sm:w-40">
-                <div class="border-l pl-2 flex flex-wrap gap-2 items-center">
-                    <input type="date" id="filterExpenseDate" class="input-std w-auto text-sm">
-                    <select id="filterExpenseMonth" class="input-std w-32 text-sm">
-                        <option value="all">Mes: Todos</option>
-                        <option value="0">Enero</option>
-                        <option value="1">Febrero</option>
-                        <option value="2">Marzo</option>
-                        <option value="3">Abril</option>
-                        <option value="4">Mayo</option>
-                        <option value="5">Junio</option>
-                        <option value="6">Julio</option>
-                        <option value="7">Agosto</option>
-                        <option value="8">Septiembre</option>
-                        <option value="9">Octubre</option>
-                        <option value="10">Noviembre</option>
-                        <option value="11">Diciembre</option>
-                    </select>
-                    <select id="filterExpenseYear" class="input-std w-24 text-sm">
-                        <option value="all">Año</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                    </select>
-                    <button id="applyExpenseFilter" class="bg-red-500 text-white px-3 py-2 rounded-lg">
-                        <i class="fas fa-filter"></i>
-                    </button>
-                    <button id="resetExpenseFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                </div>
-            </div>
-            <button onclick="toggleChart('expenses')" class="text-red-600 border border-red-200 px-3 py-1 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center gap-2 mt-2 sm:mt-0">
-                <i class="fas fa-chart-bar"></i> Ver Gráfico
-            </button>
-        </div>
-        <div id="expensesChartWrapper" class="hidden p-4 bg-white border-b">
-            <div style="height: 200px; position: relative; width: 100%;">
-                <canvas id="expensesChart"></canvas>
-            </div>
-        </div>
-        <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="table-header">Fecha</th>
-                        <th class="table-header">Categoría</th>
-                        <th class="table-header">Pago</th>
-                        <th class="table-header">Encargado</th>
-                        <th class="table-header text-right">Monto</th>
-                        <th class="table-header text-center w-28">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="expensesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL CAJA ACTUAL (v3.9.14, con hora automática, editar/eliminar y CAJITA) -->
-<div id="cashDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-yellow-50 rounded-t-2xl">
-            <h2 class="text-xl font-bold text-yellow-700">Arqueo de Caja</h2>
-            <button data-close="cashDetailModal" class="text-gray-400 text-xl cursor-pointer">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-6 border-b grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-            <div class="bg-yellow-100 p-3 rounded-lg border-2 border-yellow-300">
-                <div class="text-xs text-yellow-700 font-bold uppercase">Caja SÓLO EFECTIVO (FILTRADO)</div>
-                <div class="text-lg font-bold text-yellow-800" id="cashModalOnlyCash">$0.00</div>
-            </div>
-            <div class="bg-green-50 p-3 rounded-lg relative">
-                <div class="text-xs text-green-600 font-bold uppercase">Ganancia Bruta</div>
-                <div class="text-lg font-bold text-green-800 protected-field" id="cashModalGross" data-toggle-privacy="cashGross">******</div>
-                <button class="absolute top-1 right-1 text-gray-400 hover:text-green-600 cursor-pointer" data-toggle-privacy="cashGross">
-                    <i class="fas fa-eye text-xs"></i>
-                </button>
-            </div>
-            <div class="bg-red-50 p-3 rounded-lg">
-                <div class="text-xs text-red-600 font-bold uppercase">Retiros Manuales</div>
-                <div class="text-lg font-bold text-red-800" id="cashModalWithdrawals">$0.00</div>
-            </div>
-            <div class="bg-blue-50 p-3 rounded-lg">
-                <div class="text-xs text-blue-600 font-bold uppercase">Ajustes Positivos</div>
-                <div class="text-lg font-bold text-blue-800" id="cashModalAdjustments">$0.00</div>
-            </div>
-            <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200 relative">
-                <div class="text-xs text-yellow-600 font-bold uppercase">En Caja Real</div>
-                <div class="2xl font-bold text-yellow-800 protected-field" id="cashModalNet" data-toggle-privacy="cashNet">******</div>
-                <button class="absolute top-1 right-1 text-gray-400 hover:text-yellow-600 cursor-pointer" data-toggle-privacy="cashNet">
-                    <i class="fas fa-eye text-xs"></i>
-                </button>
-            </div>
-        </div>
-        <div class="p-4 bg-yellow-50 border-b flex flex-wrap gap-2 items-center">
-            <input type="text" id="searchCashInput" placeholder="Buscar empleado o motivo..." class="input-std w-full sm:w-40">
-            <div class="border-l border-yellow-200 pl-2 flex flex-wrap gap-2 items-center">
-                <span class="text-xs text-yellow-700 font-bold">FECHA:</span>
-                <input type="date" id="filterCashDate" class="input-std w-auto text-sm">
-                <span class="text-xs text-yellow-700">O</span>
-                <select id="filterCashMonth" class="input-std w-32 text-sm">
-                    <option value="all">Mes: Todos</option>
-                    <option value="0">Enero</option>
-                    <option value="1">Febrero</option>
-                    <option value="2">Marzo</option>
-                    <option value="3">Abril</option>
-                    <option value="4">Mayo</option>
-                    <option value="5">Junio</option>
-                    <option value="6">Julio</option>
-                    <option value="7">Agosto</option>
-                    <option value="8">Septiembre</option>
-                    <option value="9">Octubre</option>
-                    <option value="10">Noviembre</option>
-                    <option value="11">Diciembre</option>
-                </select>
-                <select id="filterCashYear" class="input-std w-24 text-sm">
+                <select id="filterStatsYear" class="input-std w-24 text-sm">
                     <option value="all">Año</option>
                     <option value="2025">2025</option>
                     <option value="2024">2024</option>
                 </select>
-                <button id="applyCashFilter" class="bg-yellow-600 text-white px-3 py-2 rounded-lg" title="Aplicar filtro">
+                <button id="applyStatsFilter" class="bg-indigo-600 text-white px-3 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition" title="Aplicar Filtros">
                     <i class="fas fa-filter"></i>
                 </button>
-                <button id="resetCashFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300" title="Borrar filtro">
+                <button id="resetStatsFilter" class="bg-gray-100 text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-200 transition" title="Limpiar Filtros">
                     <i class="fas fa-undo"></i>
                 </button>
             </div>
-            <div class="ml-auto text-sm font-bold text-yellow-800 border-l border-yellow-300 pl-3 pt-2 sm:pt-0 w-full sm:w-auto text-center sm:text-right">
-                Flujo Cash Filtrado: <span id="cashFilteredTotal" class="text-yellow-800">$0.00</span>
+            <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="table-header">Empleado</th>
+                            <th class="table-header text-center">Turnos</th>
+                            <th class="table-header text-center">Horas</th>
+                            <th class="table-header text-right">Comisión Estimada</th>
+                            <th class="table-header text-right">Retiros</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeStatsTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
             </div>
-        </div>
-        
-        <!-- NUEVA SECCIÓN PARA CAJITA -->
-        <div class="p-4 bg-purple-50 border-b">
-            <h3 class="font-bold text-purple-700 mb-3"><i class="fas fa-piggy-bank mr-2"></i> Cajitas / Tarjetas</h3>
-            <div id="cajitaStats" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div class="bg-purple-100 p-3 rounded-lg border border-purple-200">
-                    <div class="text-xs text-purple-600 font-bold uppercase">Total en Cajitas</div>
-                    <div class="text-lg font-bold text-purple-800" id="totalCajitas">$0.00</div>
-                </div>
-                <div class="bg-purple-100 p-3 rounded-lg border border-purple-200">
-                    <div class="text-xs text-purple-600 font-bold uppercase">Cantidad de Cajitas</div>
-                    <div class="text-lg font-bold text-purple-800" id="cantidadCajitas">0</div>
-                </div>
-                <div class="bg-purple-100 p-3 rounded-lg border border-purple-200">
-                    <div class="text-xs text-purple-600 font-bold uppercase">Última Cajita</div>
-                    <div class="text-lg font-bold text-purple-800" id="ultimaCajita">-</div>
-                </div>
+            <div class="p-4 bg-indigo-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2"><span class="text-sm text-indigo-800 font-medium">Comisión Est. (Período):</span><span class="text-xl font-bold text-green-600" id="statsTotalCommission">$0.00</span></div>
+                <div class="flex items-center gap-2"><span class="text-sm text-indigo-800 font-medium">Total Retiros (Período):</span><span class="text-xl font-bold text-red-600" id="statsTotalWithdrawals">$0.00</span></div>
             </div>
-            <form id="cajitaForm" class="bg-purple-50 p-3 rounded-xl border border-purple-200 space-y-2">
-                <h4 class="font-bold text-purple-700"><i class="fas fa-plus-circle mr-1"></i> Nueva Cajita</h4>
-                <div class="flex gap-2">
-                    <input type="number" id="cjAmount" placeholder="Monto (+)" class="input-std w-32 text-purple-600 font-bold" required>
-                    <input type="text" id="cjEmployee" list="managerList" placeholder="Encargado..." class="input-std flex-1" required>
-                </div>
-                <input type="text" id="cjNote" placeholder="Descripción de la cajita..." class="input-std">
-                <button type="submit" class="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600">
-                    <i class="fas fa-piggy-bank mr-2"></i> Guardar Cajita
-                </button>
-            </form>
-        </div>
-        
-        <div class="p-4 bg-gray-100 border-b grid grid-cols-1 md:grid-cols-2 gap-4">
-            <form id="withdrawalForm" class="bg-red-50 p-3 rounded-xl border border-red-200 space-y-2">
-                <h3 class="font-bold text-red-700"><i class="fas fa-sign-out-alt mr-1"></i> Retiro de Caja (Egreso)</h3>
-                <div class="flex gap-2">
-                    <input type="number" id="wdAmount" placeholder="Monto (-)" class="input-std w-32 text-red-600 font-bold" required>
-                    <select id="wdType" class="input-std w-40" required>
-                        <option value="Empleado">Retiro a Empleado</option>
-                        <option value="Cajita">Retiro a Cajita</option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <input type="text" id="wdEmployee" list="managerList" placeholder="Empleado..." class="input-std flex-1" required>
-                </div>
-                <input type="text" id="wdNote" placeholder="Motivo del retiro..." class="input-std">
-                <button type="submit" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">
-                    Registrar Retiro
-                </button>
-            </form>
-            <form id="adjustmentForm" class="bg-green-50 p-3 rounded-xl border border-green-200 space-y-2">
-                <h3 class="font-bold text-green-700"><i class="fas fa-hand-holding-usd mr-1"></i> Ajuste Manual (Ingreso / Egreso)</h3>
-                <div class="flex gap-2">
-                    <input type="number" id="adjAmount" placeholder="Monto (+/-)" class="input-std w-32 font-bold" required>
-                    <input type="text" id="adjEmployee" list="managerList" placeholder="Encargado..." class="input-std flex-1" required>
-                </div>
-                <input type="text" id="adjNote" placeholder="Motivo del ajuste (ej: 'Error en conteo', 'Fondo inicial')..." class="input-std" required>
-                <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">
-                    Guardar Ajuste
-                </button>
-            </form>
-        </div>
-        
-        <!-- PESTAÑAS PARA RETIROS Y CAJITAS -->
-        <div class="border-b">
-            <div class="flex">
-                <button id="tabRetiros" class="flex-1 py-3 text-center font-bold text-yellow-700 border-b-2 border-yellow-500 bg-yellow-50">
-                    <i class="fas fa-money-bill-wave mr-2"></i> Retiros y Ajustes
-                </button>
-                <button id="tabCajitas" class="flex-1 py-3 text-center font-bold text-purple-600 border-b border-gray-200 hover:bg-purple-50">
-                    <i class="fas fa-piggy-bank mr-2"></i> Cajitas / Tarjetas
-                </button>
-            </div>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x" id="retirosTabContent">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50 sticky top-0">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha / Hora</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Movimiento</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Encargado / Motivo</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto ($)</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase w-28">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="cashMovementsTableBody" class="bg-white divide-y divide-gray-100"></tbody>
-            </table>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x hidden" id="cajitasTabContent">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-purple-50 sticky top-0">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase">Fecha / Hora</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase">Encargado</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase">Descripción</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-purple-700 uppercase">Monto ($)</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-purple-700 uppercase w-28">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="cajitasTableBody" class="bg-white divide-y divide-gray-100"></tbody>
-            </table>
         </div>
     </div>
-</div>
 
-<!-- MODAL INVENTARIO (with edit/delete) -->
-<div id="inventoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-orange-50 rounded-t-2xl">
-            <h2 class="text-xl font-bold text-orange-600">Inventario</h2>
-            <button data-close="inventoryModal" class="text-gray-400 text-xl">
-                <i class="fas fa-times"></i>
-            </button>
+    <div id="tutorialsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="p-6 bg-blue-600 text-white flex justify-between items-center rounded-t-2xl">
+                <h2 class="text-2xl font-bold text-lg sm:text-2xl"><i class="fas fa-graduation-cap mr-2"></i> Tutorial de Uso Rápido</h2>
+                <button data-close="tutorialsModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Registro de Transacciones</h3>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-shopping-cart mr-2"></i> 1. Registrar una Venta</h4>
+                    <p class="text-gray-700 mb-3">La función principal es registrar cada venta de forma correcta para calcular comisiones y caja.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-xl border border-blue-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón grande que dice <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs font-mono">Venta</span> en el Panel de Control.</li>
+                        <li><span class="font-bold">Datos Cruciales:</span>
+                            <ul class="list-disc list-inside ml-5">
+                                <li><span class="font-medium">Monto ($):</span> El valor final cobrado.</li>
+                                <li><span class="font-medium">Producto y Cantidad:</span> Debes seleccionar el producto del **Inventario** y la **Cantidad Vendida** (esto resta del stock).</li>
+                                <li><span class="font-medium">Cliente:</span> Nombre (opcional).</li>
+                                <li><span class="font-medium">Encargado:</span> Tu nombre (¡Crucial para tu comisión!).</li>
+                                <li><span class="font-medium">Pago:</span> Tipo de pago (Efectivo, Tarjeta, Nave, etc.).</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-bold text-red-600">Comisiones:</span> Si la encargada es Yael, se aplica un 3% para pagos con QR, Nave, T. Crédito o T. Débito, y 7% para los demás. Para otros encargados la comisión es 0%.</li>
+                    </ul>
+                </div>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-minus-circle mr-2"></i> 2. Registrar un Gasto</h4>
+                    <p class="text-gray-700 mb-3">Si pagas algo del negocio con dinero de la caja, debe quedar registrado como Gasto.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-red-50 p-4 rounded-xl border border-red-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón rojo <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-mono">Gasto</span>.</li>
+                        <li><span class="font-bold">Monto y Categoría:</span> Indica el monto y selecciona una categoría (ej: 'Mercadería', 'Alquiler').</li>
+                        <li><span class="font-bold">Método de Pago:</span> Indica con qué se pagó (Efectivo, Transferencia, etc.).</li>
+                        <li><span class="font-bold">Efecto:</span> Esto resta del dinero disponible en la <span class="font-bold text-yellow-700">Caja Actual</span>.</li>
+                    </ul>
+                </div>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-box-open mr-2"></i> 3. Agregar/Actualizar Inventario</h4>
+                    <p class="text-gray-700 mb-3">Registra nuevos productos o actualiza los existentes para tener control de stock y precios.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-orange-50 p-4 rounded-xl border border-orange-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón azul <span class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-mono">Producto</span>.</li>
+                        <li><span class="font-bold">Datos:</span> Ingresa el Nombre, Tipo, Precio ARS/USD y el Stock.</li>
+                        <li><span class="font-bold">Visualización:</span> Puedes ver todo el inventario en la tarjeta de <span class="font-bold text-orange-600">Inventario</span>.</li>
+                    </ul>
+                </div>
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Historiales y Consultas</h3>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-history mr-2"></i> 4. Ver Historiales (Ventas, Gastos, Inventario, Clientes)</h4>
+                    <p class="text-gray-700 mb-3">Los historiales se acceden haciendo clic en las tarjetas del Panel de Control (ej: 'Ver Ventas', 'Ver Gastos').</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Uso de Filtros:</span> Todos los historiales tienen campos de filtro (<i class="fas fa-filter"></i>). Puedes filtrar por **Fecha, Mes o Año** y por palabras clave (ej: nombre del cliente o encargado).</li>
+                        <li><span class="font-bold">Gráficos:</span> Tienen un botón para mostrar un gráfico visual de la distribución (por tiempo o tipo de pago/producto).</li>
+                    </ul>
+                    <h5 class="text-lg font-bold text-blue-600 mt-3"><i class="fas fa-pencil-alt mr-2"></i> ¡Ahora puedes EDITAR y ELIMINAR!</h5>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-blue-100 p-4 rounded-xl border border-blue-200">
+                        <li>Cada fila de los historiales muestra botones de <span class="font-bold">Editar</span> y <span class="font-bold">Eliminar</span>.</li>
+                        <li>Al editar una venta, se recalcula la comisión y se ajusta el stock automáticamente.</li>
+                        <li>Al editar un producto, las ventas futuras usarán los nuevos datos.</li>
+                        <li>Al editar un movimiento de caja (retiro/ajuste), se actualiza el saldo automáticamente.</li>
+                    </ul>
+                </div>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-users-cog mr-2"></i> 5. Sueldos, Horas y Retiros de Empleados</h4>
+                    <p class="text-gray-700 mb-3">Esta es una sección privada para ver el rendimiento del equipo y el estado de la Caja.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                        <li><span class="font-bold">Retiros y Caja:</span>
+                            <ul>
+                                <li>Para ver el detalle de retiros, haz clic en el ícono <i class="fas fa-external-link-alt"></i> en la tarjeta <span class="font-bold text-yellow-700">Caja Actual</span>. Ahí también registras nuevos retiros.</li>
+                                <li><span class="font-bold">NUEVO:</span> Ahora puedes editar y eliminar movimientos de caja directamente desde el historial.</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-bold">Sueldos y Horas:</span>
+                            <ul>
+                                <li>Desde el Menú Lateral, pulsa <span class="font-bold text-indigo-700">Ver Sueldos y Horas</span>.</li>
+                                <li>Aquí verás un resumen de la Comisión Estimada (calculada por el sistema) y el total de Retiros hechos por cada empleado en el período filtrado.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4 mt-6">Ajustes y Utilidades</h3>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-sign-in-alt mr-2"></i> 6. Iniciar/Cerrar Sesión y Perfil</h4>
+                    <p class="text-gray-700 mb-3">La aplicación utiliza tu cuenta para guardar tus datos de forma segura. Si ves datos de prueba, inicia sesión.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el ícono de perfil (<i class="fas fa-user-circle"></i>) en la esquina superior derecha.</li>
+                        <li><span class="font-bold">Iniciar Sesión:</span> Usa el botón de Google para iniciar sesión con tu cuenta.</li>
+                    </ul>
+                </div>
+                <div class="pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lightbulb mr-2"></i> 7. Cambiar Tema (Modo Oscuro/Claro)</h4>
+                    <p class="text-gray-700 mb-3">Para mayor comodidad visual, puedes alternar entre el modo claro y oscuro.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Ubicación:</span> Pulsa el ícono de la luna (<i class="fas fa-moon"></i>) o sol (<i class="fas fa-sun"></i>) en la barra superior de navegación.</li>
+                        <li>El cambio se guarda automáticamente.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 text-center">
+                <p class="text-xs text-gray-500">¡Recuerda mantener toda la información al día para un cálculo de comisiones perfecto!</p>
+            </div>
         </div>
-        <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
-            <div class="flex flex-wrap gap-2 items-center">
-                <input type="text" id="searchInventoryInput" placeholder="Buscar producto..." class="input-std w-full sm:w-40">
-                <div class="border-l pl-2 flex flex-wrap gap-2 items-center">
-                    <span class="text-xs text-gray-400 font-bold">CREADO:</span>
-                    <input type="date" id="filterInvDate" class="input-std w-auto text-sm">
-                    <select id="filterInvMonth" class="input-std w-32 text-sm">
+    </div>
+
+    <div id="gananciasDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-green-50 rounded-t-2xl">
+                <div>
+                    <h2 class="text-xl font-bold text-green-800">Historial de Rentabilidad</h2>
+                    <div class="text-sm font-medium mt-1" id="profitHeaderSummary">Cargando...</div>
+                </div>
+                <button data-close="gananciasDetailModal" class="text-gray-400 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <select id="filterProfitMonth" class="input-std w-32 text-sm">
                         <option value="all">Mes: Todos</option>
                         <option value="0">Enero</option>
                         <option value="1">Febrero</option>
@@ -1568,46 +1051,395 @@
                         <option value="10">Noviembre</option>
                         <option value="11">Diciembre</option>
                     </select>
-                    <select id="filterInvYear" class="input-std w-24 text-sm">
+                    <select id="filterProfitYear" class="input-std w-24 text-sm">
+                        <option value="all">Año: Todos</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                    <button id="applyProfitFilterBtn" class="bg-green-600 text-white px-3 py-2 rounded-lg">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+                <button onclick="toggleChart('profit')" class="text-green-600 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition text-sm font-bold flex items-center gap-2">
+                    <i class="fas fa-chart-area"></i> Ver Gráfico
+                </button>
+            </div>
+            <div id="profitChartWrapper" class="hidden p-4 bg-white border-b">
+                <div style="height: 220px; width: 100%; position: relative;">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+            <div class="overflow-y-auto flex-1 p-0 mobile-scroll-x">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="table-header">Fecha</th>
+                            <th class="table-header text-right">Ventas</th>
+                            <th class="table-header text-right">Gastos</th>
+                            <th class="table-header text-right">Balance Neto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profitTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL VENTAS (with edit/delete) -->
+    <div id="salesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl">
+                <div>
+                    <h2 class="text-xl font-bold text-blue-700">Historial de Ventas</h2>
+                    <p class="text-sm text-blue-500" id="salesHistoryTotalLabel">Total: $0.00</p>
+                </div>
+                <button data-close="salesHistoryModal" class="text-gray-400 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="text" id="searchSaleInput" placeholder="Cliente o Empleado..." class="input-std w-full sm:w-40">
+                    <div class="border-l pl-2 flex flex-wrap gap-2 items-center">
+                        <span class="text-xs text-gray-400 font-bold">FECHA:</span>
+                        <input type="date" id="filterSaleDate" class="input-std w-auto text-sm">
+                        <span class="text-xs text-gray-400">O</span>
+                        <select id="filterSaleMonth" class="input-std w-32 text-sm">
+                            <option value="all">Mes: Todos</option>
+                            <option value="0">Enero</option>
+                            <option value="1">Febrero</option>
+                            <option value="2">Marzo</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Mayo</option>
+                            <option value="5">Junio</option>
+                            <option value="6">Julio</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Septiembre</option>
+                            <option value="9">Octubre</option>
+                            <option value="10">Noviembre</option>
+                            <option value="11">Diciembre</option>
+                        </select>
+                        <select id="filterSaleYear" class="input-std w-24 text-sm">
+                            <option value="all">Año</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                        <button id="applySalesFilter" class="bg-blue-600 text-white px-3 py-2 rounded-lg">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button id="resetSalesFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-2 sm:mt-0 w-full justify-end sm:w-auto">
+                    <button id="toggleSalesTimeChart" class="flex-1 sm:flex-initial text-blue-600 border border-blue-200 px-3 py-1 rounded-lg hover:bg-blue-50 transition text-sm font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-chart-bar"></i> Ventas por Tiempo
+                    </button>
+                    <button id="togglePaymentTypeChart" class="flex-1 sm:flex-initial text-gray-600 border border-gray-200 px-3 py-1 rounded-lg hover:bg-gray-50 transition text-sm font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-chart-pie"></i> Pagos por Tipo
+                    </button>
+                </div>
+            </div>
+            <div id="salesChartWrapper" class="hidden p-4 bg-white border-b">
+                <div class="flex justify-center mb-2 gap-2">
+                    <button class="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600 font-bold hover:bg-blue-200 transition" onclick="updateChartMode('daily')">
+                        Diario
+                    </button>
+                    <button class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onclick="updateChartMode('monthly')">
+                        Mensual
+                    </button>
+                    <button class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onclick="updateChartMode('yearly')">
+                        Anual
+                    </button>
+                </div>
+                <div style="height: 200px; position: relative; width: 100%;">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+            <div id="paymentTypeChartWrapper" class="hidden p-4 bg-white border-b flex justify-center">
+                <div style="height: 250px; width: 100%; max-width: 400px; position: relative;">
+                    <canvas id="paymentTypeChart"></canvas>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="table-header">Fecha / Hora</th>
+                            <th class="table-header">Cliente</th>
+                            <th class="table-header">Producto</th>
+                            <th class="table-header">Cantidad</th>
+                            <th class="table-header">Pago</th>
+                            <th class="table-header">Encargado</th>
+                            <th class="table-header text-right">Monto</th>
+                            <th class="table-header text-center w-28">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL GASTOS (with edit/delete) -->
+    <div id="expensesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-red-600">Historial de Gastos</h2>
+                <p class="text-sm text-red-500" id="expensesHistoryTotalLabel">Total: $0.00</p>
+                <button data-close="expensesHistoryModal" class="text-gray-400 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-gray-50 border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="text" id="searchExpenseInput" placeholder="Cat. o Encargado..." class="input-std w-full sm:w-40">
+                    <div class="border-l pl-2 flex flex-wrap gap-2 items-center">
+                        <input type="date" id="filterExpenseDate" class="input-std w-auto text-sm">
+                        <select id="filterExpenseMonth" class="input-std w-32 text-sm">
+                            <option value="all">Mes: Todos</option>
+                            <option value="0">Enero</option>
+                            <option value="1">Febrero</option>
+                            <option value="2">Marzo</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Mayo</option>
+                            <option value="5">Junio</option>
+                            <option value="6">Julio</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Septiembre</option>
+                            <option value="9">Octubre</option>
+                            <option value="10">Noviembre</option>
+                            <option value="11">Diciembre</option>
+                        </select>
+                        <select id="filterExpenseYear" class="input-std w-24 text-sm">
+                            <option value="all">Año</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                        <button id="applyExpenseFilter" class="bg-red-500 text-white px-3 py-2 rounded-lg">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button id="resetExpenseFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="toggleChart('expenses')" class="text-red-600 border border-red-200 px-3 py-1 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center gap-2 mt-2 sm:mt-0">
+                    <i class="fas fa-chart-bar"></i> Ver Gráfico
+                </button>
+            </div>
+            <div id="expensesChartWrapper" class="hidden p-4 bg-white border-b">
+                <div style="height: 200px; position: relative; width: 100%;">
+                    <canvas id="expensesChart"></canvas>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Fecha</th>
+                            <th class="table-header">Categoría</th>
+                            <th class="table-header">Pago</th>
+                            <th class="table-header">Encargado</th>
+                            <th class="table-header text-right">Monto</th>
+                            <th class="table-header text-center w-28">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CAJA ACTUAL (MODIFICADO: sin cajitas y con ajustes +-) -->
+    <div id="cashDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-yellow-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-yellow-700">Arqueo de Caja</h2>
+                <button data-close="cashDetailModal" class="text-gray-400 text-xl cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 border-b grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-yellow-100 p-3 rounded-lg border-2 border-yellow-300">
+                    <div class="text-xs text-yellow-700 font-bold uppercase">Caja SÓLO EFECTIVO (FILTRADO)</div>
+                    <div class="text-lg font-bold text-yellow-800" id="cashModalOnlyCash">$0.00</div>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg relative">
+                    <div class="text-xs text-green-600 font-bold uppercase">Ganancia Bruta</div>
+                    <div class="text-lg font-bold text-green-800 protected-field" id="cashModalGross" data-toggle-privacy="cashGross">******</div>
+                    <button class="absolute top-1 right-1 text-gray-400 hover:text-green-600 cursor-pointer" data-toggle-privacy="cashGross">
+                        <i class="fas fa-eye text-xs"></i>
+                    </button>
+                </div>
+                <div class="bg-red-50 p-3 rounded-lg">
+                    <div class="text-xs text-red-600 font-bold uppercase">Retiros Manuales</div>
+                    <div class="text-lg font-bold text-red-800" id="cashModalWithdrawals">$0.00</div>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200 relative">
+                    <div class="text-xs text-yellow-600 font-bold uppercase">En Caja Real</div>
+                    <div class="2xl font-bold text-yellow-800 protected-field" id="cashModalNet" data-toggle-privacy="cashNet">******</div>
+                    <button class="absolute top-1 right-1 text-gray-400 hover:text-yellow-600 cursor-pointer" data-toggle-privacy="cashNet">
+                        <i class="fas fa-eye text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 bg-yellow-50 border-b flex flex-wrap gap-2 items-center">
+                <input type="text" id="searchCashInput" placeholder="Buscar empleado o motivo..." class="input-std w-full sm:w-40">
+                <div class="border-l border-yellow-200 pl-2 flex flex-wrap gap-2 items-center">
+                    <span class="text-xs text-yellow-700 font-bold">FECHA:</span>
+                    <input type="date" id="filterCashDate" class="input-std w-auto text-sm">
+                    <span class="text-xs text-yellow-700">O</span>
+                    <select id="filterCashMonth" class="input-std w-32 text-sm">
+                        <option value="all">Mes: Todos</option>
+                        <option value="0">Enero</option>
+                        <option value="1">Febrero</option>
+                        <option value="2">Marzo</option>
+                        <option value="3">Abril</option>
+                        <option value="4">Mayo</option>
+                        <option value="5">Junio</option>
+                        <option value="6">Julio</option>
+                        <option value="7">Agosto</option>
+                        <option value="8">Septiembre</option>
+                        <option value="9">Octubre</option>
+                        <option value="10">Noviembre</option>
+                        <option value="11">Diciembre</option>
+                    </select>
+                    <select id="filterCashYear" class="input-std w-24 text-sm">
                         <option value="all">Año</option>
                         <option value="2025">2025</option>
                         <option value="2024">2024</option>
                     </select>
-                    <button id="applyInvFilter" class="bg-orange-500 text-white px-3 py-2 rounded-lg">
+                    <button id="applyCashFilter" class="bg-yellow-600 text-white px-3 py-2 rounded-lg" title="Aplicar filtro">
                         <i class="fas fa-filter"></i>
                     </button>
-                    <button id="resetInvFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300">
+                    <button id="resetCashFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300" title="Borrar filtro">
                         <i class="fas fa-undo"></i>
                     </button>
                 </div>
+                <div class="ml-auto text-sm font-bold text-yellow-800 border-l border-yellow-300 pl-3 pt-2 sm:pt-0 w-full sm:w-auto text-center sm:text-right">
+                    Flujo Cash Filtrado: <span id="cashFilteredTotal" class="text-yellow-800">$0.00</span>
+                </div>
             </div>
-            <button onclick="toggleChart('inventory')" class="text-orange-600 border border-orange-200 px-3 py-1 rounded-lg hover:bg-orange-50 transition text-sm font-bold flex items-center gap-2 mt-2 sm:mt-0">
-                <i class="fas fa-chart-pie"></i> Ver Gráfico
-            </button>
-        </div>
-        <div id="inventoryChartWrapper" class="hidden p-4 bg-white border-b flex justify-center">
-            <div style="height: 250px; width: 100%; max-width: 400px; position: relative;">
-                <canvas id="inventoryChart"></canvas>
+            
+            <!-- FORMULARIOS PARA RETIROS Y AJUSTES -->
+            <div class="p-4 bg-gray-100 border-b grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form id="withdrawalForm" class="bg-red-50 p-3 rounded-xl border border-red-200 space-y-2">
+                    <h3 class="font-bold text-red-700"><i class="fas fa-sign-out-alt mr-1"></i> Retiro de Caja (Egreso)</h3>
+                    <div class="flex gap-2">
+                        <input type="number" id="wdAmount" placeholder="Monto (-)" class="input-std w-32 text-red-600 font-bold" required>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="wdEmployee" list="managerList" placeholder="Empleado..." class="input-std flex-1" required>
+                    </div>
+                    <input type="text" id="wdNote" placeholder="Motivo del retiro..." class="input-std">
+                    <button type="submit" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">
+                        Registrar Retiro
+                    </button>
+                </form>
+                <form id="adjustmentForm" class="bg-green-50 p-3 rounded-xl border border-green-200 space-y-2">
+                    <h3 class="font-bold text-green-700"><i class="fas fa-hand-holding-usd mr-1"></i> Ajuste Manual (Ingreso / Egreso)</h3>
+                    <div class="flex gap-2">
+                        <input type="number" id="adjAmount" placeholder="Monto (+/-)" class="input-std w-32 font-bold" required>
+                        <input type="text" id="adjEmployee" list="managerList" placeholder="Encargado..." class="input-std flex-1" required>
+                    </div>
+                    <input type="text" id="adjNote" placeholder="Motivo del ajuste (ej: 'Error en conteo', 'Fondo inicial', 'Sobrante', 'Faltante')..." class="input-std" required>
+                    <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">
+                        Guardar Ajuste
+                    </button>
+                </form>
             </div>
-        </div>
-        <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="table-header">Producto</th>
-                        <th class="table-header">Tipo</th>
-                        <th class="table-header text-right">Stock</th>
-                        <th class="table-header text-right">Precio ARS</th>
-                        <th class="table-header text-right">Precio USD</th>
-                        <th class="table-header text-center w-28">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="inventoryTableBody" class="bg-white divide-y divide-gray-100"></tbody>
-            </table>
+            
+            <!-- TABLA DE MOVIMIENTOS -->
+            <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha / Hora</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Movimiento</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Encargado / Motivo</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto ($)</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase w-28">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cashMovementsTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-      <!-- REST OF MODALS (New Sale, New Expense, etc. - v3.9.10) -->
+
+    <!-- MODAL INVENTARIO (with edit/delete) -->
+    <div id="inventoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-orange-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-orange-600">Inventario</h2>
+                <button data-close="inventoryModal" class="text-gray-400 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="text" id="searchInventoryInput" placeholder="Buscar producto..." class="input-std w-full sm:w-40">
+                    <div class="border-l pl-2 flex flex-wrap gap-2 items-center">
+                        <span class="text-xs text-gray-400 font-bold">CREADO:</span>
+                        <input type="date" id="filterInvDate" class="input-std w-auto text-sm">
+                        <select id="filterInvMonth" class="input-std w-32 text-sm">
+                            <option value="all">Mes: Todos</option>
+                            <option value="0">Enero</option>
+                            <option value="1">Febrero</option>
+                            <option value="2">Marzo</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Mayo</option>
+                            <option value="5">Junio</option>
+                            <option value="6">Julio</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Septiembre</option>
+                            <option value="9">Octubre</option>
+                            <option value="10">Noviembre</option>
+                            <option value="11">Diciembre</option>
+                        </select>
+                        <select id="filterInvYear" class="input-std w-24 text-sm">
+                            <option value="all">Año</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                        <button id="applyInvFilter" class="bg-orange-500 text-white px-3 py-2 rounded-lg">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button id="resetInvFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="toggleChart('inventory')" class="text-orange-600 border border-orange-200 px-3 py-1 rounded-lg hover:bg-orange-50 transition text-sm font-bold flex items-center gap-2 mt-2 sm:mt-0">
+                    <i class="fas fa-chart-pie"></i> Ver Gráfico
+                </button>
+            </div>
+            <div id="inventoryChartWrapper" class="hidden p-4 bg-white border-b flex justify-center">
+                <div style="height: 250px; width: 100%; max-width: 400px; position: relative;">
+                    <canvas id="inventoryChart"></canvas>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0 mobile-scroll-x">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Producto</th>
+                            <th class="table-header">Tipo</th>
+                            <th class="table-header text-right">Stock</th>
+                            <th class="table-header text-right">Precio ARS</th>
+                            <th class="table-header text-right">Precio USD</th>
+                            <th class="table-header text-center w-28">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- REST OF MODALS (New Sale, New Expense, etc. - v3.9.10) -->
     <div id="newSaleModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
@@ -1617,14 +1449,6 @@
                 </button>
             </div>
             <form id="saleForm" class="p-6 space-y-4">
-                <div class="date-toggle">
-                    <span class="toggle-label">Fecha automática:</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="saleAutoDate" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <button type="button" id="saleSetToday" class="auto-date-btn">Hoy</button>
-                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Fecha</label>
@@ -1720,14 +1544,6 @@
                 </button>
             </div>
             <form id="expenseForm" class="p-6 space-y-4">
-                <div class="date-toggle">
-                    <span class="toggle-label">Fecha automática:</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="expenseAutoDate" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <button type="button" id="expenseSetToday" class="auto-date-btn">Hoy</button>
-                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Fecha</label>
@@ -1790,14 +1606,6 @@
                 </button>
             </div>
             <form id="productForm" class="p-6 space-y-4">
-                <div class="date-toggle">
-                    <span class="toggle-label">Fecha automática:</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="productAutoDate" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <button type="button" id="productSetToday" class="auto-date-btn">Hoy</button>
-                </div>
                 <input type="text" id="prodName" placeholder="Nombre" class="input-std" required>
                 <div class="relative">
                     <label class="block text-sm font-medium text-gray-700">Tipo</label>
@@ -1927,6 +1735,19 @@
         </div>
     </div>
 
+    <!-- CONTROLES DE ZOOM PARA MÓVIL -->
+    <div id="zoomControls" class="zoom-controls hidden">
+        <button id="zoomInBtn" class="zoom-btn">
+            <i class="fas fa-search-plus"></i>
+        </button>
+        <button id="zoomOutBtn" class="zoom-btn">
+            <i class="fas fa-search-minus"></i>
+        </button>
+        <button id="resetZoomBtn" class="zoom-btn">
+            <i class="fas fa-expand-alt"></i>
+        </button>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -1952,7 +1773,7 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         let userId = null;
-        let products = [], sales = [], expenses = [], clients = [], withdrawals = [], news = [], adjustments = [], cajitas = [];
+        let products = [], sales = [], expenses = [], clients = [], withdrawals = [], news = [], adjustments = [];
         let settings = { 
             storeName: "MI NEGOCIO", 
             employees: [], 
@@ -1982,6 +1803,12 @@
         // Calculator
         let calcType = 'surcharge';
 
+        // Variables de zoom para móvil
+        let currentZoom = 1;
+        const MAX_ZOOM = 1.5;
+        const MIN_ZOOM = 0.8;
+        const ZOOM_STEP = 0.1;
+
         const $ = id => document.getElementById(id);
         const fmtMoney = n => `$${parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         const fmtDate = s => { 
@@ -1999,6 +1826,44 @@
             const now = new Date();
             return now.toTimeString().split(' ')[0].substring(0, 5);
         };
+
+        // Funciones de zoom para móvil
+        function updateZoomControls() {
+            if (window.innerWidth <= 640) {
+                $('zoomControls').classList.remove('hidden');
+            } else {
+                $('zoomControls').classList.add('hidden');
+                // Restaurar zoom predeterminado
+                document.body.style.transform = 'scale(1)';
+                document.body.style.transformOrigin = 'top left';
+                currentZoom = 1;
+            }
+        }
+
+        function applyZoom() {
+            document.body.style.transform = `scale(${currentZoom})`;
+            document.body.style.transformOrigin = 'top left';
+            document.body.style.width = `${100 / currentZoom}%`;
+        }
+
+        function zoomIn() {
+            if (currentZoom < MAX_ZOOM) {
+                currentZoom += ZOOM_STEP;
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > MIN_ZOOM) {
+                currentZoom -= ZOOM_STEP;
+                applyZoom();
+            }
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
 
         // Toasts
         function showToast(message, type = 'info', duration = 3000) {
@@ -2071,41 +1936,6 @@
         }
         setInterval(updateClock, 1000); 
         updateClock();
-
-        // Función para manejar fecha automática/manual
-        function setupDateToggle(autoCheckboxId, dateInputId, setTodayBtnId) {
-            const autoCheckbox = $(autoCheckboxId);
-            const dateInput = $(dateInputId);
-            const setTodayBtn = $(setTodayBtnId);
-            
-            if (!autoCheckbox || !dateInput) return;
-            
-            // Establecer fecha actual por defecto
-            if (autoCheckbox.checked) {
-                dateInput.value = getToday();
-                dateInput.disabled = true;
-            }
-            
-            // Toggle cambio
-            autoCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    dateInput.value = getToday();
-                    dateInput.disabled = true;
-                } else {
-                    dateInput.disabled = false;
-                }
-            });
-            
-            // Botón "Hoy"
-            if (setTodayBtn) {
-                setTodayBtn.addEventListener('click', function() {
-                    dateInput.value = getToday();
-                    autoCheckbox.checked = true;
-                    dateInput.disabled = true;
-                    showToast("Fecha establecida a hoy", 'info');
-                });
-            }
-        }
 
         const updateProtectedField = (id, value) => {
             const el = $(id);
@@ -2222,13 +2052,6 @@
                 adjustments = s.docs.map(d => ({ id: d.id, ...d.data() })); 
                 updateDashboard(); 
                 renderCashMovements(); 
-            });
-            
-            // Cajitas - CORRECCIÓN: Incluir el ID del documento
-            onSnapshot(path('cajitas'), s => { 
-                cajitas = s.docs.map(d => ({ id: d.id, ...d.data() })); 
-                updateDashboard(); 
-                renderCajitasList(); 
             });
             
             // Notas
@@ -2372,28 +2195,15 @@
                 }
             });
             
-            // Calcular retiros (siempre se consideran en efectivo)
+            // Calcular retiros (siempre se consideran en efectivo y son negativos)
             const wTotal = withdrawals.reduce((a, w) => a + (parseFloat(w.amount) || 0), 0);
             
-            // Calcular ajustes positivos y negativos
-            const adjustmentsPositive = adjustments.reduce((a, adj) => {
-                const amount = parseFloat(adj.amount) || 0;
-                return a + (amount > 0 ? amount : 0);
-            }, 0);
-            
-            const adjustmentsNegative = adjustments.reduce((a, adj) => {
-                const amount = parseFloat(adj.amount) || 0;
-                return a + (amount < 0 ? amount : 0);
-            }, 0);
-            
-            const adjTotal = adjustmentsPositive + adjustmentsNegative;
-            
-            // Cajitas son separadas (son ingresos a cajita, no afectan caja efectivo)
-            const cajitasTotal = cajitas.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
+            // Ajustes pueden ser positivos (ingresos) o negativos (egresos)
+            const adjTotal = adjustments.reduce((a, adj) => a + (parseFloat(adj.amount) || 0), 0);
             
             // CORRECCIÓN: Cálculo correcto de caja en efectivo
-            // Ventas en efectivo - Gastos en efectivo + Ajustes Positivos + Retiros (ya negativos)
-            const cashOnlyTotal = salesCashTotal - expensesCashTotal + adjustmentsPositive + wTotal;
+            // Ventas en efectivo - Gastos en efectivo - Retiros (negativos) + Ajustes (pueden ser + o -)
+            const cashOnlyTotal = salesCashTotal - expensesCashTotal + wTotal + adjTotal;
             
             // Actualizar dashboard
             $('dashVentasHoy').textContent = fmtMoney(sToday);
@@ -2406,26 +2216,9 @@
             updateProtectedField('cardGananciaMes', fmtMoney(sMonth - eMonth));
             $('cardCaja').textContent = fmtMoney(cashOnlyTotal);
             updateProtectedField('cashModalGross', fmtMoney(salesTotal - expensesTotal));
-            updateProtectedField('cashModalNet', fmtMoney(salesTotal - expensesTotal + adjTotal));
+            updateProtectedField('cashModalNet', fmtMoney(salesTotal - expensesTotal + wTotal + adjTotal));
             $('cashModalOnlyCash').textContent = fmtMoney(cashOnlyTotal);
             $('cashModalWithdrawals').textContent = fmtMoney(Math.abs(wTotal));
-            
-            // Actualizar panel de ajustes si existe
-            if ($('cashModalAdjustments')) {
-                $('cashModalAdjustments').textContent = fmtMoney(adjustmentsPositive);
-            }
-            
-            // Actualizar estadísticas de cajitas
-            if ($('totalCajitas')) $('totalCajitas').textContent = fmtMoney(cajitasTotal);
-            if ($('cantidadCajitas')) $('cantidadCajitas').textContent = cajitas.length;
-            if ($('ultimaCajita')) {
-                if (cajitas.length > 0) {
-                    const lastCajita = cajitas.sort((a, b) => b.date.localeCompare(a.date))[0];
-                    $('ultimaCajita').textContent = `${fmtDate(lastCajita.date)} - ${fmtMoney(lastCajita.amount)}`;
-                } else {
-                    $('ultimaCajita').textContent = '-';
-                }
-            }
         }
 
         const filterByDate = (item, dateField, fDate, fMonth, fYear) => {
@@ -2949,7 +2742,7 @@
             const fMonth = $('filterCashMonth') ? $('filterCashMonth').value : 'all';
             const fYear = $('filterCashYear') ? $('filterCashYear').value : 'all';
 
-            // Filtrar ventas y gastos en efectivo según fecha
+            // CORRECCIÓN: Filtrar ventas y gastos en efectivo según fecha
             let filteredSalesCash = 0;
             let filteredExpensesCash = 0;
             
@@ -2971,10 +2764,6 @@
                 }
             });
 
-            // Calcular ajustes positivos y retiros
-            let totalAdjustmentsPositive = 0;
-            let totalWithdrawalsNegative = 0;
-            
             const allMovements = [
                 ...withdrawals.map(w => ({ 
                     ...w, 
@@ -2997,31 +2786,12 @@
                 if (q && !m.employee.toLowerCase().includes(q) && !m.note.toLowerCase().includes(q)) return false;
                 return filterByDate(m, 'date', fDate, fMonth, fYear);
             }).sort((a, b) => {
+                // Ordenar por fecha y luego por hora
                 const dateCompare = b.date.localeCompare(a.date);
                 if (dateCompare !== 0) return dateCompare;
                 return (b.time || '').localeCompare(a.time || '');
             });
 
-            allMovements.forEach(m => {
-                if (m.type === 'Retiro') {
-                    totalWithdrawalsNegative += m.amount; // Ya es negativo
-                } else if (m.type === 'Ajuste' && m.amount > 0) {
-                    totalAdjustmentsPositive += m.amount;
-                }
-            });
-
-            // Actualizar métricas
-            $('cashModalWithdrawals').textContent = fmtMoney(Math.abs(totalWithdrawalsNegative));
-            $('cashModalAdjustments').textContent = fmtMoney(totalAdjustmentsPositive);
-            
-            // Cálculo CORREGIDO: Ventas en efectivo - Gastos en efectivo + Ajustes Positivos - Retiros
-            const cashFlowFiltered = filteredSalesCash - filteredExpensesCash;
-            const totalCashFiltered = cashFlowFiltered + totalAdjustmentsPositive + totalWithdrawalsNegative;
-            
-            $('cashModalOnlyCash').textContent = fmtMoney(totalCashFiltered);
-            $('cashFilteredTotal').textContent = fmtMoney(totalCashFiltered);
-
-            // Renderizar tabla
             let totalMovements = 0;
             allMovements.forEach(m => {
                 totalMovements += m.amount;
@@ -3032,6 +2802,7 @@
                     ? 'Retiro Manual' 
                     : (m.amount > 0 ? 'Ajuste (Ingreso)' : 'Ajuste (Egreso)');
                 
+                // Botones de acciones
                 const actions = `
                     <td class="px-6 py-2 text-center">
                         <button class="cash-action-btn edit-btn" onclick="editCashMovement('${m.id}', '${m.type}')" title="Editar">
@@ -3056,42 +2827,13 @@
                     ${actions}
                 </tr>`;
             });
-        }
 
-        function renderCajitasList() {
-            const tb = $('cajitasTableBody'); 
-            if (!tb) return;
-            tb.innerHTML = '';
-            
-            const filteredCajitas = cajitas.filter(c => {
-                // Puedes agregar filtros aquí si es necesario
-                return true;
-            }).sort((a, b) => b.date.localeCompare(a.date));
-            
-            filteredCajitas.forEach(c => {
-                const actions = `
-                    <td class="px-6 py-2 text-center">
-                        <button class="cash-action-btn edit-btn" onclick="editCajita('${c.id}')" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="cash-action-btn delete-btn" onclick="deleteCajitaPrompt('${c.id}')" title="Eliminar">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>`;
-                
-                tb.innerHTML += `<tr>
-                    <td class="px-6 py-2 text-sm">
-                        <div class="font-bold">${fmtDate(c.date)}</div>
-                        <div class="text-xs text-gray-500">${c.time || 'Sin hora'}</div>
-                    </td>
-                    <td class="px-6 py-2 text-sm font-bold text-purple-700">${c.employee || 'N/A'}</td>
-                    <td class="px-6 py-2 text-sm text-gray-700">
-                        ${c.note || 'Sin descripción'}
-                    </td>
-                    <td class="px-6 py-2 text-sm text-right font-bold text-green-600">+${fmtMoney(c.amount)}</td>
-                    ${actions}
-                </tr>`;
-            });
+            const cashFlowFiltered = filteredSalesCash - filteredExpensesCash;
+            const totalCashFiltered = cashFlowFiltered + totalMovements;
+            $('cashModalOnlyCash').textContent = fmtMoney(totalCashFiltered);
+            $('cashFilteredTotal').textContent = fmtMoney(totalCashFiltered);
+            const filteredWithdrawalsTotal = allMovements.filter(m => m.type === 'Retiro').reduce((sum, m) => sum + Math.abs(m.amount), 0);
+            $('cashModalWithdrawals').textContent = fmtMoney(filteredWithdrawalsTotal);
         }
 
         function renderNewsList() {
@@ -3168,9 +2910,6 @@
             // Actualizar lista de productos si necesario
             updateProductListForSale();
             $('editSaleModal').classList.remove('hidden');
-            
-            // Configurar toggle de fecha
-            setupDateToggle('editSaleAutoDate', 'editSaleDate', 'editSaleSetToday');
         };
 
         window.deleteSalePrompt = (id) => {
@@ -3222,9 +2961,6 @@
             $('editExpenseDesc').value = exp.description || '';
             $('editExpensePaymentMethod').value = exp.paymentMethod || '';
             $('editExpenseModal').classList.remove('hidden');
-            
-            // Configurar toggle de fecha
-            setupDateToggle('editExpenseAutoDate', 'editExpenseDate', 'editExpenseSetToday');
         };
 
         window.deleteExpensePrompt = (id) => {
@@ -3257,9 +2993,6 @@
             $('editProdPriceUsd').value = prod.priceUsd || '';
             $('editProdStock').value = prod.stock || 0;
             $('editProductModal').classList.remove('hidden');
-            
-            // Configurar toggle de fecha
-            setupDateToggle('editProductAutoDate', 'editProdDate', 'editProductSetToday');
         };
 
         window.deleteProductPrompt = (id) => {
@@ -3317,9 +3050,6 @@
             $('editCashMovementTypeDisplay').value = typeDisplay;
             
             $('editCashMovementModal').classList.remove('hidden');
-            
-            // Configurar toggle de fecha
-            setupDateToggle('editCashAutoDate', 'editCashMovementDate', 'editCashSetToday');
         };
 
         window.deleteCashMovementPrompt = (id, type) => {
@@ -3339,43 +3069,6 @@
             } catch (err) {
                 console.error("Error al eliminar movimiento:", err);
                 showToast("Error al eliminar el movimiento", 'error');
-            }
-        };
-
-        // === FUNCIONES PARA CAJITAS ===
-        window.editCajita = (id) => {
-            const cajita = cajitas.find(c => c.id === id);
-            if (!cajita) {
-                showToast("Cajita no encontrada", 'error');
-                return;
-            }
-
-            $('editCajitaId').value = id;
-            $('editCajitaDate').value = cajita.date;
-            $('editCajitaTime').value = cajita.time || getCurrentTime();
-            $('editCajitaAmount').value = cajita.amount;
-            $('editCajitaEmployee').value = cajita.employee || '';
-            $('editCajitaNote').value = cajita.note || '';
-            
-            $('editCajitaModal').classList.remove('hidden');
-            
-            // Configurar toggle de fecha
-            setupDateToggle('editCajitaAutoDate', 'editCajitaDate', 'editCajitaSetToday');
-        };
-
-        window.deleteCajitaPrompt = (id) => {
-            if (confirm(`¿Está seguro de eliminar esta cajita?`)) {
-                deleteCajita(id);
-            }
-        };
-
-        window.deleteCajita = async (id) => {
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'cajitas', id));
-                showToast("Cajita eliminada", 'success');
-            } catch (err) {
-                console.error("Error al eliminar cajita:", err);
-                showToast("Error al eliminar la cajita", 'error');
             }
         };
 
@@ -3404,6 +3097,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             registerServiceWorker();
 
+            // Configurar controles de zoom para móvil
+            window.addEventListener('resize', updateZoomControls);
+            updateZoomControls();
+
+            $('zoomInBtn').onclick = zoomIn;
+            $('zoomOutBtn').onclick = zoomOut;
+            $('resetZoomBtn').onclick = resetZoom;
+
             $('reloadUpdateBtn').onclick = () => {
                 if (navigator.serviceWorker.controller) {
                     navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
@@ -3423,25 +3124,6 @@
             $('closeSideMenuBtn').onclick = closeMenu;
             $('sideMenuOverlay').onclick = closeMenu;
 
-            // Tabs en modal de caja
-            $('tabRetiros').onclick = () => {
-                $('retirosTabContent').classList.remove('hidden');
-                $('cajitasTabContent').classList.add('hidden');
-                $('tabRetiros').classList.add('border-yellow-500', 'bg-yellow-50', 'text-yellow-700');
-                $('tabRetiros').classList.remove('border-gray-200', 'text-gray-600');
-                $('tabCajitas').classList.remove('border-purple-500', 'bg-purple-50', 'text-purple-700');
-                $('tabCajitas').classList.add('border-gray-200', 'text-gray-600');
-            };
-            
-            $('tabCajitas').onclick = () => {
-                $('cajitasTabContent').classList.remove('hidden');
-                $('retirosTabContent').classList.add('hidden');
-                $('tabCajitas').classList.add('border-purple-500', 'bg-purple-50', 'text-purple-700');
-                $('tabCajitas').classList.remove('border-gray-200', 'text-gray-600');
-                $('tabRetiros').classList.remove('border-yellow-500', 'bg-yellow-50', 'text-yellow-700');
-                $('tabRetiros').classList.add('border-gray-200', 'text-gray-600');
-            };
-
             // Open modals - SIN AUTENTICACIÓN
             $('btnNewSale').onclick = () => {
                 $('saleDate').value = getToday();
@@ -3451,23 +3133,12 @@
                 $('saleQuantity').value = 1;
                 $('saleAmount').value = "";
                 $('newSaleModal').classList.remove('hidden');
-                
-                // Configurar toggle de fecha para nueva venta
-                setupDateToggle('saleAutoDate', 'saleDate', 'saleSetToday');
             };
             $('btnNewExpense').onclick = () => {
                 $('expenseDate').value = getToday();
                 $('newExpenseModal').classList.remove('hidden');
-                
-                // Configurar toggle de fecha para nuevo gasto
-                setupDateToggle('expenseAutoDate', 'expenseDate', 'expenseSetToday');
             };
-            $('btnNewProduct').onclick = () => {
-                $('productModal').classList.remove('hidden');
-                
-                // Configurar toggle de fecha para nuevo producto
-                setupDateToggle('productAutoDate', 'prodDate', 'productSetToday');
-            };
+            $('btnNewProduct').onclick = () => $('productModal').classList.remove('hidden');
             $('openProfileModalBtn').onclick = () => $('profileModal').classList.remove('hidden');
             $('btnAddClientDirect').onclick = () => $('newClientModal').classList.remove('hidden');
             $('btnOpenTutorialsModal').onclick = () => $('tutorialsModal').classList.remove('hidden');
@@ -3699,37 +3370,41 @@
                 showToast("Cliente agregado con éxito", 'success');
             };
 
-            // MODIFICACIÓN: Agregar hora automática en retiros y ajustes
+            // MODIFICACIÓN: Retiros siempre son negativos
             $('withdrawalForm').onsubmit = async (e) => {
                 e.preventDefault();
                 if (!userId) return;
                 const emp = $('wdEmployee').value.trim();
-                const amount = $('wdAmount').value;
+                const amount = parseFloat($('wdAmount').value) || 0;
                 const note = $('wdNote').value.trim();
-                const wdType = $('wdType').value;
                 const currentTime = getCurrentTime();
+                
+                if (amount <= 0) {
+                    showToast("El monto del retiro debe ser mayor a 0.", 'error');
+                    return;
+                }
                 
                 if (emp && !settings.employees.includes(emp)) 
                     await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), { employees: arrayUnion(emp) }, { merge: true });
                 
                 // CORRECCIÓN: Los retiros SIEMPRE son negativos (egresos de caja)
-                const withdrawalAmount = -Math.abs(parseFloat(amount) || 0);
+                const withdrawalAmount = -Math.abs(amount);
                 
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'withdrawals'), {
                     date: getToday(),
-                    time: currentTime, // AGREGAR HORA AUTOMÁTICAMENTE
+                    time: currentTime,
                     amount: withdrawalAmount,
                     employee: emp,
                     note: note,
-                    type: wdType,
+                    type: 'Retiro Manual',
                     createdAt: new Date().toISOString()
                 });
                 $('wdAmount').value = '';
                 $('wdNote').value = '';
-                showToast(`Retiro (${wdType}) registrado con éxito a las ${currentTime}`, 'success');
+                showToast(`Retiro registrado con éxito a las ${currentTime}`, 'success');
             };
 
-            // MODIFICACIÓN: Agregar hora automática en ajustes
+            // MODIFICACIÓN: Ajustes pueden ser positivos o negativos
             $('adjustmentForm').onsubmit = async (e) => {
                 e.preventDefault();
                 if (!userId) return;
@@ -3738,53 +3413,27 @@
                 const note = $('adjNote').value.trim();
                 const currentTime = getCurrentTime();
                 
-                if (!amount || !emp || !note) {
+                if (!emp || !note) {
                     showToast("Todos los campos de Ajuste son obligatorios.", 'error');
                     return;
                 }
                 if (emp && !settings.employees.includes(emp)) 
                     await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), { employees: arrayUnion(emp) }, { merge: true });
                 
+                // El monto puede ser positivo (ingreso) o negativo (egreso)
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'adjustments'), {
                     date: getToday(),
-                    time: currentTime, // AGREGAR HORA AUTOMÁTICAMENTE
+                    time: currentTime,
                     amount: amount, // Puede ser positivo (ingreso) o negativo (egreso)
                     employee: emp,
                     note: note,
+                    type: amount >= 0 ? 'Ajuste (Ingreso)' : 'Ajuste (Egreso)',
                     createdAt: new Date().toISOString()
                 });
                 $('adjAmount').value = '';
                 $('adjNote').value = '';
-                showToast(`Ajuste de caja guardado con éxito a las ${currentTime}`, 'success');
-            };
-
-            // NUEVO FORMULARIO PARA CAJITAS
-            $('cajitaForm').onsubmit = async (e) => {
-                e.preventDefault();
-                if (!userId) return;
-                const emp = $('cjEmployee').value.trim();
-                const amount = parseFloat($('cjAmount').value) || 0;
-                const note = $('cjNote').value.trim();
-                const currentTime = getCurrentTime();
-                
-                if (!amount || !emp) {
-                    showToast("Monto y encargado son obligatorios.", 'error');
-                    return;
-                }
-                if (emp && !settings.employees.includes(emp)) 
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), { employees: arrayUnion(emp) }, { merge: true });
-                
-                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'cajitas'), {
-                    date: getToday(),
-                    time: currentTime,
-                    amount: amount,
-                    employee: emp,
-                    note: note,
-                    createdAt: new Date().toISOString()
-                });
-                $('cjAmount').value = '';
-                $('cjNote').value = '';
-                showToast(`Cajita guardada con éxito a las ${currentTime}`, 'success');
+                const tipo = amount >= 0 ? 'Ingreso' : 'Egreso';
+                showToast(`Ajuste (${tipo}) guardado con éxito a las ${currentTime}`, 'success');
             };
 
             // Time shift detection
@@ -3867,7 +3516,6 @@
                 if ($('filterCashMonth')) $('filterCashMonth').value = 'all';
                 if ($('filterCashYear')) $('filterCashYear').value = 'all';
                 renderCashMovements();
-                renderCajitasList();
                 $('cashDetailModal').classList.remove('hidden');
             };
             $('openNewsModalBtn').onclick = () => {
@@ -3903,135 +3551,24 @@
                 if (text) window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
             };
 
-            // PWA Install para iOS y Android
+            // PWA Install
             let deferredPrompt;
             const installBtn = $('installAppBtn');
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
-            // Ocultar botón si ya está instalado
-            if (isStandalone) {
-                installBtn.classList.add('hidden');
-            }
-
-            // Para iOS: mostrar botón siempre (excepto si ya está instalado)
-            if (isIOS && !isStandalone) {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
                 installBtn.classList.remove('hidden');
-                
-                // Verificar si podemos usar beforeinstallprompt
-                window.addEventListener('beforeinstallprompt', (e) => {
-                    e.preventDefault();
-                    deferredPrompt = e;
-                    installBtn.classList.remove('hidden');
-                });
-                
-                // Si no hay beforeinstallprompt (iOS), configurar instalación manual
-                installBtn.onclick = () => {
-                    if (deferredPrompt) {
-                        // Android/Chrome
-                        deferredPrompt.prompt();
-                        deferredPrompt.userChoice.then((choiceResult) => {
-                            if (choiceResult.outcome === 'accepted') {
-                                console.log('Usuario aceptó la instalación');
-                                showToast("¡App instalada con éxito! 🎉", 'success');
-                            } else {
-                                console.log('Usuario rechazó la instalación');
-                                showToast("Instalación cancelada", 'info');
-                            }
-                            deferredPrompt = null;
-                            installBtn.classList.add('hidden');
-                        });
-                    } else if (isIOS) {
-                        // Instrucciones automáticas para iOS
-                        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-                        
-                        if (isSafari) {
-                            // Mostrar instrucciones nativas para Safari
-                            showToast("Para instalar: 1. Toca 'Compartir' 2. Desplázate y selecciona 'Agregar a Inicio' 3. Toca 'Agregar'", 'info', 8000);
-                            
-                            // Intentar mostrar un modal con instrucciones visuales
-                            const iosModal = document.createElement('div');
-                            iosModal.className = 'modal-overlay fixed inset-0 z-[100] flex items-center justify-center p-4';
-                            iosModal.innerHTML = `
-                                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-                                    <h3 class="text-lg font-bold mb-4 text-blue-700">
-                                        <i class="fas fa-mobile-alt mr-2"></i> Instalar en iPhone
-                                    </h3>
-                                    <div class="space-y-3 mb-6">
-                                        <div class="flex items-start gap-3">
-                                            <div class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
-                                            <div class="flex-1">
-                                                <p class="font-medium">Toca el ícono de <span class="text-blue-600 font-bold">Compartir</span> <i class="fas fa-share-alt ml-1"></i></p>
-                                                <p class="text-sm text-gray-500">En la barra inferior de Safari</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start gap-3">
-                                            <div class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
-                                            <div class="flex-1">
-                                                <p class="font-medium">Desplázate y selecciona <span class="text-blue-600 font-bold">"Agregar a Inicio"</span></p>
-                                                <p class="text-sm text-gray-500">En la segunda fila de opciones</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start gap-3">
-                                            <div class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold">3</div>
-                                            <div class="flex-1">
-                                                <p class="font-medium">Toca <span class="text-blue-600 font-bold">"Agregar"</span> en la esquina superior derecha</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button id="closeIosModal" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold">
-                                            Entendido
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                            
-                            document.body.appendChild(iosModal);
-                            
-                            // Cerrar modal
-                            document.getElementById('closeIosModal').onclick = () => {
-                                document.body.removeChild(iosModal);
-                            };
-                        }
-                    }
-                };
-            } else {
-                // Para Android/otros navegadores
-                window.addEventListener('beforeinstallprompt', (e) => {
-                    e.preventDefault();
-                    deferredPrompt = e;
-                    installBtn.classList.remove('hidden');
-                });
-                
-                installBtn.onclick = async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                            console.log('PWA: Usuario aceptó la instalación.');
-                            showToast("¡App instalada con éxito! 🎉", 'success');
-                        } else {
-                            console.log('PWA: Usuario rechazó la instalación.');
-                            showToast("Instalación cancelada", 'info');
-                        }
-                        deferredPrompt = null;
-                        installBtn.classList.add('hidden');
-                    }
-                };
-            }
-
-            // También escuchar cambios en el modo de visualización
-            window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
-                if (evt.matches) {
-                    installBtn.classList.add('hidden');
-                } else {
-                    // Revisar si deberíamos mostrar el botón nuevamente
-                    if (isIOS || deferredPrompt) {
-                        installBtn.classList.remove('hidden');
-                    }
-                }
             });
+            installBtn.onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') console.log('PWA: Usuario aceptó la instalación.');
+                    else console.log('PWA: Usuario rechazó la instalación.');
+                    deferredPrompt = null;
+                    installBtn.classList.add('hidden');
+                }
+            };
 
             // Theme toggle
             const themeToggle = $('themeToggle');
@@ -4264,39 +3801,6 @@
                 if (id && confirm("¿Eliminar este movimiento de caja?")) {
                     deleteCashMovement(id, type);
                     $('editCashMovementModal').classList.add('hidden');
-                }
-            };
-
-            // === FORMULARIO PARA EDITAR CAJITAS ===
-            $('editCajitaForm').onsubmit = async (e) => {
-                e.preventDefault();
-                const id = $('editCajitaId').value;
-                
-                try {
-                    const updateData = {
-                        date: $('editCajitaDate').value,
-                        time: $('editCajitaTime').value,
-                        amount: parseFloat($('editCajitaAmount').value) || 0,
-                        employee: $('editCajitaEmployee').value.trim(),
-                        note: $('editCajitaNote').value.trim(),
-                        updatedAt: new Date().toISOString()
-                    };
-
-                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'cajitas', id), updateData);
-
-                    $('editCajitaModal').classList.add('hidden');
-                    showToast("Cajita actualizada con éxito", 'success');
-                } catch (err) {
-                    console.error("Error al actualizar cajita:", err);
-                    showToast("Error al actualizar la cajita", 'error');
-                }
-            };
-
-            $('deleteCajitaBtn').onclick = () => {
-                const id = $('editCajitaId').value;
-                if (id && confirm("¿Eliminar esta cajita?")) {
-                    deleteCajita(id);
-                    $('editCajitaModal').classList.add('hidden');
                 }
             };
         });
