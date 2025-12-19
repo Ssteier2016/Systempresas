@@ -869,7 +869,7 @@
             <div class="p-4 bg-yellow-50 border-b flex flex-wrap gap-2 items-center sticky top-0 z-10 bg-yellow-50">
                 <input type="text" id="searchCashInput" placeholder="Buscar empleado o motivo..." class="input-std w-40">
                 <div class="border-l border-yellow-200 pl-2 flex gap-2 items-center">
-                    <span class="text-xs text-yellow-700 font-bold">FECHA:</span><input type="date" id="filterCashDate" class="input-std w-auto text-sm"><span class="text-xs text-yellow-700">O</span><select id="filterCashMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select><select id="filterCashYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select><button id="applyCashFilter" class="bg-yellow-600 text-white px-3 py-2 rounded-lg" title="Aplicar filtro"><i class="fas fa-filter"></i></button><button id="resetCashFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300" title="Borrar filtro"><i class="fas fa-undo"></i></button>
+                    <span class="text-xs text-yellow-700 font-bold">FECHA:</span><input type="date" id="filterCashDate" class="input-std w-auto text-sm"><span class="text-xs text-yellow-700">O</span><select id="filterCashMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option value="11">Diciembre</option></select><select id="filterCashYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select><button id="applyCashFilter" class="bg-yellow-600 text-white px-3 py-2 rounded-lg" title="Aplicar filtro"><i class="fas fa-filter"></i></button><button id="resetCashFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300" title="Borrar filtro"><i class="fas fa-undo"></i></button>
                 </div>
                 <div class="ml-auto text-sm font-bold text-yellow-800 border-l border-yellow-300 pl-3">Flujo Cash Filtrado: <span id="cashFilteredTotal" class="text-yellow-800">$0.00</span></div>
             </div>
@@ -1026,6 +1026,66 @@
     <div id="newClientModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold text-indigo-700">Nuevo Cliente</h2><button data-close="newClientModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="clientForm" class="p-6 space-y-4"><input type="text" id="newClientName" class="input-std" placeholder="Nombre Completo" required><input type="tel" id="newClientWhatsapp" class="input-std" placeholder="WhatsApp"><input type="email" id="newClientEmail" class="input-std" placeholder="Email"><button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Guardar Cliente</button></form></div></div>
     <div id="clientsModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"><div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl"><h2 class="text-xl font-bold text-indigo-700">Base de Clientes</h2><button data-close="clientsModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center"><input type="text" id="searchClientInput" placeholder="Buscar por nombre..." class="input-std w-40"><div class="border-l pl-2 flex gap-2 items-center"><select id="filterClientMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select><select id="filterClientYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select><button id="applyClientFilter" class="bg-indigo-600 text-white px-3 py-2 rounded-lg"><i class="fas fa-filter"></i></button></div><button id="btnAddClientDirect" class="bg-indigo-600 text-white px-4 rounded-lg ml-auto"><i class="fas fa-plus"></i></button></div><div class="flex-1 overflow-y-auto p-0"><table class="min-w-full divide-y divide-gray-200"><thead><tr><th class="table-header">Nombre</th><th class="table-header">Contacto</th><th class="table-header">Email</th><th class="table-header text-right">Historial</th><th class="table-header text-center">Acciones</th></tr></thead><tbody id="clientsTableBody" class="bg-white divide-y divide-gray-100"></tbody></table></div></div></div>
     <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"><h3 class="text-lg font-bold mb-4">Perfil</h3><div class="bg-gray-50 p-3 rounded-lg mb-4 text-sm"><p><strong>Estado:</strong> <span id="authStatusText" class="text-green-600">Conectado</span></p><p class="text-xs text-gray-400 truncate mt-1" id="uidDisplay">...</p></div><button id="googleLoginBtn" class="w-full border py-2 rounded-lg hover:bg-gray-50 mb-2 flex items-center justify-center gap-2"><i class="fab fa-google text-red-500"></i> Google Login</button><button id="logoutBtn" class="w-full bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200">Cerrar Sesión</button><button data-close="profileModal" class="w-full mt-4 text-gray-400 text-sm">Cerrar</button></div></div>
+
+    <!-- MODAL PARA EDITAR RETIRO -->
+    <div id="editWithdrawalModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="p-6 border-b flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-red-700"><i class="fas fa-edit mr-2"></i> Editar Retiro</h2>
+                <button data-close="editWithdrawalModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editWithdrawalForm" class="p-6 space-y-4">
+                <input type="hidden" id="editWid">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                    <input type="date" id="editWdDate" class="input-std" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
+                    <input type="number" id="editWdAmount" step="0.01" class="input-std font-bold text-lg text-red-600" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Empleado</label>
+                    <input type="text" id="editWdEmployee" list="managerList" class="input-std" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Motivo</label>
+                    <input type="text" id="editWdNote" class="input-std">
+                </div>
+                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Actualizar Retiro</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PARA EDITAR AJUSTE -->
+    <div id="editAdjustmentModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="p-6 border-b flex justify-between items-center bg-green-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-green-700"><i class="fas fa-edit mr-2"></i> Editar Ajuste</h2>
+                <button data-close="editAdjustmentModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editAdjustmentForm" class="p-6 space-y-4">
+                <input type="hidden" id="editAdjId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                    <input type="date" id="editAdjDate" class="input-std" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Monto (+/- $)</label>
+                    <input type="number" id="editAdjAmount" step="0.01" class="input-std font-bold text-lg" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Encargado</label>
+                    <input type="text" id="editAdjEmployee" list="managerList" class="input-std" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Motivo</label>
+                    <input type="text" id="editAdjNote" class="input-std" required>
+                </div>
+                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Actualizar Ajuste</button>
+            </form>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -1554,6 +1614,28 @@
             $('newClientModal').classList.remove('hidden');
         }
 
+        // Función para editar retiro
+        function editWithdrawal(withdrawal) {
+            $('editWid').value = withdrawal.id;
+            $('editWdDate').value = withdrawal.date || getToday();
+            $('editWdAmount').value = withdrawal.amount || '';
+            $('editWdEmployee').value = withdrawal.employee || '';
+            $('editWdNote').value = withdrawal.note || '';
+            
+            $('editWithdrawalModal').classList.remove('hidden');
+        }
+
+        // Función para editar ajuste
+        function editAdjustment(adjustment) {
+            $('editAdjId').value = adjustment.id;
+            $('editAdjDate').value = adjustment.date || getToday();
+            $('editAdjAmount').value = adjustment.amount || '';
+            $('editAdjEmployee').value = adjustment.employee || '';
+            $('editAdjNote').value = adjustment.note || '';
+            
+            $('editAdjustmentModal').classList.remove('hidden');
+        }
+
         // --- CHARTS LOGIC ---
 
         function renderSalesChart() {
@@ -1793,6 +1875,9 @@
                     <td class="px-6 py-2 text-sm text-gray-700">${m.employee || 'N/A'} - <span class="text-gray-500 text-xs">${m.note}</span></td>
                     <td class="px-6 py-2 text-sm text-right font-bold ${color}">${sign}${fmtMoney(Math.abs(m.amount))}</td>
                     <td class="px-6 py-2 text-sm text-center">
+                        <button onclick="edit${m.type === 'Retiro' ? 'Withdrawal' : 'Adjustment'}(${JSON.stringify(m).replace(/"/g, '&quot;')})" class="text-blue-600 hover:text-blue-800 mx-1" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button onclick="delete${m.type === 'Retiro' ? 'Withdrawal' : 'Adjustment'}('${m.id}')" class="text-red-600 hover:text-red-800 mx-1" title="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -1899,7 +1984,7 @@
             const q = $('searchExpenseInput').value.toLowerCase();
             const fDate = $('filterExpenseDate').value;
             const fMonth = $('filterExpenseMonth').value;
-            const fYear = $('filterExpenseYear').value;
+                        const fYear = $('filterExpenseYear').value;
             const list = expenses.filter(e => {
                 if(q && !(e.category||'').toLowerCase().includes(q) && !(e.manager||'').toLowerCase().includes(q)) return false;
                 return filterByDate(e, 'date', fDate, fMonth, fYear);
@@ -2071,7 +2156,14 @@
                 div.appendChild(btn); c.appendChild(div);
             });
         }
-        function updateNewsBadge() { const today = getToday(); const hasNewsToday = news.some(n => n.date === today); const badge = $('newsBadge'); if(hasNewsToday) badge.classList.add('active'); else badge.classList.remove('active'); }
+        
+        function updateNewsBadge() { 
+            const today = getToday(); 
+            const hasNewsToday = news.some(n => n.date === today); 
+            const badge = $('newsBadge'); 
+            if(hasNewsToday) badge.classList.add('active'); 
+            else badge.classList.remove('active'); 
+        }
 
         // LÓGICA DE REGISTRO DE SERVICE WORKER Y ACTUALIZACIONES
         let deferredPrompt; 
@@ -2126,9 +2218,18 @@
                 } 
             };
 
-            $('openSideMenuBtn').onclick = () => { $('sideMenu').classList.add('open'); $('sideMenuOverlay').classList.remove('hidden'); };
-            const closeMenu = () => { $('sideMenu').classList.remove('open'); $('sideMenuOverlay').classList.add('hidden'); };
-            $('closeSideMenuBtn').onclick = closeMenu; $('sideMenuOverlay').onclick = closeMenu;
+            $('openSideMenuBtn').onclick = () => { 
+                $('sideMenu').classList.add('open'); 
+                $('sideMenuOverlay').classList.remove('hidden'); 
+            };
+            
+            const closeMenu = () => { 
+                $('sideMenu').classList.remove('open'); 
+                $('sideMenuOverlay').classList.add('hidden'); 
+            };
+            
+            $('closeSideMenuBtn').onclick = closeMenu; 
+            $('sideMenuOverlay').onclick = closeMenu;
             
             $('btnNewSale').onclick = () => { 
                 $('saleDate').value = getToday(); 
@@ -2161,6 +2262,7 @@
                 submitBtn.classList.add('bg-red-500', 'hover:bg-red-600');
                 $('newExpenseModal').classList.remove('hidden'); 
             };
+            
             $('btnNewProduct').onclick = () => { 
                 delete $('productForm').dataset.editingId;
                 const submitBtn = $('productForm').querySelector('button[type="submit"]');
@@ -2169,6 +2271,7 @@
                 submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
                 $('productModal').classList.remove('hidden'); 
             };
+            
             $('openProfileModalBtn').onclick = () => $('profileModal').classList.remove('hidden');
             $('btnAddClientDirect').onclick = () => { 
                 delete $('clientForm').dataset.editingId;
@@ -2178,6 +2281,7 @@
                 submitBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
                 $('newClientModal').classList.remove('hidden'); 
             };
+            
             document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).classList.add('hidden'));
             
             $('btnOpenTutorialsModal').onclick = () => $('tutorialsModal').classList.remove('hidden');
@@ -2187,13 +2291,33 @@
 
             $('applyProfitFilterBtn').onclick = renderProfitReport;
             $('applySalesFilter').onclick = renderSalesList;
-            $('resetSalesFilter').onclick = () => { $('filterSaleDate').value=''; $('filterSaleMonth').value='all'; $('filterSaleYear').value='all'; $('searchSaleInput').value=''; renderSalesList(); };
-            $('applyExpenseFilter').onclick = renderExpensesList;
-            $('resetExpenseFilter').onclick = () => { $('filterExpenseDate').value=''; $('filterExpenseMonth').value='all'; $('filterExpenseYear').value='all'; $('searchExpenseInput').value=''; renderExpensesList(); };
-            $('applyInvFilter').onclick = renderInventory;
-            $('resetInvFilter').onclick = () => { $('filterInvDate').value=''; $('filterInvMonth').value='all'; $('filterInvYear').value='all'; $('searchInventoryInput').value=''; renderInventory(); };
-            $('applyClientFilter').onclick = renderClientsTable;
+            $('resetSalesFilter').onclick = () => { 
+                $('filterSaleDate').value=''; 
+                $('filterSaleMonth').value='all'; 
+                $('filterSaleYear').value='all'; 
+                $('searchSaleInput').value=''; 
+                renderSalesList(); 
+            };
             
+            $('applyExpenseFilter').onclick = renderExpensesList;
+            $('resetExpenseFilter').onclick = () => { 
+                $('filterExpenseDate').value=''; 
+                $('filterExpenseMonth').value='all'; 
+                $('filterExpenseYear').value='all'; 
+                $('searchExpenseInput').value=''; 
+                renderExpensesList(); 
+            };
+            
+            $('applyInvFilter').onclick = renderInventory;
+            $('resetInvFilter').onclick = () => { 
+                $('filterInvDate').value=''; 
+                $('filterInvMonth').value='all'; 
+                $('filterInvYear').value='all'; 
+                $('searchInventoryInput').value=''; 
+                renderInventory(); 
+            };
+            
+            $('applyClientFilter').onclick = renderClientsTable;
             $('applyCashFilter').onclick = renderCashMovements;
             $('resetCashFilter').onclick = () => { 
                 $('searchCashInput').value=''; 
@@ -2202,11 +2326,25 @@
                 $('filterCashYear').value='all'; 
                 renderCashMovements(); 
             };
+            
             $('searchCashInput').oninput = renderCashMovements;
 
-            $('btnOpenEmployeeStats').onclick = () => { if($('filterStatsMonth').value === 'all' && $('filterStatsYear').value === 'all' && !$('filterStatsDate').value) { $('filterStatsMonth').value = new Date().getMonth().toString(); $('filterStatsYear').value = new Date().getFullYear().toString(); } renderEmployeeStats(); $('employeeStatsModal').classList.remove('hidden'); };
+            $('btnOpenEmployeeStats').onclick = () => { 
+                if($('filterStatsMonth').value === 'all' && $('filterStatsYear').value === 'all' && !$('filterStatsDate').value) { 
+                    $('filterStatsMonth').value = new Date().getMonth().toString(); 
+                    $('filterStatsYear').value = new Date().getFullYear().toString(); 
+                } 
+                renderEmployeeStats(); 
+                $('employeeStatsModal').classList.remove('hidden'); 
+            };
+            
             $('applyStatsFilter').onclick = renderEmployeeStats;
-            $('resetStatsFilter').onclick = () => { $('filterStatsDate').value = ''; $('filterStatsMonth').value = 'all'; $('filterStatsYear').value = 'all'; renderEmployeeStats(); };
+            $('resetStatsFilter').onclick = () => { 
+                $('filterStatsDate').value = ''; 
+                $('filterStatsMonth').value = 'all'; 
+                $('filterStatsYear').value = 'all'; 
+                renderEmployeeStats(); 
+            };
 
             // LISTENERS CALCULADORA
             $('openCalcBtn').onclick = () => {
@@ -2216,6 +2354,7 @@
                 $('calcResultDisplay').textContent = fmtMoney(parseFloat(currentVal) || 0);
                 $('calculatorModal').classList.remove('hidden');
             };
+            
             $('calcBaseAmount').oninput = updateCalc;
             
             $('calcTypeSurcharge').onclick = () => {
@@ -2224,6 +2363,7 @@
                 $('calcTypeDiscount').className = "flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-100 text-gray-600 font-bold text-sm hover:bg-green-100 hover:text-green-700 transition";
                 updateCalc();
             };
+            
             $('calcTypeDiscount').onclick = () => {
                 calcType = 'discount';
                 $('calcTypeDiscount').className = "flex-1 py-2 rounded-lg border-2 border-transparent bg-green-100 text-green-700 font-bold text-sm hover:bg-green-200 transition ring-2 ring-green-500";
@@ -2563,20 +2703,99 @@
                 showToast("Ajuste de caja guardado con éxito", 'success');
             };
 
-            $('saleTime').onchange = (e) => { const [h,m] = e.target.value.split(':').map(Number); const t = h+m/60; $('saleShift').value = (t>=10&&t<16)?'Turno Mañana':((t>=16&&t<21)?'Turno Tarde':'Fuera de Horario'); };
+            // FORMULARIO PARA EDITAR RETIRO
+            $('editWithdrawalForm').onsubmit = async(e) => {
+                e.preventDefault();
+                if(!userId) return;
+
+                const withdrawalId = $('editWid').value;
+                const updatedData = {
+                    date: $('editWdDate').value || getToday(),
+                    amount: $('editWdAmount').value,
+                    employee: $('editWdEmployee').value.trim(),
+                    note: $('editWdNote').value || '',
+                    updatedAt: new Date().toISOString()
+                };
+
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'withdrawals', withdrawalId), updatedData);
+                    showToast("Retiro actualizado con éxito", 'success');
+                    $('editWithdrawalModal').classList.add('hidden');
+                } catch (error) {
+                    console.error("Error actualizando retiro:", error);
+                    showToast("Error al actualizar el retiro", 'error');
+                }
+            };
+
+            // FORMULARIO PARA EDITAR AJUSTE
+            $('editAdjustmentForm').onsubmit = async(e) => {
+                e.preventDefault();
+                if(!userId) return;
+
+                const adjustmentId = $('editAdjId').value;
+                const updatedData = {
+                    date: $('editAdjDate').value || getToday(),
+                    amount: $('editAdjAmount').value,
+                    employee: $('editAdjEmployee').value.trim(),
+                    note: $('editAdjNote').value || '',
+                    updatedAt: new Date().toISOString()
+                };
+
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'adjustments', adjustmentId), updatedData);
+                    showToast("Ajuste actualizado con éxito", 'success');
+                    $('editAdjustmentModal').classList.add('hidden');
+                } catch (error) {
+                    console.error("Error actualizando ajuste:", error);
+                    showToast("Error al actualizar el ajuste", 'error');
+                }
+            };
+
+            $('saleTime').onchange = (e) => { 
+                const [h,m] = e.target.value.split(':').map(Number); 
+                const t = h+m/60; 
+                $('saleShift').value = (t>=10&&t<16)?'Turno Mañana':((t>=16&&t<21)?'Turno Tarde':'Fuera de Horario'); 
+            };
+            
             $('searchSaleInput').oninput = renderSalesList;
             $('searchExpenseInput').oninput = renderExpensesList;
             $('searchInventoryInput').oninput = renderInventory;
             $('searchClientInput').oninput = renderClientsTable;
             
-            $('logoutBtn').onclick = () => { if(auth) signOut(auth).then(()=>$('profileModal').classList.add('hidden')); showToast("Sesión cerrada.", 'info'); };
-            $('googleLoginBtn').onclick = () => { if(auth) signInWithPopup(auth, new GoogleAuthProvider()).then(()=>$('profileModal').classList.add('hidden')); };
+            $('logoutBtn').onclick = () => { 
+                if(auth) signOut(auth).then(()=>$('profileModal').classList.add('hidden')); 
+                showToast("Sesión cerrada.", 'info'); 
+            };
+            
+            $('googleLoginBtn').onclick = () => { 
+                if(auth) signInWithPopup(auth, new GoogleAuthProvider()).then(()=>$('profileModal').classList.add('hidden')); 
+            };
 
-            $('openInventarioBtn').onclick = () => { renderInventory(); $('inventoryModal').classList.remove('hidden'); };
-            $('openVentasHistoryBtn').onclick = () => { renderSalesList(); $('salesHistoryModal').classList.remove('hidden'); };
-            $('openGananciasHistoryBtn').onclick = () => { if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); renderProfitReport(); $('gananciasDetailModal').classList.remove('hidden'); };
-            $('openGastosHistoryBtn').onclick = () => { renderExpensesList(); $('expensesHistoryModal').classList.remove('hidden'); };
-            $('openClientesBtn').onclick = () => { renderClientsTable(); $('clientsModal').classList.remove('hidden'); };
+            $('openInventarioBtn').onclick = () => { 
+                renderInventory(); 
+                $('inventoryModal').classList.remove('hidden'); 
+            };
+            
+            $('openVentasHistoryBtn').onclick = () => { 
+                renderSalesList(); 
+                $('salesHistoryModal').classList.remove('hidden'); 
+            };
+            
+            $('openGananciasHistoryBtn').onclick = () => { 
+                if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
+                renderProfitReport(); 
+                $('gananciasDetailModal').classList.remove('hidden'); 
+            };
+            
+            $('openGastosHistoryBtn').onclick = () => { 
+                renderExpensesList(); 
+                $('expensesHistoryModal').classList.remove('hidden'); 
+            };
+            
+            $('openClientesBtn').onclick = () => { 
+                renderClientsTable(); 
+                $('clientsModal').classList.remove('hidden'); 
+            };
             
             $('btnOpenCashModal').onclick = () => { 
                 if($('searchCashInput')) $('searchCashInput').value=''; 
@@ -2587,13 +2806,26 @@
                 $('cashDetailModal').classList.remove('hidden'); 
             };
             
-            $('openNewsModalBtn').onclick = () => { $('newsHistoryModal').classList.remove('hidden'); };
+            $('openNewsModalBtn').onclick = () => { 
+                $('newsHistoryModal').classList.remove('hidden'); 
+            };
+            
             $('saveNoteBtn').onclick = async () => { 
                 const text = $('dailyNoteInput').value.trim(); 
-                if(!text) { showToast("La nota está vacía.", 'info'); return; } 
-                if(!userId) { showToast("Error: Usuario no identificado.", 'error'); return; } 
+                if(!text) { 
+                    showToast("La nota está vacía.", 'info'); 
+                    return; 
+                } 
+                if(!userId) { 
+                    showToast("Error: Usuario no identificado.", 'error'); 
+                    return; 
+                } 
                 try { 
-                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'dailyNotes'), { text: text, date: getToday(), timestamp: new Date().toISOString() }); 
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'dailyNotes'), { 
+                        text: text, 
+                        date: getToday(), 
+                        timestamp: new Date().toISOString() 
+                    }); 
                     $('dailyNoteInput').value = ''; 
                     showToast("Nota guardada en el historial", 'success'); 
                 } catch(e) { 
@@ -2601,7 +2833,11 @@
                     showToast("Error al guardar la nota", 'error'); 
                 } 
             };
-            $('sendWhatsappBtn').onclick = () => { const text = $('dailyNoteInput').value; if(text) window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); };
+            
+            $('sendWhatsappBtn').onclick = () => { 
+                const text = $('dailyNoteInput').value; 
+                if(text) window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); 
+            };
 
             const themeToggle = $('themeToggle'); 
             const icon = themeToggle.querySelector('i'); 
@@ -2610,6 +2846,7 @@
                 icon.classList.add('fa-sun'); 
                 icon.classList.add('text-yellow-400'); 
             }
+            
             themeToggle.onclick = () => { 
                 const currentTheme = document.documentElement.getAttribute('data-theme'); 
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark'; 
@@ -2653,6 +2890,20 @@
                 div.appendChild(btn); c.appendChild(div); 
             }); 
         }
+
+        // Hacer las funciones de edición globales
+        window.editProduct = editProduct;
+        window.editSale = editSale;
+        window.editExpense = editExpense;
+        window.editClient = editClient;
+        window.editWithdrawal = editWithdrawal;
+        window.editAdjustment = editAdjustment;
+        window.deleteProduct = deleteProduct;
+        window.deleteSale = deleteSale;
+        window.deleteExpense = deleteExpense;
+        window.deleteClient = deleteClient;
+        window.deleteWithdrawal = deleteWithdrawal;
+        window.deleteAdjustment = deleteAdjustment;
     </script>
 </body>
 </html>
