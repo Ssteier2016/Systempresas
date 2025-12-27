@@ -1,21 +1,80 @@
 {
-  "name": "Systempresas: Gestión de Negocios",
-  "short_name": "Systempresas",
-  "description": "Dashboard de gestión de ventas, gastos e inventario en tiempo real.",
-  "start_url": "/index.html",
+  "name": "Gestión de Negocios Pro",
+  "short_name": "NegociosPro",
+  "description": "Sistema de gestión empresarial completo",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f9fafb",
   "theme_color": "#3b82f6",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "/logo192.png",
+      "src": "/icon-72.png",
+      "sizes": "72x72",
       "type": "image/png",
-      "sizes": "192x192"
+      "purpose": "any maskable"
     },
     {
-      "src": "/icon512.png",
+      "src": "/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "scope": "/",
+  "categories": ["business", "productivity", "finance"],
+  "screenshots": [
+    {
+      "src": "/screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nueva Venta",
+      "short_name": "Venta",
+      "description": "Registrar nueva venta",
+      "url": "/?action=new-sale",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Ver Historial",
+      "short_name": "Historial",
+      "description": "Ver historial de ventas",
+      "url": "/?action=sales-history",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
     }
   ]
 }
