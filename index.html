@@ -3628,10 +3628,10 @@
                 // Procesar cada fila
                 for (const rowId of massiveSaleRows) {
                     try {
-                        const productSelect = document.querySelector(`#${rowId} .massive-product`);
+                        const productSelect = document.querySelector(`${rowId} .massive-product`);
                         const productId = productSelect ? productSelect.value : '';
                         const product = products.find(p => p.id === productId);
-                        const quantityInput = document.querySelector(`#${rowId} .massive-quantity`);
+                        const quantityInput = document.querySelector(`${rowId} .massive-quantity`);
                         const quantity = parseInt(quantityInput?.value) || 1;
                         
                         // Validar stock si hay producto seleccionado
@@ -3644,7 +3644,7 @@
                             }
                         }
                         
-                        const amountInput = document.querySelector(`#${rowId} .massive-amount`);
+                        const amountInput = document.querySelector(`${rowId} .massive-amount`);
                         const montoCobrado = parseFloat(amountInput?.value) || 0;
                         
                         if (montoCobrado <= 0) {
@@ -3653,31 +3653,31 @@
                             continue;
                         }
                         
-                        const employeeInput = document.querySelector(`#${rowId} .massive-employee`);
+                        const employeeInput = document.querySelector(`${rowId} .massive-employee`);
                         const emp = employeeInput?.value.trim() || defaultEmployee || 'Sin encargado';
                         
-                        const clientInput = document.querySelector(`#${rowId} .massive-client`);
+                        const clientInput = document.querySelector(`${rowId} .massive-client`);
                         const cName = clientInput?.value.trim() || 'Cliente no registrado';
                         
-                        const paymentInput = document.querySelector(`#${rowId} .massive-payment`);
+                        const paymentInput = document.querySelector(`${rowId} .massive-payment`);
                         const paymentType = paymentInput?.value.trim() || 'Efectivo';
                         
-                        const timeInput = document.querySelector(`#${rowId} .massive-time`);
+                        const timeInput = document.querySelector(`${rowId} .massive-time`);
                         const time = timeInput?.value || new Date().toLocaleTimeString('es-ES', {hour12: false, hour: '2-digit', minute: '2-digit'});
                         
-                        const shiftInput = document.querySelector(`#${rowId} .massive-shift`);
+                        const shiftInput = document.querySelector(`${rowId} .massive-shift`);
                         const shift = shiftInput?.value || detectShift(time);
                         
-                        const channelInput = document.querySelector(`#${rowId} .massive-channel`);
+                        const channelInput = document.querySelector(`${rowId} .massive-channel`);
                         const salesChannel = channelInput?.value.trim() || '';
                         
-                        const whatsappInput = document.querySelector(`#${rowId} .massive-whatsapp`);
+                        const whatsappInput = document.querySelector(`${rowId} .massive-whatsapp`);
                         const whatsapp = whatsappInput?.value.trim() || '';
                         
-                        const emailInput = document.querySelector(`#${rowId} .massive-email`);
+                        const emailInput = document.querySelector(`${rowId} .massive-email`);
                         const email = emailInput?.value.trim() || '';
                         
-                        const notesInput = document.querySelector(`#${rowId} .massive-notes`);
+                        const notesInput = document.querySelector(`${rowId} .massive-notes`);
                         const notes = notesInput?.value.trim() || '';
                         
                         // Calcular comisiones para Yael
