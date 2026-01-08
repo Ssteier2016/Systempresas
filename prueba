@@ -5044,4 +5044,459 @@
 
             const themeToggle = $('themeToggle'); 
             const icon = themeToggle.querySelector('i'); 
-            if(document.documentElement.getAttribute('data-theme') === 'dark') { 
+            if(document.documentElement.getAttribute('data-theme') === 'dark') {                icon.classList.remove('fa-moon'); 
+                icon.classList.add('fa-sun'); 
+            }
+            
+            themeToggle.onclick = () => { 
+                const currentTheme = document.documentElement.getAttribute('data-theme'); 
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark'; 
+                document.documentElement.setAttribute('data-theme', newTheme); 
+                localStorage.setItem('theme', newTheme); 
+                
+                if(newTheme === 'dark') { 
+                    icon.classList.remove('fa-moon'); 
+                    icon.classList.add('fa-sun'); 
+                } else { 
+                    icon.classList.remove('fa-sun'); 
+                    icon.classList.add('fa-moon'); 
+                } 
+            };
+
+            $('openInventarioBtn').onclick = () => { 
+                renderInventory(); 
+                $('inventoryModal').classList.remove('hidden'); 
+            };
+            
+            $('openVentasHistoryBtn').onclick = () => { 
+                // Verificar contraseña antes de mostrar historial de ventas
+                if (!userPassword) {
+                    showToast('Primero configura una contraseña en el menú lateral', 'info');
+                    $('securitySettingsModal').classList.remove('hidden');
+                    return;
+                }
+                
+                if (!passwordProtectedData.sales) {
+                    showToast('Necesitas ingresar la contraseña para ver el historial de ventas', 'info');
+                    $('passwordModalType').value = 'sales';
+                    $('passwordInput').value = '';
+                    $('passwordModal').classList.remove('hidden');
+                    return;
+                }
+                
+                renderSalesList(); 
+                $('salesHistoryModal').classList.remove('hidden'); 
+            };
+
+            // FORMULARIO DE AJUSTE MANUAL
+            $('adjustmentForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+                
+                const date = $('adjDate').value || getToday(); 
+                const amount = parseFloat($('adjAmount').value) || 0; 
+                const employee = $('adjEmployee').value.trim(); 
+                const note = $('adjNote').value.trim(); 
+                
+                if(!employee) { 
+                    showToast("Debe indicar un encargado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    const adjData = { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        createdAt: new Date().toISOString() 
+                    }; 
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'adjustments'), adjData); 
+                    showToast("Ajuste registrado", 'success'); 
+                    sendNotificationToAll('Ajuste de Caja', 
+                        `${employee} registró un ajuste de ${amount >= 0 ? '+' : ''}${fmtMoney(amount)}: ${note}`);
+                    
+                    e.target.reset(); 
+                    $('adjDate').value = getToday(); 
+                } catch(err) { 
+                    console.error("Error guardando ajuste:", err); 
+                    showToast("Error al guardar ajuste", 'error'); 
+                } 
+            };
+            
+            // FORMULARIO DE RETIRO MANUAL
+            $('withdrawalForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+                
+                const date = $('wdDate').value || getToday(); 
+                const amount = parseFloat($('wdAmount').value) || 0; 
+                const employee = $('wdEmployee').value.trim(); 
+                const note = $('wdNote').value.trim(); 
+                
+                if(amount <= 0) { 
+                    showToast("El monto debe ser mayor a 0.", 'error'); 
+                    return; 
+                } 
+                if(!employee) { 
+                    showToast("Debe indicar un empleado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    const wData = { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        createdAt: new Date().toISOString() 
+                    }; 
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'withdrawals'), wData); 
+                    showToast("Retiro registrado", 'success'); 
+                    sendNotificationToAll('Retiro de Caja', 
+                        `${employee} retiró ${fmtMoney(amount)}: ${note || 'Sin motivo especificado'}`);
+                    
+                    e.target.reset(); 
+                    $('wdDate').value = getToday(); 
+                } catch(err) { 
+                    console.error("Error guardando retiro:", err); 
+                    showToast("Error al guardar retiro", 'error'); 
+                } 
+            };
+
+            // FORMULARIO DE EDICIÓN DE RETIRO
+            $('editWithdrawalForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                const wid = $('editWid').value; 
+                if(!wid || !userId) return; 
+                
+                const date = $('editWdDate').value || getToday(); 
+                const amount = parseFloat($('editWdAmount').value) || 0; 
+                const employee = $('editWdEmployee').value.trim(); 
+                const note = $('editWdNote').value.trim(); 
+                
+                if(amount <= 0) { 
+                    showToast("El monto debe ser mayor a 0.", 'error'); 
+                    return; 
+                } 
+                if(!employee) { 
+                    showToast("Debe indicar un empleado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'withdrawals', wid), { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        updatedAt: new Date().toISOString() 
+                    }); 
+                    showToast("Retiro actualizado", 'success'); 
+                    $('editWithdrawalModal').classList.add('hidden'); 
+                } catch(err) { 
+                    console.error("Error actualizando retiro:", err); 
+                    showToast("Error al actualizar retiro", 'error'); 
+                } 
+            };
+            
+            // FORMULARIO DE EDICIÓN DE AJUSTE
+            $('editAdjustmentForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                const adjId = $('editAdjId').value; 
+                if(!adjId || !userId) return; 
+                
+                const date = $('editAdjDate').value || getToday(); 
+                const amount = parseFloat($('editAdjAmount').value) || 0; 
+                const employee = $('editAdjEmployee').value.trim(); 
+                const note = $('editAdjNote').value.trim(); 
+                
+                if(!employee) { 
+                    showToast("Debe indicar un encargado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'adjustments', adjId), { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        updatedAt: new Date().toISOString() 
+                    }); 
+                    showToast("Ajuste actualizado", 'success'); 
+                    $('editAdjustmentModal').classList.add('hidden'); 
+                } catch(err) { 
+                    console.error("Error actualizando ajuste:", err); 
+                    showToast("Error al actualizar ajuste", 'error'); 
+                } 
+            };
+
+            $('expenseForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+
+                const isEditing = $('expenseForm').dataset.editingId;
+                const amount = parseFloat($('expenseAmount').value) || 0; 
+                if(amount <= 0) { 
+                    showToast("El monto debe ser mayor a 0.", 'error'); 
+                    return; 
+                } 
+                
+                const expenseData = { 
+                    date: $('expenseDate').value || getToday(), 
+                    gastoTotal: amount, 
+                    category: $('expenseCategory').value.trim(), 
+                    paymentMethod: $('expensePaymentMethod').value.trim() || 'Efectivo', 
+                    manager: $('expenseManager').value.trim(), 
+                    description: $('expenseDesc').value.trim(), 
+                    updatedAt: new Date().toISOString()
+                }; 
+                
+                try {
+                    if (isEditing) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'expenses', isEditing), expenseData);
+                        showToast("Gasto actualizado", 'success');
+                        sendNotificationToAll('Gasto Actualizado', 
+                            `${expenseData.manager} actualizó un gasto de ${fmtMoney(amount)}`);
+                        
+                        const submitBtn = $('expenseForm').querySelector('button[type="submit"]');
+                        submitBtn.textContent = "Guardar Gasto";
+                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        submitBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                        delete $('expenseForm').dataset.editingId;
+                    } else {
+                        expenseData.createdAt = new Date().toISOString();
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), expenseData);
+                        showToast("Gasto registrado", 'success');
+                        
+                        // Enviar notificación push a todos los usuarios
+                        sendNotificationToAll('Nuevo Gasto Registrado', 
+                            `${expenseData.manager} registró un gasto de ${fmtMoney(amount)} en ${expenseData.category}`);
+                    }
+                    
+                    $('newExpenseModal').classList.add('hidden'); 
+                    e.target.reset(); 
+                } catch(err) { 
+                    console.error("Error guardando gasto:", err); 
+                    showToast("Error al guardar gasto", 'error'); 
+                } 
+            };
+
+            $('productForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+
+                const isEditing = $('productForm').dataset.editingId;
+                const productData = { 
+                    name: $('prodName').value.trim(), 
+                    prodType: $('prodType').value.trim(), 
+                    priceRetail: $('prodPrice').value || 0, 
+                    priceUsd: $('prodPriceUsd').value || 0, 
+                    stock: $('prodStock').value || 0, 
+                    updatedAt: new Date().toISOString()
+                }; 
+                
+                try {
+                    if (isEditing) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', isEditing), productData);
+                        showToast("Producto actualizado", 'success');
+                        sendNotificationToAll('Producto Actualizado', 
+                            `Se actualizó el producto "${productData.name}" en el inventario`);
+                        
+                        const submitBtn = $('productForm').querySelector('button[type="submit"]');
+                        submitBtn.textContent = "Guardar";
+                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                        delete $('productForm').dataset.editingId;
+                    } else {
+                        productData.createdAt = new Date().toISOString();
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'products'), productData);
+                        showToast("Producto agregado al inventario", 'success');
+                        
+                        // Enviar notificación push a todos los usuarios
+                        sendNotificationToAll('Nuevo Producto', 
+                            `Se agregó "${productData.name}" al inventario con ${productData.stock} unidades`);
+                    }
+                    
+                    $('productModal').classList.add('hidden'); 
+                    e.target.reset(); 
+                } catch(err) { 
+                    console.error("Error guardando producto:", err); 
+                    showToast("Error al guardar producto", 'error'); 
+                } 
+            };
+
+            $('clientForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+
+                const isEditing = $('clientForm').dataset.editingId;
+                const clientData = { 
+                    name: $('newClientName').value.trim(), 
+                    whatsapp: $('newClientWhatsapp').value.trim(), 
+                    email: $('newClientEmail').value.trim(), 
+                    updatedAt: new Date().toISOString()
+                }; 
+                
+                if(!clientData.name) { 
+                    showToast("El nombre es obligatorio", 'error'); 
+                    return; 
+                } 
+                
+                try {
+                    if (isEditing) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'clients', isEditing), clientData);
+                        showToast("Cliente actualizado", 'success');
+                        sendNotificationToAll('Cliente Actualizado', 
+                            `Se actualizó la información del cliente "${clientData.name}"`);
+                        
+                        const submitBtn = $('clientForm').querySelector('button[type="submit"]');
+                        submitBtn.textContent = "Guardar Cliente";
+                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        submitBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                        delete $('clientForm').dataset.editingId;
+                    } else {
+                        clientData.createdAt = new Date().toISOString();
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'clients'), clientData);
+                        showToast("Cliente agregado", 'success');
+                        
+                        // Enviar notificación push a todos los usuarios
+                        sendNotificationToAll('Nuevo Cliente', 
+                            `Se agregó a "${clientData.name}" a la base de clientes`);
+                    }
+                    
+                    $('newClientModal').classList.add('hidden'); 
+                    e.target.reset(); 
+                } catch(err) { 
+                    console.error("Error guardando cliente:", err); 
+                    showToast("Error al guardar cliente", 'error'); 
+                } 
+            };
+
+            $('addEmployeeForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+                
+                const newEmp = $('newEmployeeInput').value.trim(); 
+                if(!newEmp) { 
+                    showToast("Ingrese un nombre válido.", 'info'); 
+                    return; 
+                } 
+                if(settings.employees.includes(newEmp)) { 
+                    showToast("Ese empleado ya existe.", 'info'); 
+                    return; 
+                } 
+                
+                try { 
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                        { employees: arrayUnion(newEmp) }, 
+                        { merge: true } 
+                    ); 
+                    $('newEmployeeInput').value = ''; 
+                    showToast("Empleado agregado", 'success'); 
+                    sendNotificationToAll('Nuevo Empleado', 
+                        `Se agregó a "${newEmp}" al equipo de trabajo`);
+                } catch(err) { 
+                    console.error("Error agregando empleado:", err); 
+                    showToast("Error al agregar empleado", 'error'); 
+                } 
+            };
+
+            // AUTENTICACIÓN CON GOOGLE
+            const provider = new GoogleAuthProvider(); 
+            $('googleLoginBtn').onclick = async () => { 
+                try { 
+                    await signInWithPopup(auth, provider); 
+                    showToast("Autenticación exitosa", 'success'); 
+                    sendNotificationToAll('Nuevo Inicio de Sesión', 
+                        'Se ha iniciado sesión en el sistema con Google');
+                } catch(err) { 
+                    console.error("Error en autenticación Google:", err); 
+                    showToast("Error en autenticación", 'error'); 
+                } 
+            }; 
+            
+            $('logoutBtn').onclick = async () => { 
+                try { 
+                    await signOut(auth); 
+                    showToast("Sesión cerrada", 'info'); 
+                } catch(err) { 
+                    console.error("Error cerrando sesión:", err); 
+                    showToast("Error al cerrar sesión", 'error'); 
+                } 
+            };
+
+            function renderEmployeeList() {
+                const container = $('employeeListContainer');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                if (!settings.employees || settings.employees.length === 0) {
+                    container.innerHTML = '<div class="text-sm text-gray-400 text-center py-2">No hay empleados registrados</div>';
+                    return;
+                }
+                
+                settings.employees.forEach(emp => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-gray-50 p-2 rounded border';
+                    div.innerHTML = `<span class="text-sm font-medium text-gray-700">${emp}</span>`;
+                    
+                    const btn = document.createElement('button');
+                    btn.innerHTML = '<i class="fas fa-times text-red-500 hover:text-red-700"></i>';
+                    btn.title = "Eliminar empleado";
+                    btn.onclick = async () => {
+                        if (!confirm(`¿Eliminar a ${emp}?`)) return;
+                        
+                        try {
+                            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                                { employees: arrayRemove(emp) }, 
+                                { merge: true }
+                            );
+                            showToast(`Empleado ${emp} eliminado`, 'info');
+                            sendNotificationToAll('Empleado Eliminado', 
+                                `Se eliminó a "${emp}" del equipo de trabajo`);
+                        } catch(err) {
+                            console.error("Error eliminando empleado:", err);
+                            showToast("Error al eliminar empleado", 'error');
+                        }
+                    };
+                    
+                    div.appendChild(btn);
+                    container.appendChild(div);
+                });
+            }
+
+            // SETEO DE FECHAS POR DEFECTO
+            const today = getToday();
+            [$('saleDate'), $('expenseDate'), $('adjDate'), $('wdDate'), $('massiveSaleDate'), $('massiveExpenseDate'), 
+             $('filterSaleDate'), $('filterExpenseDate'), $('filterInvDate'), $('filterCashDate'), $('filterStatsDate')]
+                .forEach(el => { if(el) el.value = today; });
+            
+            [$('saleTime'), $('massiveSaleDate')].forEach(el => { 
+                if(el) el.value = new Date().toLocaleTimeString('es-ES', {hour12: false, hour: '2-digit', minute: '2-digit'}); 
+            });
+            
+            [$('filterProfitMonth'), $('filterSaleMonth'), $('filterExpenseMonth'), $('filterInvMonth'), $('filterCashMonth'), $('filterClientMonth'), $('filterStatsMonth')]
+                .forEach(el => { if(el) el.value = new Date().getMonth().toString(); });
+            
+            [$('filterProfitYear'), $('filterSaleYear'), $('filterExpenseYear'), $('filterInvYear'), $('filterCashYear'), $('filterClientYear'), $('filterStatsYear')]
+                .forEach(el => { if(el) el.value = new Date().getFullYear().toString(); });
+            
+            // Llamada final para actualizar
+            updateClock();
+            updateDashboard();
+            updateDynamicLists();
+            updateProductListForSale();
+            updateChannelFilter(); // ACTUALIZADO: Actualizar filtro de canales al cargar
+            
+            // Verificar si está en webview de Lemon Cash y mostrar botón
+            if (window.LemonCashSDK && window.LemonCashSDK.isWebView && window.LemonCashSDK.isWebView()) {
+                $('lemonCashBtn').classList.remove('hidden');
+            }
+            
+            console.log('Sistema cargado correctamente v3.9.13 Pro');
+        });
+    </script>
+</body>
+</html>
