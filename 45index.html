@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- MEJORADO: Añadido maximum-scale y user-scalable para zoom en móvil -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Gestión de Negocios - Pro v3.9.13</title>
+    <!-- ASEGÚRATE QUE EL MANIFEST.JSON ESTÉ EN LA MISMA CARPETA -->
+    <link rel="manifest" href="./manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { 
+            font-family: 'Inter', system-ui, sans-serif;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            
+            /* Colores Modo Claro */
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --card-bg: #ffffff;
+            --input-bg: #f9fafb;
+            --modal-bg: #ffffff;
+        }
+        
+        [data-theme="dark"] {
+            /* Colores Modo Oscuro */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --card-bg: #1e293b;
+            --input-bg: #334155;
+            --modal-bg: #1e293b;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            /* MEJORADO: Permitir scroll táctil en toda la página */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Splash Screen con gradiente animado */
+        #splashScreen { 
+            position: fixed; 
+            inset: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 9999; 
+            transition: opacity .6s ease-out; 
+            opacity: 1; 
+            pointer-events: all;
+        }
+        
+        [data-theme="dark"] #splashScreen {
+            background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+        }
+        
+        #splashScreen .text-blue-600 {
+            color: white !important;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+        
+        #splashScreen h1 { color: white; }
+        #splashScreen p { color: rgba(255,255,255,0.8); }
+        
+        #mainContent { 
+            opacity: 0; 
+            transition: opacity .8s ease-in; 
+            pointer-events: none; 
+        }
+        #mainContent.visible { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+        
+        /* Tarjetas adaptadas al tema */
+        .bg-white {
+            background-color: var(--card-bg) !important;
+            transition: all 0.3s ease;
+        }
+        
+        [data-theme="dark"] .text-gray-800,
+        [data-theme="dark"] .text-gray-900 {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .text-gray-500,
+        [data-theme="dark"] .text-gray-400 {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] .text-gray-700 {
+            color: #cbd5e1 !important;
+        }
+        
+        [data-theme="dark"] .bg-gray-50 {
+            background-color: var(--bg-secondary) !important;
+        }
+
+        [data-theme="dark"] .border-gray-100,
+        [data-theme="dark"] .border-gray-200 {
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .bg-gray-50 {
+            background-color: var(--bg-tertiary) !important;
+        }
+        
+        [data-theme="dark"] .bg-gray-100 {
+            background-color: #334155 !important;
+        }
+        
+        /* Tarjetas con efecto glassmorphism */
+        .card-border-l { 
+            border-left-width: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .card-border-l:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15);
+        }
+        
+        [data-theme="dark"] .card-border-l:hover {
+            box-shadow: 0 12px 24px -8px rgba(0,0,0,0.5);
+        }
+        
+        /* Modal overlay mejorado */
+        .modal-overlay { 
+            background: rgba(0,0,0,.6); 
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.2s ease-out;
+            /* MEJORADO: Permitir scroll táctil en modales */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        [data-theme="dark"] .modal-overlay {
+            background: rgba(0,0,0,.8);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Tablas con hover suave */
+        .table-header { 
+            @apply px-6 py-3 text-left text-xs font-medium uppercase tracking-wider;
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .table-cell { 
+            @apply px-6 py-4 whitespace-nowrap text-sm;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.15s ease;
+        }
+        
+        tbody tr:hover .table-cell {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        [data-theme="dark"] tbody tr:hover .table-cell {
+            background-color: rgba(59, 130, 246, 0.15);
+        }
+        
+        /* Input mejorado con efectos */
+        .input-std { 
+            @apply block w-full rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+            transition: all 0.2s ease;
+        }
+        
+        .input-std:focus {
+            background-color: var(--card-bg);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        [data-theme="dark"] .input-std::placeholder {
+            color: #64748b;
+        }
+        
+        /* Campos protegidos con mejor estilo */
+        .protected-field { 
+            font-family: monospace; 
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.02) 100%);
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        [data-theme="dark"] .protected-field {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+        }
+        
+        .protected-field.revealed { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            letter-spacing: normal;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        }
+        
+        /* Menú lateral con sombra elegante */
+        #sideMenu { 
+            transform: translateX(-100%); 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+            background-color: var(--card-bg);
+        }
+        
+        [data-theme="dark"] #sideMenu {
+            box-shadow: 4px 0 24px rgba(0,0,0,0.6);
+        }
+        
+        #sideMenu.open { 
+            transform: translateX(0); 
+        }
+        
+        /* Botones con efectos hover mejorados */
+        button {
+            transition: all 0.2s ease;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        /* Botones principales con gradientes */
+        .bg-blue-600 {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        
+        .bg-blue-600:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        
+        /* Cards del dashboard con efectos */
+        .group:hover .bg-orange-100,
+        .group:hover .bg-blue-100,
+        .group:hover .bg-green-100,
+        .group:hover .bg-red-100,
+        .group:hover .bg-indigo-100 {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        /* Animación para iconos */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Scrollbar personalizado - MEJORADO PARA ARQUEO DE CAJA */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+            transition: background 0.2s;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        
+        /* Efecto para modales al aparecer */
+        .modal-overlay > div {
+            animation: slideUp 0.3s ease-out;
+            background-color: var(--modal-bg);
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Botón de toggle theme */
+        #themeToggle {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+        }
+        
+        #themeToggle:hover {
+            transform: rotate(15deg);
+            background-color: var(--bg-tertiary);
+        }
+        
+        /* Badge para notificaciones */
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: none;
+        }
+        .notification-badge.active {
+            display: block;
+        }
+
+        /* Adaptaciones específicas para modo oscuro */
+        [data-theme="dark"] nav {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        [data-theme="dark"] .shadow-sm,
+        [data-theme="dark"] .shadow-md,
+        [data-theme="dark"] .shadow-lg {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* TOAST NOTIFICATION STYLES */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column-reverse; /* Las nuevas notificaciones aparecen abajo */
+            gap: 10px;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            color: white;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast.success { background-color: #10b981; } /* Green */
+        .toast.error { background-color: #ef4444; }  /* Red */
+        .toast.info { background-color: #3b82f6; }   /* Blue */
+        
+        /* Estilo para scrollbar de arqueo de caja - MEJORADO */
+        .touch-scroll {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) var(--bg-tertiary);
+        }
+        
+        /* Estilo para botón de notificaciones push */
+        .notification-toggle {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .notification-toggle.active {
+            color: #3b82f6 !important;
+        }
+        
+        .notification-toggle.active i {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Mejoras para móvil en tabla de movimientos de caja */
+        @media (max-width: 768px) {
+            .mobile-cash-table td {
+                padding: 8px 4px !important;
+                font-size: 12px !important;
+            }
+            .mobile-cash-table th {
+                padding: 8px 4px !important;
+                font-size: 11px !important;
+            }
+            .mobile-cash-table .table-cell {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+            }
+        }
+        
+        /* Estilos para la tabla de venta masiva */
+        .massive-sale-row {
+            transition: all 0.2s ease;
+        }
+        
+        .massive-sale-row:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        [data-theme="dark"] .massive-sale-row:hover {
+            background-color: rgba(59, 130, 246, 0.15);
+        }
+        
+        .massive-sale-table th {
+            position: sticky;
+            top: 0;
+            background-color: var(--card-bg);
+            z-index: 10;
+        }
+        
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+        
+        .sortable-header:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .sort-arrow {
+            font-size: 10px;
+            margin-left: 4px;
+            opacity: 0.6;
+        }
+        
+        /* Estilos para el switch de tipo de venta */
+        .sale-type-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--bg-tertiary);
+            border-radius: 9999px;
+            padding: 2px;
+            margin-bottom: 16px;
+        }
+        
+        .sale-type-option {
+            padding: 8px 16px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .sale-type-option.active {
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            color: var(--text-primary);
+        }
+        
+        .sale-type-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            height: calc(100% - 4px);
+            border-radius: 9999px;
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s ease;
+            width: calc(50% - 4px);
+        }
+        
+        .massive-sale-input {
+            @apply block w-full rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border text-sm;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+            transition: all 0.2s ease;
+        }
+        
+        .massive-sale-input:focus {
+            background-color: var(--card-bg);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .add-row-btn {
+            background-color: var(--bg-tertiary);
+            border: 2px dashed var(--border-color);
+            color: var(--text-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .add-row-btn:hover {
+            background-color: var(--card-bg);
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+        
+        .delete-row-btn {
+            color: #ef4444;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .delete-row-btn:hover {
+            opacity: 1;
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* NUEVOS ESTILOS PARA SEGURIDAD Y RESUMENES */
+        .asterisk-protected {
+            filter: blur(5px);
+            user-select: none;
+            cursor: pointer;
+        }
+        
+        .asterisk-protected:hover {
+            filter: blur(0);
+            background-color: rgba(0,0,0,0.05);
+        }
+        
+        .password-required {
+            position: relative;
+        }
+        
+        .password-required::after {
+            content: '🔒';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .today-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .today-summary-item {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .today-summary-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        .today-summary-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .daily-summary-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        
+        .daily-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .daily-summary-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .daily-summary-total {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .daily-summary-total.positive {
+            color: #10b981;
+        }
+        
+        .daily-summary-total.negative {
+            color: #ef4444;
+        }
+        
+        .daily-summary-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        
+        .daily-detail-item {
+            text-align: center;
+        }
+        
+        .daily-detail-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .daily-detail-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+    <!-- CONTENEDOR DE TOASTS -->
+    <div id="toastContainer"></div>
+
+    <!-- BANNER DE ACTUALIZACIÓN DE PWA (SOLICITADO POR EL USUARIO) -->
+    <div id="updateNotification" class="hidden fixed bottom-0 left-0 right-0 p-3 bg-yellow-500 text-white z-[90] text-center shadow-lg flex justify-center items-center gap-4">
+        <div class="flex items-center gap-2 font-bold"><i class="fas fa-sync-alt animate-spin"></i> Nueva versión disponible.</div>
+        <button id="reloadUpdateBtn" class="bg-yellow-700 hover:bg-yellow-800 text-white font-bold py-1 px-3 rounded-full transition text-sm">Recargar y Actualizar</button>
+    </div>
+
+    <div id="splashScreen">
+        <div class="text-center">
+            <div class="text-6xl text-blue-600 mb-4 animate-bounce"><i class="fas fa-chart-pie"></i></div>
+            <h1 class="text-xl font-bold text-gray-700">Cargando Sistema...</h1>
+            <p class="text-sm text-gray-400 mt-2">v3.9.13 - Pro</p>
+        </div>
+    </div>
+
+    <script>
+        // Función para convertir la clave VAPID al formato Uint8Array
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+            
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        // Claves VAPID para Firebase Cloud Messaging
+        const FCM_VAPID_PUBLIC_KEY = 'BI13e4HvxmyL2gsxK-yoW9JbeMMGmmDm3hKxGG8aRP2Y_6O0IgMmnp0cuGg3KR-edpqH1T_6c0oA2KscvcP8s6M';
+        const FCM_VAPID_PRIVATE_KEY = 'T7oE8fRd7Q779XP7MYRqsDzPPLsUkyOtL9tQ0UkPH8Y';
+
+        // Inicializar FCM y obtener token
+        async function initializeFCM() {
+            if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
+                try {
+                    // Solicitar permiso si no está concedido
+                    let permission = Notification.permission;
+                    if (permission === 'default') {
+                        permission = await Notification.requestPermission();
+                    }
+                    
+                    if (permission === 'granted') {
+                        console.log('Permiso de notificaciones concedido');
+                        
+                        // Obtener el service worker registration
+                        const registration = await navigator.serviceWorker.ready;
+                        
+                        // Verificar si ya está suscrito
+                        const subscription = await registration.pushManager.getSubscription();
+                        
+                        if (!subscription) {
+                            // Suscribirse a FCM con la clave VAPID
+                            try {
+                                const newSubscription = await registration.pushManager.subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: urlBase64ToUint8Array(FCM_VAPID_PUBLIC_KEY)
+                                });
+                                
+                                console.log('Suscripción FCM exitosa:', newSubscription);
+                                
+                                // Enviar el token a Firestore
+                                await saveFCMTokenToFirestore(newSubscription);
+                                
+                                // Mostrar notificación de éxito
+                                if ('showNotification' in registration) {
+                                    registration.showNotification('Notificaciones Activadas', {
+                                        body: 'Ahora recibirás notificaciones importantes del sistema.',
+                                        icon: '/icon-192.png',
+                                        badge: '/icon-72.png'
+                                    });
+                                }
+                                
+                                showToast('Notificaciones push configuradas correctamente', 'success');
+                            } catch (subscribeError) {
+                                console.error('Error al suscribirse a FCM:', subscribeError);
+                                showToast('Error al configurar notificaciones push', 'error');
+                            }
+                        } else {
+                            console.log('Ya está suscrito a FCM:', subscription);
+                            // Actualizar el token en Firestore
+                            await saveFCMTokenToFirestore(subscription);
+                        }
+                        
+                        // Marcar el botón como activo
+                        const notificationBtn = document.getElementById('notificationToggleBtn');
+                        if (notificationBtn) {
+                            notificationBtn.classList.add('active');
+                            notificationBtn.querySelector('i').classList.remove('fa-bell-slash');
+                            notificationBtn.querySelector('i').classList.add('fa-bell');
+                            notificationBtn.title = "Notificaciones activadas";
+                        }
+                    } else {
+                        console.log('Permiso de notificaciones denegado:', permission);
+                        showToast('Notificaciones desactivadas. Puedes activarlas en la configuración del navegador.', 'info');
+                    }
+                } catch (error) {
+                    console.error('Error configurando FCM:', error);
+                    showToast('Error al configurar notificaciones', 'error');
+                }
+            } else {
+                console.log('Este navegador no soporta notificaciones push');
+                showToast('Tu navegador no soporta notificaciones push', 'error');
+            }
+        }
+
+        // Guardar token FCM en Firestore
+        async function saveFCMTokenToFirestore(subscription) {
+            try {
+                // Convertir la suscripción a un objeto que podemos almacenar
+                const subscriptionJSON = subscription.toJSON();
+                
+                // Guardar en Firestore bajo el usuario actual
+                const userId = window.userId; // Esta variable se establece en la autenticación
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                
+                if (userId) {
+                    // Usar Firestore para guardar el token
+                    const db = window.db; // La instancia de Firestore se establece en el código principal
+                    
+                    if (db) {
+                        const { setDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+                        const userFCMRef = doc(db, 'artifacts', appId, 'users', userId, 'fcm', 'token');
+                        
+                        await setDoc(userFCMRef, {
+                            subscription: subscriptionJSON,
+                            endpoint: subscription.endpoint,
+                            keys: subscriptionJSON.keys,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                            platform: navigator.platform,
+                            userAgent: navigator.userAgent.substring(0, 100)
+                        }, { merge: true });
+                        
+                        console.log('Token FCM guardado en Firestore');
+                        
+                        // También guardar en localStorage para referencia local
+                        localStorage.setItem('fcmToken', JSON.stringify(subscriptionJSON));
+                    }
+                }
+            } catch (error) {
+                console.error('Error guardando token FCM en Firestore:', error);
+            }
+        }
+
+        // Desuscribirse de FCM
+        async function unsubscribeFromFCM() {
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                
+                if (subscription) {
+                    await subscription.unsubscribe();
+                    console.log('Desuscrito de FCM');
+                    
+                    // Eliminar de Firestore
+                    const userId = window.userId;
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    
+                    if (userId && window.db) {
+                        const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+                        const userFCMRef = doc(window.db, 'artifacts', appId, 'users', userId, 'fcm', 'token');
+                        await deleteDoc(userFCMRef);
+                    }
+                    
+                    // Eliminar de localStorage
+                    localStorage.removeItem('fcmToken');
+                    
+                    showToast('Notificaciones push desactivadas', 'info');
+                }
+            } catch (error) {
+                console.error('Error desuscribiéndose de FCM:', error);
+                showToast('Error al desactivar notificaciones', 'error');
+            }
+        }
+
+        // Verificar y configurar FCM al cargar la página
+        async function checkAndSetupFCM() {
+            if ('serviceWorker' in navigator && 'PushManager' in window) {
+                try {
+                    const registration = await navigator.serviceWorker.ready;
+                    const subscription = await registration.pushManager.getSubscription();
+                    
+                    if (subscription) {
+                        console.log('Ya suscrito a FCM');
+                        // Actualizar el token en Firestore
+                        await saveFCMTokenToFirestore(subscription);
+                    }
+                } catch (error) {
+                    console.error('Error verificando suscripción FCM:', error);
+                }
+            }
+        }
+
+        window.addEventListener('load', () => {
+            // Verificar preferencia de tema al cargar
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            // Verificar estado de notificaciones
+            const notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+            if (notificationsEnabled) {
+                const notificationBtn = document.getElementById('notificationToggleBtn');
+                if (notificationBtn) {
+                    notificationBtn.classList.add('active');
+                    notificationBtn.title = "Notificaciones activadas";
+                }
+                
+                // Verificar y configurar FCM
+                setTimeout(() => {
+                    checkAndSetupFCM();
+                }, 2000);
+            }
+            
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                const main = document.getElementById('mainContent');
+                if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 600); }
+                if(main) { main.classList.add('visible'); main.style.pointerEvents = 'auto'; }
+            }, 1500);
+        });
+    </script>
+
+    <!-- MENÚ LATERAL -->
+    <div id="sideMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-[60] hidden"></div>
+    <div id="sideMenu" class="fixed top-0 left-0 h-full w-80 shadow-2xl z-[70] flex flex-col">
+        <div class="p-6 bg-blue-600 text-white flex justify-between items-center"><h2 class="text-xl font-bold"><i class="fas fa-store mr-2"></i> Mi Tienda</h2><button id="closeSideMenuBtn" class="text-white hover:text-gray-200"><i class="fas fa-times text-xl"></i></button></div>
+        <div class="p-6 flex-1 overflow-y-auto">
+            <!-- SECCIÓN ACTUALIZADA DE GESTIÓN DE PERSONAL -->
+            <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Gestión de Personal</h3>
+            
+            <!-- BOTONES DE ACCIÓN PARA EL PERSONAL -->
+            <div class="space-y-4 mb-6">
+                <button id="btnOpenEmployeeStats" class="w-full bg-indigo-50 text-indigo-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-100 transition"><i class="fas fa-users-cog"></i> Ver Sueldos y Horas</button>
+                
+                <!-- BOTÓN DE CONFIGURACIÓN -->
+                <button id="btnOpenSettingsModal" class="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-gray-200 transition">
+                    <i class="fas fa-cog"></i> Configuración
+                </button>
+                
+                <!-- BOTÓN PARA "¿QUIÉN TRABAJÓ HOY?" -->
+                <button id="btnOpenWhoWorkedToday" class="w-full bg-green-50 text-green-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-green-100 transition">
+                    <i class="fas fa-user-clock"></i> ¿Quién trabajó hoy?
+                </button>
+                
+                <!-- NUEVO BOTÓN DE TUTORIALES -->
+                <button id="btnOpenTutorialsModal" class="w-full bg-blue-50 text-blue-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition"><i class="fas fa-question-circle"></i> Tutoriales</button>
+            </div>
+            
+            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Lista de Empleados</h4>
+            <form id="addEmployeeForm" class="flex gap-2 mb-4"><input type="text" id="newEmployeeInput" class="input-std text-sm" placeholder="Agregar nombre..." required><button type="submit" class="bg-blue-600 text-white px-3 rounded-lg"><i class="fas fa-plus"></i></button></form>
+            <div id="employeeListContainer" class="space-y-2"></div>
+        </div>
+        <div class="p-4 bg-gray-50 border-t text-center text-xs text-gray-400">Sistema v3.9.13 Pro</div>
+    </div>
+
+    <div id="mainContent">
+        <nav class="bg-white shadow-sm sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <button id="openSideMenuBtn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-bars"></i></button>
+                    <div class="flex items-center gap-2 p-2 rounded-lg"><span id="storeNameDisplay" class="text-xl font-bold text-gray-800 tracking-tight">MI NEGOCIO</span></div>
+                </div>
+                <div class="flex gap-4 text-gray-500 items-center">
+                    <button id="installAppBtn" class="hidden bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-200 transition"><i class="fas fa-download mr-1"></i> Instalar App</button>
+                    <!-- BOTÓN CAMPANITA DE NOVEDADES -->
+                    <button id="openNewsModalBtn" class="relative text-gray-500 hover:text-blue-600 text-xl transition transform hover:scale-110">
+                        <i class="fas fa-bell"></i>
+                        <span id="newsBadge" class="notification-badge"></span>
+                    </button>
+                    <!-- BOTÓN TOGGLE NOTIFICACIONES PUSH -->
+                    <button id="notificationToggleBtn" class="notification-toggle text-gray-500 hover:text-blue-600 text-xl transition transform hover:scale-110" title="Activar/Desactivar notificaciones">
+                        <i class="fas fa-bell-slash"></i>
+                    </button>
+                    <button id="themeToggle" class="text-gray-500 hover:text-blue-600"><i class="fas fa-moon"></i></button>
+                    <div id="connectionStatus" class="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500 hidden md:block"><i class="fas fa-circle text-[8px] mr-1"></i> Iniciando...</div>
+                    <button id="openProfileModalBtn" class="hover:text-blue-600 text-2xl transition transform hover:scale-110"><i class="fas fa-user-circle"></i></button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div><h1 class="text-2xl font-bold text-gray-900">Panel de Control</h1><p class="text-sm text-gray-500">Resumen de actividad en tiempo real</p></div>
+                <div class="text-right bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex flex-col items-end min-w-[150px]">
+                    <div id="currentDateDisplay" class="text-sm font-bold text-blue-600 capitalize">Cargando fecha...</div>
+                    <div id="currentTimeDisplay" class="text-xs text-gray-400">--:--:--</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <button id="openInventarioBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-box"></i></div>
+                    <div class="font-semibold text-sm text-gray-700">Inventario</div>
+                    <div class="text-xs text-gray-400 mt-1">Total: <span id="dashTotalProductos">0</span></div>
+                </button>
+                <button id="openVentasHistoryBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="font-semibold text-sm text-gray-700">Ver Ventas</div>
+                    <div class="text-xs text-gray-400 mt-1">Hoy: <span id="dashVentasHoy">$0</span></div>
+                </button>
+                <button id="openGananciasHistoryBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-chart-line"></i></div>
+                    <div class="font-semibold text-sm text-gray-700">Ver Ganancias</div>
+                    <div class="text-xs text-gray-400 mt-1">Rentabilidad</div>
+                </button>
+                <button id="openGastosHistoryBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-receipt"></i></div>
+                    <div class="font-semibold text-sm text-gray-700">Ver Gastos</div>
+                    <div class="text-xs text-gray-400 mt-1">Hoy: <span id="dashGastosHoy">$0</span></div>
+                </button>
+                <button id="openClientesBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-users"></i></div>
+                    <div class="font-semibold text-sm text-gray-700">Clientes</div>
+                    <div class="text-xs text-gray-400 mt-1"><span id="dashTotalClientes">0</span> reg.</div>
+                </button>
+            </div>
+
+            <!-- SECCIÓN DE VENTAS HOY POR TIPO DE PAGO -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fas fa-money-bill-wave text-green-500"></i> Ventas Hoy por Tipo de Pago
+                </h3>
+                <div class="today-summary-grid" id="todaySalesByPaymentType">
+                    <!-- Se llenará dinámicamente con JavaScript -->
+                    <div class="text-center text-gray-400 py-4">Cargando datos...</div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mb-8">
+                <button id="btnNewProduct" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl shadow-lg shadow-blue-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Producto</button>
+                <button id="btnNewSale" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl shadow-lg shadow-gray-300 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Venta</button>
+                <!-- BOTÓN DE GASTOS MASIVOS AGREGADO -->
+                <button id="btnNewMassiveExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-layer-group"></i> Gastos Masivos</button>
+                <button id="btnNewExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-minus"></i> Gasto</button>
+            </div>
+
+            <!-- RESUMEN DIARIO DE VENTAS, GASTOS Y GANANCIAS -->
+            <div class="mb-8" id="dailySummaryContainer">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-calendar-day text-blue-500"></i> Resumen Diario
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="dailySummaryCards">
+                    <!-- Se llenará dinámicamente con JavaScript -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-blue-500 relative">
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div><button class="text-gray-400 hover:text-blue-600 cursor-pointer" data-toggle-privacy="sales" onclick="togglePrivacy('sales')"><i class="fas fa-eye"></i></button></div>
+                    <div class="text-2xl font-bold text-gray-900 asterisk-protected" id="cardVentasMes" onclick="requestPassword('sales')">✳️✳️✳️✳️✳️</div>
+                    <div class="mt-2 text-xs text-green-600 flex items-center"><i class="fas fa-calendar-day mr-1"></i> Hoy: <span id="cardVentasHoy" class="ml-1 font-semibold">$0.00</span></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-green-500 relative">
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div><button class="text-gray-400 hover:text-green-600 cursor-pointer" data-toggle-privacy="profit" onclick="togglePrivacy('profit')"><i class="fas fa-eye"></i></button></div>
+                    <div class="text-2xl font-bold text-gray-900 asterisk-protected" id="cardGananciaMes" onclick="requestPassword('profit')">✳️✳️✳️✳️✳️</div>
+                    <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
+                </div>
+                <!-- CAMBIO: Ahora es CUMULATIVO y Persistente -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-yellow-500 relative">
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Caja SÓLO EFECTIVO (ACUMULADO)</div><button class="text-gray-400 hover:text-yellow-600 cursor-pointer" id="btnOpenCashModal"><i class="fas fa-external-link-alt"></i></button></div>
+                    <div class="text-2xl font-bold text-gray-900" id="cardCaja">$0.00</div>
+                    <div class="mt-2 text-xs text-yellow-600 font-semibold">Click ícono para detalle y ajustes</div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-orange-500 relative">
+                    <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Stock Total</div>
+                    <div class="text-2xl font-bold text-gray-900" id="cardStockUnidades">0</div>
+                    <div class="mt-2 text-xs text-gray-500">Unidades Físicas</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-bullhorn text-purple-500"></i> Notas / Novedades</h3>
+                <div class="flex gap-2">
+                    <textarea id="dailyNoteInput" rows="2" class="input-std" placeholder="Escribe un recordatorio o novedad del día..."></textarea>
+                    <div class="flex flex-col gap-2 justify-center">
+                        <button id="saveNoteBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg shadow-sm transition font-medium cursor-pointer h-full" title="Guardar en historial"><i class="fas fa-save"></i></button>
+                        <button id="sendWhatsappBtn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg shadow-sm transition font-medium cursor-pointer h-full" title="Enviar por WhatsApp"><i class="fab fa-whatsapp text-xl"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALES -->
+
+    <!-- MODAL DE CONFIGURACIÓN -->
+    <div id="settingsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="p-6 bg-gray-900 text-white flex justify-between items-center rounded-t-2xl">
+                <h2 class="text-2xl font-bold"><i class="fas fa-cog mr-2"></i> Configuración</h2>
+                <button data-close="settingsModal" class="text-white opacity-80 hover:opacity-100 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div class="border-b pb-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-lock mr-2"></i> Configuración de Contraseña
+                    </h4>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Establece una contraseña para proteger información sensible como ventas mensuales, ganancias y caja.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña Actual</label>
+                            <input type="password" id="currentPassword" class="input-std w-full" placeholder="Dejar vacío si es primera vez">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
+                            <input type="password" id="newPassword" class="input-std w-full" placeholder="Mínimo 4 caracteres">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Nueva Contraseña</label>
+                            <input type="password" id="confirmPassword" class="input-std w-full" placeholder="Repite la nueva contraseña">
+                        </div>
+                        <button id="savePasswordBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-md">
+                            <i class="fas fa-save mr-2"></i> Guardar Contraseña
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border-b pb-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-percentage mr-2"></i> Comisiones
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <div class="text-sm font-bold text-blue-700 mb-1">Comisiones para Yael</div>
+                            <ul class="text-xs text-gray-600 space-y-1">
+                                <li><i class="fas fa-check-circle text-green-500 mr-1"></i> 3% para: QR, Nave, Tarjeta de Crédito, Tarjeta de Débito, Payway</li>
+                                <li><i class="fas fa-check-circle text-green-500 mr-1"></i> 7% para: Efectivo, Transferencia, Otros</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-sm font-bold text-gray-700 mb-1">Otros Empleados</div>
+                            <p class="text-xs text-gray-600">Sin comisión (0%)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-shield-alt mr-2"></i> Seguridad
+                    </h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Contraseña establecida:</span>
+                            <span id="passwordStatus" class="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-700">No</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Sesión activa:</span>
+                            <span id="sessionStatus" class="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">Sí</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 text-center">
+                <p class="text-xs text-gray-500">Los cambios se guardan automáticamente</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL "¿QUIÉN TRABAJÓ HOY?" -->
+    <div id="whoWorkedTodayModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="p-6 bg-green-600 text-white flex justify-between items-center rounded-t-2xl">
+                <h2 class="text-2xl font-bold"><i class="fas fa-user-clock mr-2"></i> ¿Quién trabajó hoy?</h2>
+                <button data-close="whoWorkedTodayModal" class="text-white opacity-80 hover:opacity-100 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <p class="text-sm text-gray-600 mb-4">
+                        Selecciona los empleados que trabajaron hoy. Esto establecerá el encargado por defecto para nuevas ventas y gastos.
+                    </p>
+                    
+                    <div class="space-y-3" id="todayEmployeesList">
+                        <!-- Se llenará dinámicamente con JavaScript -->
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-gray-700">Horas trabajadas hoy:</span>
+                            <span id="totalHoursToday" class="text-lg font-bold text-green-600">0h</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <h4 class="font-bold text-blue-700 mb-2">Encargado Predeterminado</h4>
+                    <p class="text-sm text-gray-600 mb-3">
+                        El empleado seleccionado como encargado será el predeterminado para nuevas ventas y gastos.
+                    </p>
+                    <select id="defaultEmployeeSelect" class="input-std w-full">
+                        <option value="">Seleccionar encargado predeterminado</option>
+                    </select>
+                </div>
+                
+                <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                    <h4 class="font-bold text-yellow-700 mb-2">Cambio de Turno</h4>
+                    <p class="text-sm text-gray-600 mb-3">
+                        Registra el cambio de turno para comenzar a contar horas para el siguiente empleado.
+                    </p>
+                    <div class="flex gap-2">
+                        <select id="shiftChangeEmployee" class="input-std flex-1">
+                            <option value="">Seleccionar empleado</option>
+                        </select>
+                        <button id="registerShiftChangeBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex justify-between">
+                <button id="saveTodayEmployeesBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-bold">
+                    <i class="fas fa-save mr-2"></i> Guardar
+                </button>
+                <button data-close="whoWorkedTodayModal" class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TUTORIALES (NUEVO) -->
+    <div id="tutorialsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="p-6 bg-blue-600 text-white flex justify-between items-center rounded-t-2xl">
+                <h2 class="text-2xl font-bold"><i class="fas fa-graduation-cap mr-2"></i> Tutorial de Uso Rápido</h2>
+                <button data-close="tutorialsModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Registro de Transacciones</h3>
+                
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-shopping-cart mr-2"></i> 1. Registrar una Venta</h4>
+                    <p class="text-gray-700 mb-3">La función principal es registrar cada venta de forma correcta para calcular comisiones y caja.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-xl border border-blue-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón grande que dice <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs font-mono">Venta</span> en el Panel de Control.</li>
+                        <li><span class="font-bold">Datos Cruciales:</span>
+                            <ul class="list-disc list-inside ml-5">
+                                <li><span class="font-medium">Monto ($):</span> El valor final cobrado.</li>
+                                <li><span class="font-medium">Producto y Cantidad:</span> Debes seleccionar el producto del **Inventario** y la **Cantidad Vendida** (esto resta del stock).</li>
+                                <li><span class="font-medium">Cliente:</span> Nombre (Si es cliente nuevo, se agrega automáticamente a la Base de Clientes).</li>
+                                <li><span class="font-medium">Encargado:</span> Tu nombre (¡Crucial para tu comisión!).</li>
+                                <li><span class="font-medium">Pago:</span> Tipo de pago (Efectivo, Tarjeta, Nave, etc.).</li>
+                            </ul>
+                        </li>
+                        <!-- NOTA: Aquí están implementadas las comisiones de Yael -->
+                        <li><span class="font-bold text-red-600">Comisiones:</span> Si la encargada es Yael, se aplica un 3% para pagos con QR, Nave, T. Crédito o T. Débito, y 7% para los demás. Para otros encargados la comisión es 0%.</li>
+                    </ul>
+                </div>
+                
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-minus-circle mr-2"></i> 2. Registrar un Gasto</h4>
+                    <p class="text-gray-700 mb-3">Si pagas algo del negocio con dinero de la caja, debe quedar registrado como Gasto.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-red-50 p-4 rounded-xl border border-red-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón rojo <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-mono">Gasto</span>.</li>
+                        <li><span class="font-bold">Monto y Categoría:</span> Indica el monto y selecciona una categoría (ej: 'Mercadería', 'Alquiler').</li>
+                        <li><span class="font-bold">Método de Pago:</span> Indica con qué se pagó (Efectivo, Transferencia, etc.).</li>
+                        <li><span class="font-bold">Efecto:</span> Esto resta del dinero disponible en la <span class="font-bold text-yellow-700">Caja Actual</span>.</li>
+                    </ul>
+                </div>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-box-open mr-2"></i> 3. Agregar/Actualizar Inventario</h4>
+                    <p class="text-gray-700 mb-3">Registra nuevos productos o actualiza los existentes para tener control de stock y precios.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-orange-50 p-4 rounded-xl border border-orange-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón azul <span class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-mono">Producto</span>.</li>
+                        <li><span class="font-bold">Datos:</span> Ingresa el Nombre, Tipo, Precio ARS/USD y el Stock.</li>
+                        <li><span class="font-bold">Visualización:</span> Puedes ver todo el inventario en la tarjeta de <span class="font-bold text-orange-600">Inventario</span>.</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Historiales y Consultas</h3>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-history mr-2"></i> 4. Ver Historiales (Ventas, Gastos, Inventario, Clientes)</h4>
+                    <p class="text-gray-700 mb-3">Los historiales se acceden haciendo clic en las tarjetas del Panel de Control (ej: 'Ver Ventas', 'Ver Gastos').</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Uso de Filtros:</span> Todos los historiales tienen campos de filtro (<i class="fas fa-filter"></i>). Puedes filtrar por **Fecha, Mes o Año** y por palabras clave (ej: nombre del cliente o encargado).</li>
+                        <li><span class="font-bold">Gráficos:</span> Tienen un botón para mostrar un gráfico visual de la distribución (por tiempo o tipo de pago/producto).</li>
+                    </ul>
+                </div>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-users-cog mr-2"></i> 5. Sueldos, Horas y Retiros de Empleados</h4>
+                    <p class="text-gray-700 mb-3">Esta es una sección privada para ver el rendimiento del equipo y el estado de la Caja.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                        <li><span class="font-bold">Retiros y Caja:</span>
+                            <ul>
+                                <li>Para ver el detalle de retiros, haz clic en el ícono <i class="fas fa-external-link-alt"></i> en la tarjeta <span class="font-bold text-yellow-700">Caja Actual</span>. Ahí también registras nuevos retiros.</li>
+                                <!-- NOTA: El historial de ajustes ya existe en el modal de caja -->
+                                <li><span class="font-bold text-green-600">Historial de Ajustes y Retiros:</span> En el mismo modal de caja, puedes ver todos los movimientos (retiros manuales y ajustes).</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-bold">Sueldos y Horas:</span>
+                            <ul>
+                                <li>Desde el Menú Lateral, pulsa <span class="font-bold text-indigo-700">Ver Sueldos y Horas</span>.</li>
+                                <li>Aquí verás un resumen de la Comisión Estimada (calculada por el sistema) y el total de Retiros hechos por cada empleado en el período filtrado.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4 mt-6">Ajustes y Utilidades</h3>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-sign-in-alt mr-2"></i> 6. Iniciar/Cerrar Sesión y Perfil</h4>
+                    <p class="text-gray-700 mb-3">La aplicación utiliza tu cuenta para guardar tus datos de forma segura. Si ves datos de prueba, inicia sesión.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el ícono de perfil (<i class="fas fa-user-circle"></i>) en la esquina superior derecha.</li>
+                        <li><span class="font-bold">Iniciar Sesión:</span> Usa el botón de Google para iniciar sesión con tu cuenta.</li>
+                    </ul>
+                </div>
+                
+                <div class="pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lightbulb mr-2"></i> 7. Cambiar Tema (Modo Oscuro/Claro)</h4>
+                    <p class="text-gray-700 mb-3">Para mayor comodidad visual, puedes alternar entre el modo claro y oscuro.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Ubicación:</span> Pulsa el ícono de la luna (<i class="fas fa-moon"></i>) o sol (<i class="fas fa-sun"></i>) en la barra superior de navegación.</li>
+                        <li>El cambio se guarda automáticamente.</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="p-4 border-t bg-gray-50 text-center">
+                <p class="text-xs text-gray-500">¡Recuerda mantener toda la información al día para un cálculo de comisiones perfecto!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA CONFIRMAR GUARDAR VENTA -->
+    <div id="confirmSaleModal" class="modal-overlay fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div class="p-6 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl">
+                <h3 class="font-bold text-blue-700 text-lg"><i class="fas fa-question-circle mr-2"></i> Confirmar</h3>
+                <button onclick="$('confirmSaleModal').classList.add('hidden')" class="text-gray-400 text-xl cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 text-center">
+                <div class="text-5xl text-blue-500 mb-4">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h4 class="text-xl font-bold text-gray-800 mb-3">¿Confirma guardar venta?</h4>
+                <p class="text-gray-600 mb-6">Se registrará la venta y se descontará el stock correspondiente.</p>
+                <div class="flex gap-3">
+                    <button onclick="$('confirmSaleModal').classList.add('hidden')" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold">
+                        Cancelar
+                    </button>
+                    <button id="confirmSaveSaleBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold">
+                        Sí, Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA SOLICITAR CONTRASEÑA -->
+    <div id="passwordModal" class="modal-overlay fixed inset-0 z-[120] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-900 text-white rounded-t-2xl">
+                <h3 class="font-bold text-lg"><i class="fas fa-lock mr-2"></i> Acceso Restringido</h3>
+                <button onclick="$('passwordModal').classList.add('hidden')" class="text-gray-300 hover:text-white text-xl cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-gray-600 text-sm" id="passwordPromptText">
+                    Ingrese la contraseña para acceder a esta información protegida.
+                </p>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="passwordInput" class="input-std w-full" placeholder="Ingrese la contraseña">
+                    <input type="hidden" id="passwordRequiredFor">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="$('passwordModal').classList.add('hidden')" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold">
+                        Cancelar
+                    </button>
+                    <button id="submitPasswordBtn" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-bold">
+                        Verificar
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 text-center mt-4">
+                    Si olvidó la contraseña, contacte al administrador.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA CONTRASEÑA DE CAJA -->
+    <div id="cashPasswordModal" class="modal-overlay fixed inset-0 z-[120] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div class="p-6 border-b flex justify-between items-center bg-yellow-50 rounded-t-2xl">
+                <h3 class="font-bold text-yellow-700 text-lg"><i class="fas fa-unlock-alt mr-2"></i> Verificar Acceso</h3>
+                <button onclick="$('cashPasswordModal').classList.add('hidden')" class="text-gray-400 text-xl cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="text-center mb-4">
+                    <div class="text-4xl text-yellow-500 mb-2">
+                        <i class="fas fa-money-check-alt"></i>
+                    </div>
+                    <p class="text-gray-600" id="cashPasswordText">
+                        Ingrese la contraseña para ver la información de caja.
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="cashPasswordInput" class="input-std w-full" placeholder="Contraseña de caja">
+                    <input type="hidden" id="cashPasswordFor">
+                </div>
+                <button id="submitCashPasswordBtn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-xl font-bold">
+                    <i class="fas fa-check mr-2"></i> Verificar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="listManagerModal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl"><h3 class="font-bold text-gray-700">Gestionar Lista</h3><button data-close="listManagerModal" class="text-gray-400"><i class="fas fa-times"></i></button></div>
+            <div class="p-4">
+                <p class="text-xs text-gray-500 mb-2">Haz clic en el ícono de basura para **BLOQUEAR** un elemento de las listas desplegables (requiere recarga para aparecer en la lista de bloqueados).</p>
+                <ul id="listManagerItems" class="space-y-2 max-h-60 overflow-y-auto"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CALCULADORA PORCENTAJES (NUEVO) -->
+    <div id="calculatorModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 bg-gray-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-calculator mr-2"></i> Calculadora</h3>
+                <button data-close="calculatorModal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Monto Base</label>
+                    <input type="number" id="calcBaseAmount" class="input-std font-bold text-lg text-center" step="0.01">
+                </div>
+                <div class="flex gap-2 items-center justify-center">
+                    <button id="calcTypeSurcharge" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-blue-100 text-blue-700 font-bold text-sm hover:bg-blue-200 transition ring-2 ring-blue-500">RECARGO (+)</button>
+                    <button id="calcTypeDiscount" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-100 text-gray-600 font-bold text-sm hover:bg-green-100 hover:text-green-700 transition">DESCUENTO (-)</button>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porcentaje (%)</label>
+                    <div class="flex gap-2">
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=10; updateCalc();">10%</button>
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=15; updateCalc();">15%</button>
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=21; updateCalc();">21%</button>
+                        <input type="number" id="calcPercentage" class="input-std text-center font-bold" placeholder="0" oninput="updateCalc()">
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
+                    <div class="text-xs text-gray-400 uppercase font-bold mb-1">Resultado Final</div>
+                    <div id="calcResultDisplay" class="text-3xl font-bold text-gray-800">$0.00</div>
+                </div>
+                <button id="applyCalcResultBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition transform active:scale-95">Aplicar Resultado</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL HISTORIAL DE NOVEDADES -->
+    <div id="newsHistoryModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-gray-800"><i class="fas fa-bell text-blue-500 mr-2"></i> Historial de Novedades</h2>
+                <button data-close="newsHistoryModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div id="newsListContainer" class="space-y-3">
+                    <div class="text-center text-gray-400 py-4">No hay novedades registradas.</div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 text-right">
+                <button data-close="newsHistoryModal" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="employeeStatsModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl"><h2 class="text-xl font-bold text-indigo-800"><i class="fas fa-user-clock mr-2"></i> Rendimiento y Pagos</h2><button data-close="employeeStatsModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div>
+            <div class="p-6 bg-white border-b flex flex-wrap gap-2 items-center">
+                <span class="text-xs text-gray-400 font-bold uppercase mr-1">Filtrar por:</span>
+                <input type="date" id="filterStatsDate" class="input-std w-auto text-sm" title="Seleccionar día específico">
+                <span class="text-xs text-gray-300 mx-1">|</span>
+                <select id="filterStatsMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select>
+                <select id="filterStatsYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select>
+                <button id="applyStatsFilter" class="bg-indigo-600 text-white px-3 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition" title="Aplicar Filtros"><i class="fas fa-filter"></i></button>
+                <button id="resetStatsFilter" class="bg-gray-100 text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-200 transition" title="Limpiar Filtros"><i class="fas fa-undo"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50 sticky top-0"><tr><th class="table-header">Empleado</th><th class="table-header text-center">Turnos</th><th class="table-header text-center">Horas</th><th class="table-header text-right">Comisión Estimada</th><th class="table-header text-right">Retiros</th><th class="table-header text-center">Acciones</th></tr></thead><tbody id="employeeStatsTableBody" class="bg-white divide-y divide-gray-100"></tbody></table></div>
+            <div class="p-4 bg-indigo-50 border-t flex justify-between items-center gap-4">
+                <div class="flex items-center gap-2"><span class="text-sm text-indigo-800 font-medium">Comisión Est. (Período):</span><span class="text-xl font-bold text-green-600" id="statsTotalCommission">$0.00</span></div>
+                <div class="flex items-center gap-2"><span class="text-sm text-indigo-800 font-medium">Total Retiros (Período):</span><span class="text-xl font-bold text-red-600" id="statsTotalWithdrawals">$0.00</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL GANANCIAS -->
+    <div id="gananciasDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-green-50 rounded-t-2xl">
+                <div><h2 class="text-xl font-bold text-green-800">Historial de Rentabilidad</h2><div class="text-sm font-medium mt-1" id="profitHeaderSummary">Cargando...</div></div>
+                <button data-close="gananciasDetailModal" class="text-gray-400 text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex gap-2 items-center">
+                    <select id="filterProfitMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select>
+                    <select id="filterProfitYear" class="input-std w-24 text-sm"><option value="all">Año: Todos</option><option value="2025">2025</option><option value="2024">2024</option></select>
+                    <button id="applyProfitFilterBtn" class="bg-green-600 text-white px-3 py-2 rounded-lg"><i class="fas fa-filter"></i></button>
+                </div>
+                <!-- Toggle Button Ganancias -->
+                <button onclick="toggleChart('profit')" class="text-green-600 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition text-sm font-bold flex items-center gap-2"><i class="fas fa-chart-area"></i> Ver Gráfico</button>
+            </div>
+            <!-- Contenedor Chart Ganancias (Oculto por defecto) -->
+            <div id="profitChartWrapper" class="hidden p-4 bg-white border-b">
+                <div style="height: 220px; width: 100%; position: relative;"><canvas id="profitChart"></canvas></div>
+            </div>
+            <div class="overflow-y-auto flex-1 p-0">
+                <table class="min-w-full divide-y divide-gray-200 massive-sale-table"><thead class="bg-gray-50 sticky top-0"><tr><th class="table-header sortable-header" onclick="sortTable('profit', 'date')">Fecha <span class="sort-arrow" id="profitSortDate">↕</span></th><th class="table-header text-right sortable-header" onclick="sortTable('profit', 'sales')">Ventas <span class="sort-arrow" id="profitSortSales">↕</span></th><th class="table-header text-right sortable-header" onclick="sortTable('profit', 'expenses')">Gastos <span class="sort-arrow" id="profitSortExpenses">↕</span></th><th class="table-header text-right sortable-header" onclick="sortTable('profit', 'balance')">Balance Neto <span class="sort-arrow" id="profitSortBalance">↕</span></th><th class="table-header text-center">Acciones</th></tr></thead><tbody id="profitTableBody" class="bg-white divide-y divide-gray-100"></tbody></table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL HISTORIAL VENTAS - ACTUALIZADO CON FILTRO DE CANAL Y ORDENAMIENTO -->
+    <div id="salesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl"><div><h2 class="text-xl font-bold text-blue-700">Historial de Ventas</h2><p class="text-sm text-blue-500" id="salesHistoryTotalLabel">Total: $0.00</p></div><button data-close="salesHistoryModal" class="text-gray-400 text-xl"><i class="fas fa-times"></i></button></div>
+            <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="text" id="searchSaleInput" placeholder="Cliente o Empleado..." class="input-std w-40">
+                    <!-- NUEVO FILTRO DE CANAL -->
+                    <select id="filterSaleChannel" class="input-std w-32 text-sm">
+                        <option value="all">Canal: Todos</option>
+                        <!-- Las opciones se llenarán dinámicamente -->
+                    </select>
+                    <div class="border-l pl-2 flex gap-2 items-center">
+                        <span class="text-xs text-gray-400 font-bold">FECHA:</span><input type="date" id="filterSaleDate" class="input-std w-auto text-sm">
+                        <span class="text-xs text-gray-400">O</span>
+                        <select id="filterSaleMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select>
+                        <select id="filterSaleYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select>
+                        <button id="applySalesFilter" class="bg-blue-600 text-white px-3 py-2 rounded-lg"><i class="fas fa-filter"></i></button>
+                        <button id="resetSalesFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300"><i class="fas fa-undo"></i></button>
+                    </div>
+                </div>
+                <!-- Botones de Gráficos (ACTUALIZADO) -->
+                <div class="flex gap-2">
+                    <button id="toggleSalesTimeChart" class="text-blue-600 border border-blue-200 px-3 py-1 rounded-lg hover:bg-blue-50 transition text-sm font-bold flex items-center gap-2"><i class="fas fa-chart-bar"></i> Ventas por Tiempo</button>
+                    <button id="togglePaymentTypeChart" class="text-gray-600 border border-gray-200 px-3 py-1 rounded-lg hover:bg-gray-50 transition text-sm font-bold flex items-center gap-2"><i class="fas fa-chart-pie"></i> Pagos por Tipo</button>
+                </div>
+            </div>
+
+            <!-- Chart Ventas por Tiempo Wrapper (Original) -->
+            <div id="salesChartWrapper" class="hidden p-4 bg-white border-b">
+                <div class="flex justify-center mb-2 gap-2">
+                    <button class="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600 font-bold hover:bg-blue-200 transition" onclick="updateChartMode('daily')">Diario</button>
+                    <button class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onclick="updateChartMode('monthly')">Mensual</button>
+                    <button class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onclick="updateChartMode('yearly')">Anual</button>
+                </div>
+                <div style="height: 200px; position: relative; width: 100%;"><canvas id="salesChart"></canvas></div>
+            </div>
+
+            <!-- Chart Pagos por Tipo Wrapper (NUEVO) -->
+            <div id="paymentTypeChartWrapper" class="hidden p-4 bg-white border-b flex justify-center">
+                <div style="height: 250px; width: 100%; max-width: 400px; position: relative;"><canvas id="paymentTypeChart"></canvas></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200 massive-sale-table">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="table-header sortable-header" onclick="sortTable('sales', 'date')">Fecha / Hora <span class="sort-arrow" id="salesSortDate">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('sales', 'client')">Cliente <span class="sort-arrow" id="salesSortClient">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('sales', 'product')">Producto Vendido <span class="sort-arrow" id="salesSortProduct">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('sales', 'quantity')">Cantidad <span class="sort-arrow" id="salesSortQuantity">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('sales', 'payment')">Pago <span class="sort-arrow" id="salesSortPayment">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('sales', 'employee')">Encargado / Turno <span class="sort-arrow" id="salesSortEmployee">↕</span></th>
+                            <th class="table-header text-right sortable-header" onclick="sortTable('sales', 'amount')">Monto <span class="sort-arrow" id="salesSortAmount">↕</span></th>
+                            <th class="table-header text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL GASTOS CON ORDENAMIENTO -->
+    <div id="expensesHistoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold text-red-600">Historial de Gastos</h2><p class="text-sm text-red-500" id="expensesHistoryTotalLabel">Total: $0.00</p><button data-close="expensesHistoryModal" class="text-gray-400 text-xl"><i class="fas fa-times"></i></button></div>
+            <div class="p-4 bg-gray-50 border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="text" id="searchExpenseInput" placeholder="Cat. o Encargado..." class="input-std w-40">
+                    <div class="border-l pl-2 flex gap-2 items-center">
+                        <input type="date" id="filterExpenseDate" class="input-std w-auto text-sm">
+                        <select id="filterExpenseMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select>
+                        <select id="filterExpenseYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select>
+                        <button id="applyExpenseFilter" class="bg-red-500 text-white px-3 py-2 rounded-lg"><i class="fas fa-filter"></i></button>
+                        <button id="resetExpenseFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300"><i class="fas fa-undo"></i></button>
+                    </div>
+                </div>
+                <!-- Toggle Button Gastos -->
+                <button onclick="toggleChart('expenses')" class="text-red-600 border border-red-200 px-3 py-1 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center gap-2"><i class="fas fa-chart-bar"></i> Ver Gráfico</button>
+            </div>
+            <!-- Chart Gastos Wrapper (Oculto por defecto) -->
+            <div id="expensesChartWrapper" class="hidden p-4 bg-white border-b">
+                   <div style="height: 200px; position: relative; width: 100%;"><canvas id="expensesChart"></canvas></div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200 massive-sale-table">
+                    <thead>
+                        <tr>
+                            <th class="table-header sortable-header" onclick="sortTable('expenses', 'date')">Fecha <span class="sort-arrow" id="expensesSortDate">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('expenses', 'category')">Categoría <span class="sort-arrow" id="expensesSortCategory">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('expenses', 'payment')">Pago <span class="sort-arrow" id="expensesSortPayment">↕</span></th>
+                            <th class="table-header sortable-header" onclick="sortTable('expenses', 'manager')">Encargado <span class="sort-arrow" id="expensesSortManager">↕</span></th>
+                            <th class="table-header text-right sortable-header" onclick="sortTable('expenses', 'amount')">Monto <span class="sort-arrow" id="expensesSortAmount">↕</span></th>
+                            <th class="table-header text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CAJA ACTUAL (ACTUALIZADO con Ajustes y Scrollbar mejorado) -->
+    <!-- MEJORADO: Añadida clase para scroll táctil y barra deslizadora mejorada -->
+    <div id="cashDetailModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-y-auto touch-scroll">
+            <div class="p-6 border-b flex justify-between items-center bg-yellow-50 rounded-t-2xl sticky top-0 z-10 bg-white">
+                <h2 class="text-xl font-bold text-yellow-700">Arqueo de Caja - Historial de Movimientos</h2>
+                <button data-close="cashDetailModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <!-- ACTUALIZADO: Div para los 4 totales -->
+            <div class="p-6 border-b grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <!-- Caja Solo Efectivo: Muestra el total filtrado -->
+                <div class="bg-yellow-100 p-3 rounded-lg border-2 border-yellow-300">
+                    <div class="text-xs text-yellow-700 font-bold uppercase">Caja SÓLO EFECTIVO (FILTRADO)</div>
+                    <div class="text-lg font-bold text-yellow-800" id="cashModalOnlyCash" onclick="requestCashPassword('onlyCash')">$0.00</div>
+                </div>
+                <!-- Ganancia Bruta con PIN -->
+                <div class="bg-green-50 p-3 rounded-lg">
+                    <div class="text-xs text-green-600 font-bold uppercase">Ganancia Bruta</div>
+                    <div class="text-lg font-bold text-green-800" id="cashModalGross" onclick="requestCashPassword('gross')">$0.00</div>
+                </div>
+                <div class="bg-red-50 p-3 rounded-lg">
+                    <div class="text-xs text-red-600 font-bold uppercase">Retiros Manuales</div>
+                    <div class="text-lg font-bold text-red-800" id="cashModalWithdrawals">$0.00</div>
+                </div>
+                <!-- Caja Real con PIN -->
+                <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
+                    <div class="text-xs text-yellow-600 font-bold uppercase">En Caja Real</div>
+                    <div class="2xl font-bold text-yellow-800" id="cashModalNet" onclick="requestCashPassword('net')">$0.00</div>
+                </div>
+            </div>
+            
+            <!-- FILTROS - APLICAN A RETIROS Y AJUSTES -->
+            <div class="p-4 bg-yellow-50 border-b flex flex-wrap gap-2 items-center sticky top-0 z-10 bg-yellow-50">
+                <input type="text" id="searchCashInput" placeholder="Buscar empleado o motivo..." class="input-std w-40">
+                <div class="border-l border-yellow-200 pl-2 flex gap-2 items-center">
+                    <span class="text-xs text-yellow-700 font-bold">FECHA:</span><input type="date" id="filterCashDate" class="input-std w-auto text-sm"><span class="text-xs text-yellow-700">O</span><select id="filterCashMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julzo</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option value="11">Diciembre</option></select><select id="filterCashYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select><button id="applyCashFilter" class="bg-yellow-600 text-white px-3 py-2 rounded-lg" title="Aplicar filtro"><i class="fas fa-filter"></i></button><button id="resetCashFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300" title="Borrar filtro"><i class="fas fa-undo"></i></button>
+                </div>
+                <div class="ml-auto text-sm font-bold text-yellow-800 border-l border-yellow-300 pl-3">Flujo Cash Filtrado: <span id="cashFilteredTotal" class="text-yellow-800">$0.00</span></div>
+            </div>
+
+            <!-- FORMULARIOS: RETIRO MANUAL Y AJUSTE MANUAL -->
+            <div class="p-4 bg-gray-100 border-b grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- RETIRO MANUAL -->
+                <form id="withdrawalForm" class="bg-red-50 p-3 rounded-xl border border-red-200 space-y-2">
+                    <h3 class="font-bold text-red-700"><i class="fas fa-sign-out-alt mr-1"></i> Retiro de Caja (Egreso)</h3>
+                    <div class="flex gap-2">
+                        <input type="date" id="wdDate" class="input-std w-32" value="">
+                        <input type="number" id="wdAmount" placeholder="Monto (-)" class="input-std w-32 text-red-600 font-bold" required>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="wdEmployee" list="managerList" placeholder="Empleado..." class="input-std flex-1" required>
+                    </div>
+                    <input type="text" id="wdNote" placeholder="Motivo del retiro..." class="input-std">
+                    <button type="submit" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">Registrar Retiro</button>
+                </form>
+
+                <!-- AJUSTE MANUAL (NUEVO) -->
+                <form id="adjustmentForm" class="bg-green-50 p-3 rounded-xl border border-green-200 space-y-2">
+                    <h3 class="font-bold text-green-700"><i class="fas fa-hand-holding-usd mr-1"></i> Ajuste Manual (Ingreso / Egreso)</h3>
+                    <div class="flex gap-2">
+                        <input type="date" id="adjDate" class="input-std w-32" value="">
+                        <input type="number" id="adjAmount" placeholder="Monto (+/-)" class="input-std w-32 font-bold" required>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="adjEmployee" list="managerList" placeholder="Encargado..." class="input-std flex-1" required>
+                    </div>
+                    <input type="text" id="adjNote" placeholder="Motivo del ajuste (ej: 'Error en conteo', 'Fondo inicial')..." class="input-std" required>
+                    <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">Guardar Ajuste</button>
+                </form>
+            </div>
+            
+            <!-- TABLA DE MOVIMIENTOS - ACTUALIZADA CON FECHAS -->
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="min-w-full divide-y divide-gray-200 mobile-cash-table">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Movimiento</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Encargado / Motivo</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto ($)</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cashMovementsTableBody" class="bg-white divide-y divide-gray-100">
+                        <!-- Aquí se renderizarán Retiros (withdrawal) y Ajustes (adjustment) -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INVENTARIO -->
+    <div id="inventoryModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-orange-50 rounded-t-2xl"><h2 class="text-xl font-bold text-orange-600">Inventario</h2><button data-close="inventoryModal" class="text-gray-400 text-xl"><i class="fas fa-times"></i></button></div>
+            <div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="text" id="searchInventoryInput" placeholder="Buscar producto..." class="input-std w-40">
+                    <div class="border-l pl-2 flex gap-2 items-center">
+                        <span class="text-xs text-gray-400 font-bold">CREADO:</span><input type="date" id="filterInvDate" class="input-std w-auto text-sm"><select id="filterInvMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select><select id="filterInvYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select>
+                        <button id="applyInvFilter" class="bg-orange-500 text-white px-3 py-2 rounded-lg"><i class="fas fa-filter"></i></button><button id="resetInvFilter" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300"><i class="fas fa-undo"></i></button>
+                    </div>
+                </div>
+                <!-- Toggle Button Inventario -->
+                <button onclick="toggleChart('inventory')" class="text-orange-600 border border-orange-200 px-3 py-1 rounded-lg hover:bg-orange-50 transition text-sm font-bold flex items-center gap-2"><i class="fas fa-chart-pie"></i> Ver Gráfico</button>
+            </div>
+            <!-- Chart Inventario Wrapper (Oculto) -->
+            <div id="inventoryChartWrapper" class="hidden p-4 bg-white border-b flex justify-center">
+                   <div style="height: 250px; width: 100%; max-width: 400px; position: relative;"><canvas id="inventoryChart"></canvas></div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0"><table class="min-w-full divide-y divide-gray-200"><thead><tr><th class="table-header">Producto</th><th class="table-header">Tipo</th><th class="table-header text-right">Stock</th><th class="table-header text-right">Precio ARS</th><th class="table-header text-right">Precio USD</th><th class="table-header text-center">Acciones</th></tr></thead><tbody id="inventoryTableBody" class="bg-white divide-y divide-gray-100"></tbody></table></div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVA VENTA (ACTUALIZADO CON STOCK, CANTIDAD Y OPCIÓN MASIVA) -->
+    <div id="newSaleModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-xl font-bold">Registrar Venta</h2>
+                <button data-close="newSaleModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <!-- SWITCH PARA TIPO DE VENTA -->
+            <div class="p-6 border-b">
+                <div class="sale-type-switch">
+                    <div class="sale-type-slider" id="saleTypeSlider"></div>
+                    <div class="sale-type-option active" onclick="switchSaleType('single')" data-type="single">
+                        <i class="fas fa-cube mr-2"></i> Unidad
+                    </div>
+                    <div class="sale-type-option" onclick="switchSaleType('massive')" data-type="massive">
+                        <i class="fas fa-layer-group mr-2"></i> Masiva
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FORMULARIO DE VENTA POR UNIDAD (POR DEFECTO) -->
+            <form id="saleForm" class="p-6 space-y-4" style="display: block;">
+                <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block text-sm font-medium text-gray-700">Fecha</label><input type="date" id="saleDate" class="input-std" value=""></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Hora</label><input type="time" id="saleTime" class="input-std" value=""></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Turno</label><input type="text" id="saleShift" class="input-std bg-gray-100 text-gray-500" readonly></div>
+                </div>
+                
+                <!-- NUEVOS CAMPOS DE PRODUCTO Y CANTIDAD -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="relative col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Producto Vendido</label>
+                        <select id="saleProduct" class="input-std">
+                            <option value="" selected>Selecciona un producto del inventario (opcional)</option>
+                        </select>
+                        <span id="selectedProductType" class="text-xs text-gray-500 mt-1 block"></span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Cantidad</label>
+                        <input type="number" id="saleQuantity" class="input-std font-bold text-lg text-center" value="1" min="1">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Encargado</label>
+                        <input type="text" id="saleEmployee" list="managerList" class="input-std">
+                        <datalist id="managerList"></datalist>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monto ($) <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="number" id="saleAmount" step="0.01" class="input-std font-bold text-lg" required>
+                            <button type="button" id="openCalcBtn" class="bg-gray-100 px-3 rounded-lg text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition" title="Calculadora de Porcentajes"><i class="fas fa-calculator"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <label class="block text-sm font-bold text-blue-700 mb-2">Cliente (opcional)</label>
+                    <div class="space-y-3">
+                        <input type="text" id="saleClient" list="clientList" class="input-std" placeholder="Nombre">
+                        <datalist id="clientList"></datalist>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="tel" id="saleWhatsapp" class="input-std" placeholder="WhatsApp (opcional)">
+                            <input type="email" id="saleEmail" class="input-std" placeholder="Email (opcional)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">Pago (opcional)</label>
+                        <div class="flex gap-1">
+                            <input type="text" id="salePayment" list="paymentList" class="input-std" placeholder="Tipo de pago">
+                            <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('paymentType')"><i class="fas fa-cog"></i></button>
+                        </div>
+                        <datalist id="paymentList"></datalist>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">Canal (opcional)</label>
+                        <div class="flex gap-1">
+                            <input type="text" id="saleChannel" list="channelList" class="input-std" placeholder="Canal de venta">
+                            <button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('salesChannel')"><i class="fas fa-cog"></i></button>
+                        </div>
+                        <datalist id="channelList"></datalist>
+                    </div>
+                </div>
+                
+                <!-- CAMPO DE NOTA AÑADIDO -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nota (opcional) - Se verá en el historial</label>
+                    <textarea id="saleNotes" rows="2" class="input-std" placeholder="Notas adicionales sobre esta venta..."></textarea>
+                </div>
+                
+                <button type="submit" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Guardar Venta</button>
+            </form>
+
+            <!-- FORMULARIO DE VENTA MASIVA -->
+            <form id="massiveSaleForm" class="p-6 space-y-4" style="display: none;">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="massiveSaleDate" class="input-std" value="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Encargado Predeterminado</label>
+                        <input type="text" id="massiveSaleEmployee" list="managerList" class="input-std" placeholder="Encargado para todas las ventas">
+                    </div>
+                </div>
+
+                <!-- TABLA DE VENTA MASIVA -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 massive-sale-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Turno</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Encargado</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Método de Pago</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Canal de Venta</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">WhatsApp</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nota</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="massiveSaleTableBody" class="bg-white divide-y divide-gray-100">
+                            <!-- Las filas se agregarán dinámicamente -->
+                            <tr id="massiveSaleEmptyRow" class="text-center text-gray-400 py-8">
+                                <td colspan="13" class="py-8">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <i class="fas fa-layer-group text-3xl text-gray-300"></i>
+                                        <p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-between items-center pt-4">
+                    <button type="button" onclick="addMassiveSaleRow()" class="add-row-btn">
+                        <i class="fas fa-plus"></i> Agregar Fila
+                    </button>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-600 mb-2">
+                            <span class="font-bold">Total Ventas:</span> 
+                            <span id="massiveSalesTotal" class="text-green-600 font-bold text-lg">$0.00</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span id="massiveSalesCount">0</span> ventas registradas
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer mt-4">
+                    <i class="fas fa-save mr-2"></i> Guardar Todas las Ventas
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- FIN MODAL NUEVA VENTA (ACTUALIZADO) -->
+    
+    <!-- MODAL GASTOS MASIVOS (NUEVO) -->
+    <div id="massiveExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-xl font-bold"><i class="fas fa-layer-group mr-2"></i> Gastos Masivos</h2>
+                <button data-close="massiveExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="massiveExpenseDate" class="input-std" value="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Encargado Predeterminado</label>
+                        <input type="text" id="massiveExpenseEmployee" list="managerList" class="input-std" placeholder="Encargado para todos los gastos">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Categoría Predeterminada</label>
+                        <input type="text" id="massiveExpenseCategory" list="categoryList" class="input-std" placeholder="Categoría para todos los gastos">
+                    </div>
+                </div>
+
+                <!-- TABLA DE GASTOS MASIVOS -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 massive-sale-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Método de Pago</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Encargado</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto ($)</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="massiveExpenseTableBody" class="bg-white divide-y divide-gray-100">
+                            <!-- Las filas se agregarán dinámicamente -->
+                            <tr id="massiveExpenseEmptyRow" class="text-center text-gray-400 py-8">
+                                <td colspan="7" class="py-8">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <i class="fas fa-receipt text-3xl text-gray-300"></i>
+                                        <p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-between items-center pt-4">
+                    <button type="button" onclick="addMassiveExpenseRow()" class="add-row-btn">
+                        <i class="fas fa-plus"></i> Agregar Fila
+                    </button>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-600 mb-2">
+                            <span class="font-bold">Total Gastos:</span> 
+                            <span id="massiveExpensesTotal" class="text-red-600 font-bold text-lg">$0.00</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span id="massiveExpensesCount">0</span> gastos registrados
+                        </div>
+                    </div>
+                </div>
+
+                <button id="saveMassiveExpensesBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer mt-4">
+                    <i class="fas fa-save mr-2"></i> Guardar Todos los Gastos
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ACTUALIZADO: Modal Gasto con nuevo campo de método de pago -->
+    <div id="newExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold">Registrar Gasto</h2><button data-close="newExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="expenseForm" class="p-6 space-y-4"><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Fecha</label><input type="date" id="expenseDate" class="input-std" required></div><div><label class="block text-sm font-medium text-gray-700">Monto ($)</label><input type="number" id="expenseAmount" step="0.01" class="input-std font-bold text-lg text-red-600" required></div></div><div class="grid grid-cols-2 gap-4"><div class="relative"><label class="block text-sm font-medium text-gray-700">Categoría</label><div class="flex gap-1"><input type="text" id="expenseCategory" list="categoryList" class="input-std"><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('category')"><i class="fas fa-cog"></i></button></div><datalist id="categoryList"></datalist></div><div class="relative"><label class="block text-sm font-medium text-gray-700">Método de Pago</label><input type="text" id="expensePaymentMethod" list="expensePaymentList" class="input-std" placeholder="Efectivo, Transferencia..." required><datalist id="expensePaymentList"><option value="Efectivo"><option value="Transferencia"><option value="Tarjeta Débito"><option value="Tarjeta Crédito"><option value="Otro"></datalist></div></div><div class="relative"><label class="block text-sm font-medium text-gray-700">Encargado</label><div class="flex gap-1"><input type="text" id="expenseManager" list="managerList" class="input-std"><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('manager')"><i class="fas fa-cog"></i></button></div></div><div><label class="block text-sm font-medium text-gray-700">Descripción <span class="text-xs text-gray-500">(Se verá en el historial de gastos)</span></label><input type="text" id="expenseDesc" class="input-std" placeholder="Descripción detallada del gasto..."></div><button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Guardar Gasto</button></form></div></div>
+    <div id="productModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold">Nuevo Producto</h2><button data-close="productModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="productForm" class="p-6 space-y-4"><input type="text" id="prodName" placeholder="Nombre" class="input-std" required><div class="relative"><label class="block text-sm font-medium text-gray-700">Tipo</label><div class="flex gap-1"><input type="text" id="prodType" list="prodTypeList" class="input-std" required><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('prodType')"><i class="fas fa-cog"></i></button></div><datalist id="prodTypeList"><option value="Importado"><option value="Nacional"><option value="Nuevo"></datalist></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Precio ARS</label><input type="number" id="prodPrice" class="input-std"></div><div><label class="block text-sm font-medium text-gray-700">Precio USD</label><input type="number" id="prodPriceUsd" class="input-std"></div></div><div><label class="block text-sm font-medium text-gray-700">Stock</label><input type="number" id="prodStock" class="input-std" required></div><button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold cursor-pointer">Guardar</button></form></div></div>
+    <div id="newClientModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold text-indigo-700">Nuevo Cliente</h2><button data-close="newClientModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="clientForm" class="p-6 space-y-4"><input type="text" id="newClientName" class="input-std" placeholder="Nombre Completo" required><input type="tel" id="newClientWhatsapp" class="input-std" placeholder="WhatsApp"><input type="email" id="newClientEmail" class="input-std" placeholder="Email"><button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Guardar Cliente</button></form></div></div>
+    <div id="clientsModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"><div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl"><h2 class="text-xl font-bold text-indigo-700">Base de Clientes</h2><button data-close="clientsModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center"><input type="text" id="searchClientInput" placeholder="Buscar por nombre..." class="input-std w-40"><div class="border-l pl-2 flex gap-2 items-center"><select id="filterClientMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select><select id="filterClientYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select><button id="applyClientFilter" class="bg-indigo-600 text-white px-3 py-2 rounded-lg"><i class="fas fa-filter"></i></button></div><button id="btnAddClientDirect" class="bg-indigo-600 text-white px-4 rounded-lg ml-auto"><i class="fas fa-plus"></i></button></div><div class="flex-1 overflow-y-auto p-0"><table class="min-w-full divide-y divide-gray-200"><thead><tr><th class="table-header">Nombre</th><th class="table-header">Contacto</th><th class="table-header">Email</th><th class="table-header text-right">Historial</th><th class="table-header text-center">Acciones</th></tr></thead><tbody id="clientsTableBody" class="bg-white divide-y divide-gray-100"></tbody></table></div></div></div>
+    <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"><h3 class="text-lg font-bold mb-4">Perfil</h3><div class="bg-gray-50 p-3 rounded-lg mb-4 text-sm"><p><strong>Estado:</strong> <span id="authStatusText" class="text-green-600">Conectado</span></p><p class="text-xs text-gray-400 truncate mt-1" id="uidDisplay">...</p></div><button id="googleLoginBtn" class="w-full border py-2 rounded-lg hover:bg-gray-50 mb-2 flex items-center justify-center gap-2"><i class="fab fa-google text-red-500"></i> Google Login</button><button id="logoutBtn" class="w-full bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200">Cerrar Sesión</button><button data-close="profileModal" class="w-full mt-4 text-gray-400 text-sm">Cerrar</button></div></div>
+
+    <!-- MODAL PARA EDITAR RETIRO -->
+    <div id="editWithdrawalModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="p-6 border-b flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-red-700"><i class="fas fa-edit mr-2"></i> Editar Retiro</h2>
+                <button data-close="editWithdrawalModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editWithdrawalForm" class="p-6 space-y-4">
+                <input type="hidden" id="editWid">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                    <input type="date" id="editWdDate" class="input-std" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Monto ($)</label>
+                    <input type="number" id="editWdAmount" step="0.01" class="input-std font-bold text-lg text-red-600" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Empleado</label>
+                    <input type="text" id="editWdEmployee" list="managerList" class="input-std" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Motivo</label>
+                    <input type="text" id="editWdNote" class="input-std">
+                </div>
+                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Actualizar Retiro</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PARA EDITAR AJUSTE -->
+    <div id="editAdjustmentModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="p-6 border-b flex justify-between items-center bg-green-50 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-green-700"><i class="fas fa-edit mr-2"></i> Editar Ajuste</
