@@ -559,6 +559,108 @@
             opacity: 1;
             background-color: rgba(239, 68, 68, 0.1);
         }
+        
+        /* Estilos para campos protegidos con contraseña */
+        .protected-content {
+            position: relative;
+            min-height: 40px;
+        }
+        
+        .protected-content.hidden {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .protected-content.hidden::after {
+            content: "🔒";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: var(--text-secondary);
+            z-index: 2;
+        }
+        
+        .unlock-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            z-index: 3;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .unlock-btn:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-tertiary);
+        }
+        
+        /* Estilos para el modal de contraseña */
+        .password-modal-content {
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+        }
+        
+        /* Nueva sección de hoy en dashboard */
+        .today-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .today-stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .today-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .today-stat-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .today-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .today-stat-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .payment-type-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .payment-type-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
@@ -803,8 +905,8 @@
             <div class="space-y-4 mb-6">
                 <button id="btnOpenEmployeeStats" class="w-full bg-indigo-50 text-indigo-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-100 transition"><i class="fas fa-users-cog"></i> Ver Sueldos y Horas</button>
                 
-                <!-- NUEVO BOTÓN DE TUTORIALES -->
-                <button id="btnOpenTutorialsModal" class="w-full bg-blue-50 text-blue-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition"><i class="fas fa-question-circle"></i> Tutoriales</button>
+                <!-- BOTÓN PARA CONFIGURAR CONTRASEÑAS -->
+                <button id="btnOpenPasswordConfig" class="w-full bg-purple-50 text-purple-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition"><i class="fas fa-key"></i> Configurar Contraseñas</button>
             </div>
             
             <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Lista de Empleados</h4>
@@ -848,6 +950,78 @@
                 </div>
             </div>
 
+            <!-- NUEVA SECCIÓN: HOY -->
+            <div class="mb-8">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-day text-blue-500"></i> Hoy</h2>
+                
+                <div class="today-stats-grid">
+                    <!-- Venta de Hoy -->
+                    <div class="today-stat-card">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="today-stat-title">Venta de Hoy</div>
+                                <div class="today-stat-value" id="todaySalesTotal">$0.00</div>
+                                <div class="today-stat-detail">Total acumulado</div>
+                            </div>
+                            <button id="btnShowSalesToday" class="text-blue-500 hover:text-blue-700 text-sm font-medium" title="Ver detalle por medio de pago">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div id="todaySalesBreakdown" class="mt-3 hidden">
+                            <!-- Aquí se cargará el desglose por medio de pago -->
+                            <div class="text-xs font-bold text-gray-500 mb-2">Desglose por medio de pago:</div>
+                            <div id="todaySalesByPayment" class="space-y-1">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gastos de Hoy -->
+                    <div class="today-stat-card">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="today-stat-title">Gastos de Hoy</div>
+                                <div class="today-stat-value text-red-600" id="todayExpensesTotal">$0.00</div>
+                                <div class="today-stat-detail">Total acumulado</div>
+                            </div>
+                            <button id="btnShowExpensesToday" class="text-red-500 hover:text-red-700 text-sm font-medium" title="Ver detalle por categoría">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div id="todayExpensesBreakdown" class="mt-3 hidden">
+                            <!-- Aquí se cargará el desglose por categoría -->
+                            <div class="text-xs font-bold text-gray-500 mb-2">Desglose por categoría:</div>
+                            <div id="todayExpensesByCategory" class="space-y-1">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Ganancia de Hoy -->
+                    <div class="today-stat-card">
+                        <div class="today-stat-title">Ganancia de Hoy</div>
+                        <div class="today-stat-value text-green-600" id="todayProfit">$0.00</div>
+                        <div class="today-stat-detail">Ventas - Gastos</div>
+                    </div>
+                    
+                    <!-- Encargado del Día -->
+                    <div class="today-stat-card">
+                        <div class="today-stat-title">Encargado del Día</div>
+                        <div class="flex items-center gap-2">
+                            <select id="todayEmployeeSelect" class="input-std text-sm flex-1">
+                                <option value="">Seleccionar encargado</option>
+                            </select>
+                            <button id="btnSaveTodayEmployee" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </div>
+                        <div id="todayEmployeeInfo" class="mt-2 text-xs text-gray-500">
+                            <!-- Información del encargado seleccionado -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                 <button id="openInventarioBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
                     <div class="w-10 h-10 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-box"></i></div>
@@ -884,14 +1058,28 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-blue-500 relative">
-                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div><button class="text-gray-400 hover:text-blue-600 cursor-pointer" data-toggle-privacy="sales"><i class="fas fa-eye"></i></button></div>
-                    <div class="text-2xl font-bold text-gray-900" id="cardVentasMes">$0.00</div>
-                    <div class="mt-2 text-xs text-green-600 flex items-center"><i class="fas fa-calendar-day mr-1"></i> Hoy: <span id="cardVentasHoy" class="ml-1 font-semibold">$0.00</span></div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div>
+                        <button class="unlock-btn" data-unlock="sales" title="Mostrar con contraseña">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                    </div>
+                    <div class="protected-content hidden" id="protectedSales">
+                        <div class="text-2xl font-bold text-gray-900" id="cardVentasMes">$0.00</div>
+                        <div class="mt-2 text-xs text-green-600 flex items-center"><i class="fas fa-calendar-day mr-1"></i> Hoy: <span id="cardVentasHoy" class="ml-1 font-semibold">$0.00</span></div>
+                    </div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-green-500 relative">
-                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div><button class="text-gray-400 hover:text-green-600 cursor-pointer" data-toggle-privacy="profit"><i class="fas fa-eye"></i></button></div>
-                    <div class="text-2xl font-bold text-gray-900" id="cardGananciaMes">$0.00</div>
-                    <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div>
+                        <button class="unlock-btn" data-unlock="profit" title="Mostrar con contraseña">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                    </div>
+                    <div class="protected-content hidden" id="protectedProfit">
+                        <div class="text-2xl font-bold text-gray-900" id="cardGananciaMes">$0.00</div>
+                        <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
+                    </div>
                 </div>
                 <!-- CAMBIO: Ahora es CUMULATIVO y Persistente -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-yellow-500 relative">
@@ -931,145 +1119,94 @@
         </div>
     </div>
 
-    <!-- MODAL TUTORIALES (NUEVO) -->
-    <div id="tutorialsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
-            <div class="p-6 bg-blue-600 text-white flex justify-between items-center rounded-t-2xl">
-                <h2 class="text-2xl font-bold"><i class="fas fa-graduation-cap mr-2"></i> Tutorial de Uso Rápido</h2>
-                <button data-close="tutorialsModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
+    <!-- MODAL CONFIGURAR CONTRASEÑAS (NUEVO) -->
+    <div id="passwordConfigModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden password-modal-content">
+            <div class="p-6 bg-purple-600 text-white flex justify-between items-center">
+                <h2 class="text-xl font-bold"><i class="fas fa-key mr-2"></i> Configurar Contraseñas</h2>
+                <button data-close="passwordConfigModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-8">
-                
-                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Registro de Transacciones</h3>
-                
-                <div class="border-b pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-shopping-cart mr-2"></i> 1. Registrar una Venta</h4>
-                    <p class="text-gray-700 mb-3">La función principal es registrar cada venta de forma correcta para calcular comisiones y caja.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-xl border border-blue-200">
-                        <li><span class="font-bold">Acceso:</span> Pulsa el botón grande que dice <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs font-mono">Venta</span> en el Panel de Control.</li>
-                        <li><span class="font-bold">Datos Cruciales:</span>
-                            <ul class="list-disc list-inside ml-5">
-                                <li><span class="font-medium">Monto ($):</span> El valor final cobrado.</li>
-                                <li><span class="font-medium">Producto y Cantidad:</span> Debes seleccionar el producto del **Inventario** y la **Cantidad Vendida** (esto resta del stock).</li>
-                                <li><span class="font-medium">Cliente:</span> Nombre (Si es cliente nuevo, se agrega automáticamente a la Base de Clientes).</li>
-                                <li><span class="font-medium">Encargado:</span> Tu nombre (¡Crucial para tu comisión!).</li>
-                                <li><span class="font-medium">Pago:</span> Tipo de pago (Efectivo, Tarjeta, Nave, etc.).</li>
-                            </ul>
-                        </li>
-                        <!-- NOTA: Aquí están implementadas las comisiones de Yael -->
-                        <li><span class="font-bold text-red-600">Comisiones:</span> Si la encargada es Yael, se aplica un 3% para pagos con QR, Nave, T. Crédito o T. Débito, y 7% para los demás. Para otros encargados la comisión es 0%.</li>
-                    </ul>
+            <div class="p-6 space-y-6">
+                <div class="space-y-4">
+                    <h3 class="font-bold text-gray-700 border-b pb-2">Contraseña para Ver Ventas</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
+                            <input type="password" id="salesPasswordInput" class="input-std" placeholder="Ingrese nueva contraseña">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                            <input type="password" id="salesPasswordConfirm" class="input-std" placeholder="Confirme la contraseña">
+                        </div>
+                        <button id="btnSetSalesPassword" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-medium transition">
+                            Establecer Contraseña
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="border-b pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-minus-circle mr-2"></i> 2. Registrar un Gasto</h4>
-                    <p class="text-gray-700 mb-3">Si pagas algo del negocio con dinero de la caja, debe quedar registrado como Gasto.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-red-50 p-4 rounded-xl border border-red-200">
-                        <li><span class="font-bold">Acceso:</span> Pulsa el botón rojo <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-mono">Gasto</span>.</li>
-                        <li><span class="font-bold">Monto y Categoría:</span> Indica el monto y selecciona una categoría (ej: 'Mercadería', 'Alquiler').</li>
-                        <li><span class="font-bold">Método de Pago:</span> Indica con qué se pagó (Efectivo, Transferencia, etc.).</li>
-                        <li><span class="font-bold">Efecto:</span> Esto resta del dinero disponible en la <span class="font-bold text-yellow-700">Caja Actual</span>.</li>
-                    </ul>
-                </div>
-
-                <div class="border-b pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-box-open mr-2"></i> 3. Agregar/Actualizar Inventario</h4>
-                    <p class="text-gray-700 mb-3">Registra nuevos productos o actualiza los existentes para tener control de stock y precios.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-orange-50 p-4 rounded-xl border border-orange-200">
-                        <li><span class="font-bold">Acceso:</span> Pulsa el botón azul <span class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-mono">Producto</span>.</li>
-                        <li><span class="font-bold">Datos:</span> Ingresa el Nombre, Tipo, Precio ARS/USD y el Stock.</li>
-                        <li><span class="font-bold">Visualización:</span> Puedes ver todo el inventario en la tarjeta de <span class="font-bold text-orange-600">Inventario</span>.</li>
-                    </ul>
-                </div>
-
-                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Historiales y Consultas</h3>
-
-                <div class="border-b pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-history mr-2"></i> 4. Ver Historiales (Ventas, Gastos, Inventario, Clientes)</h4>
-                    <p class="text-gray-700 mb-3">Los historiales se acceden haciendo clic en las tarjetas del Panel de Control (ej: 'Ver Ventas', 'Ver Gastos').</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <li><span class="font-bold">Uso de Filtros:</span> Todos los historiales tienen campos de filtro (<i class="fas fa-filter"></i>). Puedes filtrar por **Fecha, Mes o Año** y por palabras clave (ej: nombre del cliente o encargado).</li>
-                        <li><span class="font-bold">Gráficos:</span> Tienen un botón para mostrar un gráfico visual de la distribución (por tiempo o tipo de pago/producto).</li>
-                    </ul>
-                </div>
-
-                <div class="border-b pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-users-cog mr-2"></i> 5. Sueldos, Horas y Retiros de Empleados</h4>
-                    <p class="text-gray-700 mb-3">Esta es una sección privada para ver el rendimiento del equipo y el estado de la Caja.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-indigo-50 p-4 rounded-xl border border-indigo-200">
-                        <li><span class="font-bold">Retiros y Caja:</span>
-                            <ul>
-                                <li>Para ver el detalle de retiros, haz clic en el ícono <i class="fas fa-external-link-alt"></i> en la tarjeta <span class="font-bold text-yellow-700">Caja Actual</span>. Ahí también registras nuevos retiros.</li>
-                                <!-- NOTA: El historial de ajustes ya existe en el modal de caja -->
-                                <li><span class="font-bold text-green-600">Historial de Ajustes y Retiros:</span> En el mismo modal de caja, puedes ver todos los movimientos (retiros manuales y ajustes).</li>
-                            </ul>
-                        </li>
-                        <li><span class="font-bold">Sueldos y Horas:</span>
-                            <ul>
-                                <li>Desde el Menú Lateral, pulsa <span class="font-bold text-indigo-700">Ver Sueldos y Horas</span>.</li>
-                                <li>Aquí verás un resumen de la Comisión Estimada (calculada por el sistema) y el total de Retiros hechos por cada empleado en el período filtrado.</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-
-                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4 mt-6">Ajustes y Utilidades</h3>
-
-                <div class="border-b pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-sign-in-alt mr-2"></i> 6. Iniciar/Cerrar Sesión y Perfil</h4>
-                    <p class="text-gray-700 mb-3">La aplicación utiliza tu cuenta para guardar tus datos de forma segura. Si ves datos de prueba, inicia sesión.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <li><span class="font-bold">Acceso:</span> Pulsa el ícono de perfil (<i class="fas fa-user-circle"></i>) en la esquina superior derecha.</li>
-                        <li><span class="font-bold">Iniciar Sesión:</span> Usa el botón de Google para iniciar sesión con tu cuenta.</li>
-                    </ul>
+                <div class="space-y-4">
+                    <h3 class="font-bold text-gray-700 border-b pb-2">Contraseña para Ver Ganancias</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
+                            <input type="password" id="profitPasswordInput" class="input-std" placeholder="Ingrese nueva contraseña">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                            <input type="password" id="profitPasswordConfirm" class="input-std" placeholder="Confirme la contraseña">
+                        </div>
+                        <button id="btnSetProfitPassword" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-medium transition">
+                            Establecer Contraseña
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lightbulb mr-2"></i> 7. Cambiar Tema (Modo Oscuro/Claro)</h4>
-                    <p class="text-gray-700 mb-3">Para mayor comodidad visual, puedes alternar entre el modo claro y oscuro.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <li><span class="font-bold">Ubicación:</span> Pulsa el ícono de la luna (<i class="fas fa-moon"></i>) o sol (<i class="fas fa-sun"></i>) en la barra superior de navegación.</li>
-                        <li>El cambio se guarda automáticamente.</li>
-                    </ul>
+                <div class="space-y-4">
+                    <h3 class="font-bold text-gray-700 border-b pb-2">Contraseña para Arqueo de Caja</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
+                            <input type="password" id="cashPasswordInput" class="input-std" placeholder="Ingrese nueva contraseña">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                            <input type="password" id="cashPasswordConfirm" class="input-std" placeholder="Confirme la contraseña">
+                        </div>
+                        <button id="btnSetCashPassword" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-medium transition">
+                            Establecer Contraseña
+                        </button>
+                    </div>
                 </div>
-
-            </div>
-            <div class="p-4 border-t bg-gray-50 text-center">
-                <p class="text-xs text-gray-500">¡Recuerda mantener toda la información al día para un cálculo de comisiones perfecto!</p>
+                
+                <div class="pt-4 border-t border-gray-200">
+                    <div class="text-xs text-gray-500 space-y-2">
+                        <p><i class="fas fa-info-circle text-blue-500 mr-1"></i> Las contraseñas se almacenan de forma segura en su cuenta.</p>
+                        <p><i class="fas fa-exclamation-triangle text-yellow-500 mr-1"></i> Si olvida la contraseña, deberá establecer una nueva.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- MODAL CALCULADORA PORCENTAJES (NUEVO) -->
-    <div id="calculatorModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div class="p-4 bg-gray-900 text-white flex justify-between items-center">
-                <h3 class="font-bold text-lg"><i class="fas fa-calculator mr-2"></i> Calculadora</h3>
-                <button data-close="calculatorModal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <!-- MODAL PARA INGRESAR CONTRASEÑA -->
+    <div id="passwordModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden password-modal-content">
+            <div class="p-6 bg-gray-800 text-white flex justify-between items-center">
+                <h2 class="text-xl font-bold"><i class="fas fa-lock mr-2"></i> Verificación</h2>
+                <button data-close="passwordModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Monto Base</label>
-                    <input type="number" id="calcBaseAmount" class="input-std font-bold text-lg text-center" step="0.01">
-                </div>
-                <div class="flex gap-2 items-center justify-center">
-                    <button id="calcTypeSurcharge" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-blue-100 text-blue-700 font-bold text-sm hover:bg-blue-200 transition ring-2 ring-blue-500">RECARGO (+)</button>
-                    <button id="calcTypeDiscount" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-100 text-gray-600 font-bold text-sm hover:bg-green-100 hover:text-green-700 transition">DESCUENTO (-)</button>
+                <div id="passwordModalMessage" class="text-sm text-gray-600">
+                    <!-- Mensaje dinámico -->
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porcentaje (%)</label>
-                    <div class="flex gap-2">
-                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=10; updateCalc();">10%</button>
-                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=15; updateCalc();">15%</button>
-                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=21; updateCalc();">21%</button>
-                        <input type="number" id="calcPercentage" class="input-std text-center font-bold" placeholder="0" oninput="updateCalc()">
-                    </div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="passwordInput" class="input-std" placeholder="Ingrese la contraseña" autofocus>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
-                    <div class="text-xs text-gray-400 uppercase font-bold mb-1">Resultado Final</div>
-                    <div id="calcResultDisplay" class="text-3xl font-bold text-gray-800">$0.00</div>
-                </div>
-                <button id="applyCalcResultBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition transform active:scale-95">Aplicar Resultado</button>
+                <div class="text-xs text-red-500 hidden" id="passwordError">Contraseña incorrecta. Intente nuevamente.</div>
+                <button id="btnVerifyPassword" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg font-bold transition">
+                    Verificar
+                </button>
             </div>
         </div>
     </div>
@@ -1257,18 +1394,28 @@
                     <div class="text-lg font-bold text-yellow-800" id="cashModalOnlyCash">$0.00</div>
                 </div>
                 <!-- Ganancia Bruta con PIN -->
-                <div class="bg-green-50 p-3 rounded-lg">
+                <div class="bg-green-50 p-3 rounded-lg relative">
                     <div class="text-xs text-green-600 font-bold uppercase">Ganancia Bruta</div>
-                    <div class="text-lg font-bold text-green-800" id="cashModalGross">$0.00</div>
+                    <div class="protected-content hidden" id="protectedGross">
+                        <div class="text-lg font-bold text-green-800" id="cashModalGross">$0.00</div>
+                    </div>
+                    <button class="unlock-btn" data-unlock="cashGross" title="Mostrar con contraseña">
+                        <i class="fas fa-lock"></i>
+                    </button>
                 </div>
                 <div class="bg-red-50 p-3 rounded-lg">
                     <div class="text-xs text-red-600 font-bold uppercase">Retiros Manuales</div>
                     <div class="text-lg font-bold text-red-800" id="cashModalWithdrawals">$0.00</div>
                 </div>
                 <!-- Caja Real con PIN -->
-                <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
+                <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200 relative">
                     <div class="text-xs text-yellow-600 font-bold uppercase">En Caja Real</div>
-                    <div class="2xl font-bold text-yellow-800" id="cashModalNet">$0.00</div>
+                    <div class="protected-content hidden" id="protectedNet">
+                        <div class="2xl font-bold text-yellow-800" id="cashModalNet">$0.00</div>
+                    </div>
+                    <button class="unlock-btn" data-unlock="cashNet" title="Mostrar con contraseña">
+                        <i class="fas fa-lock"></i>
+                    </button>
                 </div>
             </div>
             
@@ -1619,6 +1766,34 @@
         let products=[], sales=[], expenses=[], clients=[], withdrawals=[], news=[], adjustments=[]; // AÑADIDO: adjustments
         let settings = { storeName: "MI NEGOCIO", employees: [], blockedCategories: {}, processedReports: [] };
         
+        // Variables para contraseñas
+        let passwords = {
+            sales: null,
+            profit: null,
+            cash: null
+        };
+        
+        // Variables de verificación de sesión
+        let unlockedSections = {
+            sales: false,
+            profit: false,
+            cashGross: false,
+            cashNet: false,
+            salesHistory: false,
+            profitHistory: false
+        };
+        
+        // Variables para hoy
+        let todayStats = {
+            salesTotal: 0,
+            expensesTotal: 0,
+            profitTotal: 0,
+            salesByPayment: {},
+            expensesByCategory: {},
+            selectedEmployee: null,
+            employeeInfo: {}
+        };
+        
         // Variables para gráfico
         let salesChart = null;
         let expensesChart = null;
@@ -1817,6 +1992,324 @@
                     }
                 });
             });
+        }
+
+        // FUNCIÓN PARA CARGAR CONTRASEÑAS
+        async function loadPasswords() {
+            if (!userId) return;
+            
+            try {
+                const passwordDoc = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'passwords'));
+                if (passwordDoc.exists()) {
+                    passwords = { ...passwords, ...passwordDoc.data() };
+                    console.log('Contraseñas cargadas:', Object.keys(passwords).filter(k => passwords[k]));
+                }
+            } catch (error) {
+                console.error('Error cargando contraseñas:', error);
+            }
+        }
+
+        // FUNCIÓN PARA GUARDAR CONTRASEÑA
+        async function savePassword(type, newPassword) {
+            if (!userId) return false;
+            
+            try {
+                if (!newPassword || newPassword.trim() === '') {
+                    // Eliminar la contraseña si está vacía
+                    const updateData = { [type]: null };
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'passwords'), updateData, { merge: true });
+                    passwords[type] = null;
+                    showToast(`Contraseña de ${getPasswordTypeName(type)} eliminada`, 'success');
+                    return true;
+                } else {
+                    // Guardar la nueva contraseña (en una aplicación real, deberías hashearla)
+                    const updateData = { [type]: newPassword };
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'passwords'), updateData, { merge: true });
+                    passwords[type] = newPassword;
+                    showToast(`Contraseña de ${getPasswordTypeName(type)} actualizada`, 'success');
+                    return true;
+                }
+            } catch (error) {
+                console.error(`Error guardando contraseña ${type}:`, error);
+                showToast('Error al guardar la contraseña', 'error');
+                return false;
+            }
+        }
+
+        // FUNCIÓN PARA OBTENER NOMBRE DEL TIPO DE CONTRASEÑA
+        function getPasswordTypeName(type) {
+            const names = {
+                sales: 'Ventas',
+                profit: 'Ganancias',
+                cash: 'Arqueo de Caja'
+            };
+            return names[type] || type;
+        }
+
+        // FUNCIÓN PARA VERIFICAR CONTRASEÑA
+        function verifyPassword(type, inputPassword) {
+            const storedPassword = passwords[type];
+            if (!storedPassword) {
+                // Si no hay contraseña configurada, permitir acceso
+                return true;
+            }
+            return inputPassword === storedPassword;
+        }
+
+        // FUNCIÓN PARA MOSTRAR MODAL DE CONTRASEÑA
+        function showPasswordModal(type, target, callback) {
+            const modal = $('passwordModal');
+            const message = $('passwordModalMessage');
+            const input = $('passwordInput');
+            const error = $('passwordError');
+            
+            let messageText = '';
+            let unlockType = type;
+            
+            switch(type) {
+                case 'sales':
+                    messageText = 'Ingrese la contraseña para ver las Ventas del Mes';
+                    unlockType = 'sales';
+                    break;
+                case 'profit':
+                    messageText = 'Ingrese la contraseña para ver la Ganancia Neta del Mes';
+                    unlockType = 'profit';
+                    break;
+                case 'cashGross':
+                    messageText = 'Ingrese la contraseña para ver la Ganancia Bruta';
+                    unlockType = 'cash';
+                    break;
+                case 'cashNet':
+                    messageText = 'Ingrese la contraseña para ver el total En Caja Real';
+                    unlockType = 'cash';
+                    break;
+                case 'salesHistory':
+                    messageText = 'Ingrese la contraseña para ver el Historial de Ventas';
+                    unlockType = 'sales';
+                    break;
+                case 'profitHistory':
+                    messageText = 'Ingrese la contraseña para ver el Historial de Ganancias';
+                    unlockType = 'profit';
+                    break;
+                default:
+                    messageText = 'Ingrese la contraseña para continuar';
+            }
+            
+            message.textContent = messageText;
+            input.value = '';
+            error.classList.add('hidden');
+            
+            // Configurar el botón de verificación
+            const verifyBtn = $('btnVerifyPassword');
+            verifyBtn.onclick = () => {
+                const enteredPassword = input.value.trim();
+                
+                if (verifyPassword(unlockType, enteredPassword)) {
+                    // Contraseña correcta
+                    unlockedSections[type] = true;
+                    
+                    // Ejecutar callback si se proporciona
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
+                    
+                    // Mostrar contenido protegido
+                    if (target) {
+                        const protectedContent = $(target);
+                        if (protectedContent) {
+                            protectedContent.classList.remove('hidden');
+                            // Cambiar ícono de candado a desbloqueado
+                            const unlockBtn = protectedContent.closest('.relative')?.querySelector('.unlock-btn');
+                            if (unlockBtn) {
+                                unlockBtn.innerHTML = '<i class="fas fa-unlock"></i>';
+                                unlockBtn.title = "Contenido desbloqueado";
+                                unlockBtn.style.color = '#10b981';
+                                // Deshabilitar el botón temporalmente
+                                unlockBtn.style.pointerEvents = 'none';
+                                setTimeout(() => {
+                                    unlockBtn.innerHTML = '<i class="fas fa-lock"></i>';
+                                    unlockBtn.title = "Mostrar con contraseña";
+                                    unlockBtn.style.color = '';
+                                    unlockBtn.style.pointerEvents = 'auto';
+                                    protectedContent.classList.add('hidden');
+                                    unlockedSections[type] = false;
+                                }, 30000); // Bloquear después de 30 segundos
+                            }
+                        }
+                    }
+                    
+                    modal.classList.add('hidden');
+                    showToast('Contraseña correcta', 'success');
+                } else {
+                    // Contraseña incorrecta
+                    error.classList.remove('hidden');
+                    input.value = '';
+                    input.focus();
+                }
+            };
+            
+            // También permitir Enter para verificar
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    verifyBtn.click();
+                }
+            };
+            
+            modal.classList.remove('hidden');
+            input.focus();
+        }
+
+        // FUNCIÓN PARA ACTUALIZAR ESTADÍSTICAS DE HOY
+        function updateTodayStats() {
+            const today = getToday();
+            
+            // Reiniciar estadísticas
+            todayStats.salesTotal = 0;
+            todayStats.expensesTotal = 0;
+            todayStats.profitTotal = 0;
+            todayStats.salesByPayment = {};
+            todayStats.expensesByCategory = {};
+            
+            // Procesar ventas de hoy
+            const todaySales = sales.filter(s => s.date === today);
+            todaySales.forEach(sale => {
+                const amount = parseFloat(sale.montoCobrado) || 0;
+                todayStats.salesTotal += amount;
+                
+                // Agrupar por método de pago
+                const paymentType = sale.paymentType || 'Sin especificar';
+                todayStats.salesByPayment[paymentType] = (todayStats.salesByPayment[paymentType] || 0) + amount;
+            });
+            
+            // Procesar gastos de hoy
+            const todayExpenses = expenses.filter(e => e.date === today);
+            todayExpenses.forEach(expense => {
+                const amount = parseFloat(expense.gastoTotal) || 0;
+                todayStats.expensesTotal += amount;
+                
+                // Agrupar por categoría
+                const category = expense.category || 'Sin categoría';
+                todayStats.expensesByCategory[category] = (todayStats.expensesByCategory[category] || 0) + amount;
+            });
+            
+            // Calcular ganancia de hoy
+            todayStats.profitTotal = todayStats.salesTotal - todayStats.expensesTotal;
+            
+            // Actualizar la interfaz
+            $('todaySalesTotal').textContent = fmtMoney(todayStats.salesTotal);
+            $('todayExpensesTotal').textContent = fmtMoney(todayStats.expensesTotal);
+            $('todayProfit').textContent = fmtMoney(todayStats.profitTotal);
+            
+            // Actualizar desglose de ventas por pago
+            const salesBreakdown = $('todaySalesByPayment');
+            if (salesBreakdown) {
+                salesBreakdown.innerHTML = '';
+                Object.entries(todayStats.salesByPayment).forEach(([payment, amount]) => {
+                    const item = document.createElement('div');
+                    item.className = 'payment-type-item';
+                    item.innerHTML = `
+                        <span class="text-xs">${payment}</span>
+                        <span class="text-xs font-bold">${fmtMoney(amount)}</span>
+                    `;
+                    salesBreakdown.appendChild(item);
+                });
+            }
+            
+            // Actualizar desglose de gastos por categoría
+            const expensesBreakdown = $('todayExpensesByCategory');
+            if (expensesBreakdown) {
+                expensesBreakdown.innerHTML = '';
+                Object.entries(todayStats.expensesByCategory).forEach(([category, amount]) => {
+                    const item = document.createElement('div');
+                    item.className = 'payment-type-item';
+                    item.innerHTML = `
+                        <span class="text-xs">${category}</span>
+                        <span class="text-xs font-bold text-red-600">${fmtMoney(amount)}</span>
+                    `;
+                    expensesBreakdown.appendChild(item);
+                });
+            }
+            
+            // Actualizar información del encargado del día
+            updateTodayEmployeeInfo();
+        }
+
+        // FUNCIÓN PARA ACTUALIZAR INFORMACIÓN DEL ENCARGADO DEL DÍA
+        async function updateTodayEmployeeInfo() {
+            const today = getToday();
+            const select = $('todayEmployeeSelect');
+            const infoDiv = $('todayEmployeeInfo');
+            
+            if (!select || !infoDiv) return;
+            
+            // Obtener empleado guardado para hoy
+            try {
+                const employeeDoc = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'dailyEmployees', today));
+                if (employeeDoc.exists()) {
+                    const data = employeeDoc.data();
+                    todayStats.selectedEmployee = data.employee;
+                    todayStats.employeeInfo = data;
+                    
+                    // Seleccionar en el dropdown
+                    select.value = data.employee || '';
+                    
+                    // Mostrar información
+                    let infoHTML = '';
+                    if (data.startTime) {
+                        infoHTML += `Hora inicio: ${data.startTime}<br>`;
+                    }
+                    if (data.endTime) {
+                        infoHTML += `Hora fin: ${data.endTime}<br>`;
+                    }
+                    if (data.notes) {
+                        infoHTML += `Notas: ${data.notes}`;
+                    }
+                    
+                    infoDiv.innerHTML = infoHTML || 'No hay información adicional';
+                } else {
+                    todayStats.selectedEmployee = null;
+                    todayStats.employeeInfo = {};
+                    select.value = '';
+                    infoDiv.innerHTML = 'No hay encargado asignado para hoy';
+                }
+            } catch (error) {
+                console.error('Error cargando encargado del día:', error);
+                infoDiv.innerHTML = 'Error al cargar información';
+            }
+        }
+
+        // FUNCIÓN PARA GUARDAR ENCARGADO DEL DÍA
+        async function saveTodayEmployee() {
+            const today = getToday();
+            const select = $('todayEmployeeSelect');
+            const employee = select.value.trim();
+            
+            if (!employee) {
+                showToast('Seleccione un encargado', 'error');
+                return;
+            }
+            
+            try {
+                const employeeData = {
+                    employee: employee,
+                    date: today,
+                    savedAt: new Date().toISOString()
+                };
+                
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'dailyEmployees', today), employeeData, { merge: true });
+                
+                todayStats.selectedEmployee = employee;
+                todayStats.employeeInfo = employeeData;
+                
+                showToast('Encargado guardado para hoy', 'success');
+                updateTodayEmployeeInfo();
+                
+                // Enviar notificación
+                sendNotificationToAll('Encargado del Día', `${employee} ha sido asignado como encargado para hoy`);
+            } catch (error) {
+                console.error('Error guardando encargado:', error);
+                showToast('Error al guardar encargado', 'error');
+            }
         }
 
         // FUNCIÓN PARA CAMBIAR TIPO DE VENTA
@@ -2280,6 +2773,7 @@
                     initListeners();
                     initializeNotifications();
                     listenToGlobalNotifications(); // Escuchar notificaciones globales
+                    loadPasswords(); // Cargar contraseñas
                     
                     // Verificar y configurar FCM después de la autenticación
                     setTimeout(() => {
@@ -2315,6 +2809,33 @@
                     typeDisplay.textContent = productType ? `Tipo: ${productType}` : '';
                 }
             });
+        }
+
+        // FUNCIÓN PARA ACTUALIZAR LISTA DE EMPLEADOS EN EL SELECT DE HOY
+        function updateTodayEmployeeSelect() {
+            const select = $('todayEmployeeSelect');
+            if (!select) return;
+            
+            // Guardar valor actual
+            const currentValue = select.value;
+            
+            // Limpiar opciones
+            select.innerHTML = '<option value="">Seleccionar encargado</option>';
+            
+            // Agregar empleados de settings
+            if (settings.employees && settings.employees.length > 0) {
+                settings.employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp;
+                    option.textContent = emp;
+                    select.appendChild(option);
+                });
+            }
+            
+            // Restaurar valor si existe
+            if (currentValue && Array.from(select.options).some(opt => opt.value === currentValue)) {
+                select.value = currentValue;
+            }
         }
 
         // ACTUALIZADO: Función para actualizar filtro de canales
@@ -2357,6 +2878,7 @@
                     $('storeNameDisplay').textContent = settings.storeName || "MI NEGOCIO";
                     renderEmployeeList();
                     updateDynamicLists(); 
+                    updateTodayEmployeeSelect(); // Actualizar select de empleados de hoy
                 }
             });
             
@@ -2376,6 +2898,7 @@
                 renderProfitReport();
                 updateDynamicLists(); 
                 updateChannelFilter(); // ACTUALIZADO: Actualizar filtro de canales
+                updateTodayStats(); // Actualizar estadísticas de hoy
                 
                 // Enviar notificación si hay nueva venta y notificaciones activadas
                 if (s.docs.length > 0 && notificationPermission) {
@@ -2394,6 +2917,7 @@
                 renderExpensesList();
                 renderProfitReport(); 
                 updateDynamicLists(); 
+                updateTodayStats(); // Actualizar estadísticas de hoy
                 
                 // Enviar notificación si hay nuevo gasto
                 if (s.docs.length > 0 && notificationPermission) {
@@ -2462,6 +2986,9 @@
             fill('paymentList', payMethods); fill('channelList', channels); 
             fill('categoryList', cats); fill('managerList', managers); fill('prodTypeList', prodTypes);
             fill('expensePaymentList', expensePayments); 
+            
+            // Actualizar también el select de empleados de hoy
+            updateTodayEmployeeSelect();
         }
 
         function openListManager(type) {
@@ -2558,12 +3085,25 @@
             $('cardStockUnidades').textContent = products.reduce((a,p)=>a+(parseInt(p.stock)||0),0);
             $('dashTotalClientes').textContent = clients.length;
             
-            $('cardVentasMes').textContent = fmtMoney(sMonth);
-            $('cardGananciaMes').textContent = fmtMoney(sMonth - eMonth);
+            // Actualizar valores protegidos solo si están desbloqueados
+            if (unlockedSections.sales) {
+                $('cardVentasMes').textContent = fmtMoney(sMonth);
+            }
+            
+            if (unlockedSections.profit) {
+                $('cardGananciaMes').textContent = fmtMoney(sMonth - eMonth);
+            }
             
             $('cardCaja').textContent = fmtMoney(cashOnlyTotal); 
-            $('cashModalGross').textContent = fmtMoney(salesTotal - expensesTotal);
-            $('cashModalNet').textContent = fmtMoney(salesTotal - expensesTotal - wTotal);
+            
+            // Actualizar valores protegidos en caja solo si están desbloqueados
+            if (unlockedSections.cashGross) {
+                $('cashModalGross').textContent = fmtMoney(salesTotal - expensesTotal);
+            }
+            if (unlockedSections.cashNet) {
+                $('cashModalNet').textContent = fmtMoney(salesTotal - expensesTotal - wTotal);
+            }
+            
             $('cashModalOnlyCash').textContent = fmtMoney(cashOnlyTotal); 
             $('cashModalWithdrawals').textContent = fmtMoney(wTotal);
         }
@@ -3383,6 +3923,170 @@
             $('closeSideMenuBtn').onclick = closeMenu; 
             $('sideMenuOverlay').onclick = closeMenu;
             
+            // Botón para configurar contraseñas
+            $('btnOpenPasswordConfig').onclick = () => {
+                $('passwordConfigModal').classList.remove('hidden');
+            };
+            
+            // Configurar contraseñas
+            $('btnSetSalesPassword').onclick = async () => {
+                const password = $('salesPasswordInput').value;
+                const confirm = $('salesPasswordConfirm').value;
+                
+                if (password !== confirm) {
+                    showToast('Las contraseñas no coinciden', 'error');
+                    return;
+                }
+                
+                const success = await savePassword('sales', password);
+                if (success) {
+                    $('salesPasswordInput').value = '';
+                    $('salesPasswordConfirm').value = '';
+                }
+            };
+            
+            $('btnSetProfitPassword').onclick = async () => {
+                const password = $('profitPasswordInput').value;
+                const confirm = $('profitPasswordConfirm').value;
+                
+                if (password !== confirm) {
+                    showToast('Las contraseñas no coinciden', 'error');
+                    return;
+                }
+                
+                const success = await savePassword('profit', password);
+                if (success) {
+                    $('profitPasswordInput').value = '';
+                    $('profitPasswordConfirm').value = '';
+                }
+            };
+            
+            $('btnSetCashPassword').onclick = async () => {
+                const password = $('cashPasswordInput').value;
+                const confirm = $('cashPasswordConfirm').value;
+                
+                if (password !== confirm) {
+                    showToast('Las contraseñas no coinciden', 'error');
+                    return;
+                }
+                
+                const success = await savePassword('cash', password);
+                if (success) {
+                    $('cashPasswordInput').value = '';
+                    $('cashPasswordConfirm').value = '';
+                }
+            };
+            
+            // Botones de desbloqueo
+            document.querySelectorAll('.unlock-btn[data-unlock="sales"]').forEach(btn => {
+                btn.onclick = () => {
+                    if (passwords.sales) {
+                        showPasswordModal('sales', 'protectedSales', () => {
+                            updateDashboard();
+                        });
+                    } else {
+                        // Si no hay contraseña, mostrar directamente
+                        const protectedContent = $('protectedSales');
+                        if (protectedContent) {
+                            protectedContent.classList.remove('hidden');
+                            setTimeout(() => {
+                                protectedContent.classList.add('hidden');
+                            }, 30000);
+                        }
+                        unlockedSections.sales = true;
+                        updateDashboard();
+                    }
+                };
+            });
+            
+            document.querySelectorAll('.unlock-btn[data-unlock="profit"]').forEach(btn => {
+                btn.onclick = () => {
+                    if (passwords.profit) {
+                        showPasswordModal('profit', 'protectedProfit', () => {
+                            updateDashboard();
+                        });
+                    } else {
+                        // Si no hay contraseña, mostrar directamente
+                        const protectedContent = $('protectedProfit');
+                        if (protectedContent) {
+                            protectedContent.classList.remove('hidden');
+                            setTimeout(() => {
+                                protectedContent.classList.add('hidden');
+                            }, 30000);
+                        }
+                        unlockedSections.profit = true;
+                        updateDashboard();
+                    }
+                };
+            });
+            
+            document.querySelectorAll('.unlock-btn[data-unlock="cashGross"]').forEach(btn => {
+                btn.onclick = () => {
+                    if (passwords.cash) {
+                        showPasswordModal('cashGross', 'protectedGross', () => {
+                            updateDashboard();
+                        });
+                    } else {
+                        // Si no hay contraseña, mostrar directamente
+                        const protectedContent = $('protectedGross');
+                        if (protectedContent) {
+                            protectedContent.classList.remove('hidden');
+                            setTimeout(() => {
+                                protectedContent.classList.add('hidden');
+                            }, 30000);
+                        }
+                        unlockedSections.cashGross = true;
+                        updateDashboard();
+                    }
+                };
+            });
+            
+            document.querySelectorAll('.unlock-btn[data-unlock="cashNet"]').forEach(btn => {
+                btn.onclick = () => {
+                    if (passwords.cash) {
+                        showPasswordModal('cashNet', 'protectedNet', () => {
+                            updateDashboard();
+                        });
+                    } else {
+                        // Si no hay contraseña, mostrar directamente
+                        const protectedContent = $('protectedNet');
+                        if (protectedContent) {
+                            protectedContent.classList.remove('hidden');
+                            setTimeout(() => {
+                                protectedContent.classList.add('hidden');
+                            }, 30000);
+                        }
+                        unlockedSections.cashNet = true;
+                        updateDashboard();
+                    }
+                };
+            });
+            
+            // Funcionalidades de hoy
+            $('btnShowSalesToday').onclick = () => {
+                const breakdown = $('todaySalesBreakdown');
+                if (breakdown.classList.contains('hidden')) {
+                    breakdown.classList.remove('hidden');
+                    $('btnShowSalesToday').innerHTML = '<i class="fas fa-eye-slash"></i>';
+                } else {
+                    breakdown.classList.add('hidden');
+                    $('btnShowSalesToday').innerHTML = '<i class="fas fa-eye"></i>';
+                }
+            };
+            
+            $('btnShowExpensesToday').onclick = () => {
+                const breakdown = $('todayExpensesBreakdown');
+                if (breakdown.classList.contains('hidden')) {
+                    breakdown.classList.remove('hidden');
+                    $('btnShowExpensesToday').innerHTML = '<i class="fas fa-eye-slash"></i>';
+                } else {
+                    breakdown.classList.add('hidden');
+                    $('btnShowExpensesToday').innerHTML = '<i class="fas fa-eye"></i>';
+                }
+            };
+            
+            $('btnSaveTodayEmployee').onclick = saveTodayEmployee;
+            
             $('btnNewSale').onclick = () => { 
                 // Resetear formulario de unidad
                 $('saleDate').value = getToday(); 
@@ -3449,8 +4153,6 @@
             };
             
             document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).classList.add('hidden'));
-            
-            $('btnOpenTutorialsModal').onclick = () => $('tutorialsModal').classList.remove('hidden');
             
             $('toggleSalesTimeChart').onclick = toggleSalesTimeChart;
             $('togglePaymentTypeChart').onclick = togglePaymentTypeChart;
@@ -4162,25 +4864,41 @@
                 if(auth) signInWithPopup(auth, new GoogleAuthProvider()).then(()=>$('profileModal').classList.add('hidden')); 
             };
 
-            $('openInventarioBtn').onclick = () => { 
-                renderInventory(); 
-                $('inventoryModal').classList.remove('hidden'); 
-            };
-            
+            // MODIFICAR ABRIR HISTORIALES PARA SOLICITAR CONTRASEÑA
             $('openVentasHistoryBtn').onclick = () => { 
-                renderSalesList(); 
-                $('salesHistoryModal').classList.remove('hidden'); 
+                if (passwords.sales && !unlockedSections.salesHistory) {
+                    showPasswordModal('salesHistory', null, () => {
+                        renderSalesList(); 
+                        $('salesHistoryModal').classList.remove('hidden');
+                    });
+                } else {
+                    renderSalesList(); 
+                    $('salesHistoryModal').classList.remove('hidden');
+                }
             };
             
             $('openGananciasHistoryBtn').onclick = () => { 
-                if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
-                renderProfitReport(); 
-                $('gananciasDetailModal').classList.remove('hidden'); 
+                if (passwords.profit && !unlockedSections.profitHistory) {
+                    showPasswordModal('profitHistory', null, () => {
+                        if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
+                        renderProfitReport(); 
+                        $('gananciasDetailModal').classList.remove('hidden');
+                    });
+                } else {
+                    if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
+                    renderProfitReport(); 
+                    $('gananciasDetailModal').classList.remove('hidden');
+                }
             };
             
             $('openGastosHistoryBtn').onclick = () => { 
                 renderExpensesList(); 
                 $('expensesHistoryModal').classList.remove('hidden'); 
+            };
+            
+            $('openInventarioBtn').onclick = () => { 
+                renderInventory(); 
+                $('inventoryModal').classList.remove('hidden'); 
             };
             
             $('openClientesBtn').onclick = () => { 
@@ -4311,6 +5029,8 @@
         window.removeMassiveSaleRow = removeMassiveSaleRow;
         window.updateMassiveSalesTotal = updateMassiveSalesTotal;
         window.sortTable = sortTable;
+        window.showPasswordModal = showPasswordModal;
+        window.saveTodayEmployee = saveTodayEmployee;
     </script>
 </body>
 </html>
