@@ -5793,4 +5793,713 @@
 
         // Inicializar campos de fecha en formularios de retiro y ajuste
         if ($('wdDate')) $('wdDate').value = getToday();
-        if
+                            if (quantitySold > currentStock) {
+                        showToast(`No hay suficiente stock. Stock actual: ${currentStock}`, 'error');
+                        return;
+                    }
+                    const newStock = currentStock - quantitySold;
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', productId), {
+                        stock: newStock.toString(),
+                        lastSale: new Date().toISOString()
+                    });
+                    stockUpdated = true;
+                }
+            }
+
+            // Calcular comisiones para Yael
+            let commissionRate = 0;
+            let commissionAmount = 0;
+            const paymentType = $('salePayment').value.trim() || 'Efectivo';
+            
+            if (emp.toLowerCase() === 'yael') {
+                const normalizedPayment = paymentType.toLowerCase();
+                const lowCommissionPayments = ['qr', 'nave', 'payway', 'tarjeta de debito', 'tarjeta de credito', 'tarjeta débito', 'tarjeta crédito'];
+                
+                if (lowCommissionPayments.some(p => normalizedPayment.includes(p))) {
+                    commissionRate = 0.03; // 3% para QR, NAVE, Payway, Tarjetas
+                } else {
+                    commissionRate = 0.07; // 7% para otros métodos
+                }
+                commissionAmount = montoCobrado * commissionRate;
+            }
+            
+            // Agregar empleado a lista si no existe
+            if (emp && emp !== 'Sin encargado' && !settings.employees.includes(emp)) {
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                    { employees: arrayUnion(emp) }, { merge: true });
+            }
+            
+            // Crear cliente si no existe
+            if (cName && cName !== 'Cliente no registrado' && !clients.some(c => c.name.toLowerCase() === cName.toLowerCase())) {
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'clients'), {
+                    name: cName,
+                    whatsapp: $('saleWhatsapp').value.trim() || '',
+                    email: $('saleEmail').value.trim() || '',
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            // Preparar datos de venta
+            const saleData = {
+                date: $('saleDate').value || getToday(),
+                time: $('saleTime').value || new Date().toLocaleTimeString('es-ES', {hour12: false, hour: '2-digit', minute: '2-digit'}),
+                shift: $('saleShift').value || detectShift($('saleTime').value),
+                montoCobrado: montoCobrado,
+                clientName: cName,
+                paymentType: paymentType,
+                salesChannel: $('saleChannel').value.trim() || '',
+                productName: productToUpdate ? productToUpdate.name : '',
+                productId: productId,
+                quantitySold: quantitySold,
+                employee: emp,
+                notes: $('saleNotes').value.trim() || '',
+                commissionRate: commissionRate.toFixed(4),
+                commissionAmount: commissionAmount.toFixed(2),
+                whatsapp: $('saleWhatsapp').value.trim() || '',
+                email: $('saleEmail').value.trim() || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                if (isEditing) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'sales', isEditing), saleData);
+                    showToast("Venta actualizada correctamente", 'success');
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'sales'), saleData);
+                    showToast("Venta registrada exitosamente", 'success');
+                }
+                
+                $('newSaleModal').classList.add('hidden');
+                $('saleForm').reset();
+                delete $('saleForm').dataset.editingId;
+                delete $('saleForm').dataset.originalQuantity;
+                delete $('saleForm').dataset.originalProductId;
+                
+                // Enviar notificación
+                sendNotificationToAll('Venta Registrada', 
+                    `${emp} vendió ${fmtMoney(montoCobrado)} a ${cName}`);
+                    
+            } catch (error) {
+                console.error("Error guardando venta:", error);
+                showToast("Error al guardar la venta", 'error');
+                
+                // Revertir cambio de stock si hubo error
+                if (stockUpdated && productId && productToUpdate) {
+                    try {
+                        const currentStock = parseInt(productToUpdate.stock) || 0;
+                        const restoredStock = isEditing ? 
+                            (originalProductId === productId ? 
+                                currentStock + (quantitySold - originalQuantity) : 
+                                currentStock + quantitySold) : 
+                            currentStock + quantitySold;
+                        
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', productId), {
+                            stock: restoredStock.toString()
+                        });
+                    } catch (stockError) {
+                        console.error("Error revirtiendo stock:", stockError);
+                    }
+                }
+            }
+        }
+
+        $('expenseForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            if(!userId) return; 
+            
+            const isEditing = $('expenseForm').dataset.editingId;
+            
+            const expenseData = {
+                date: $('expenseDate').value || getToday(),
+                gastoTotal: parseFloat($('expenseAmount').value) || 0,
+                category: $('expenseCategory').value.trim() || 'Varios',
+                paymentMethod: $('expensePaymentMethod').value.trim() || 'Efectivo',
+                manager: $('expenseManager').value.trim() || 'Sin encargado',
+                description: $('expenseDesc').value.trim() || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                if (isEditing) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'expenses', isEditing), expenseData);
+                    showToast("Gasto actualizado correctamente", 'success');
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), expenseData);
+                    showToast("Gasto registrado exitosamente", 'success');
+                }
+                
+                $('newExpenseModal').classList.add('hidden');
+                $('expenseForm').reset();
+                delete $('expenseForm').dataset.editingId;
+                
+            } catch (error) {
+                console.error("Error guardando gasto:", error);
+                showToast("Error al guardar el gasto", 'error');
+            }
+        };
+
+        $('productForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            if(!userId) return; 
+            
+            const isEditing = $('productForm').dataset.editingId;
+            
+            const productData = {
+                name: $('prodName').value.trim(),
+                prodType: $('prodType').value.trim() || 'General',
+                priceRetail: parseFloat($('prodPrice').value) || 0,
+                priceUsd: parseFloat($('prodPriceUsd').value) || null,
+                stock: parseInt($('prodStock').value) || 0,
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                if (isEditing) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', isEditing), productData);
+                    showToast("Producto actualizado correctamente", 'success');
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'products'), productData);
+                    showToast("Producto agregado al inventario", 'success');
+                }
+                
+                $('productModal').classList.add('hidden');
+                $('productForm').reset();
+                delete $('productForm').dataset.editingId;
+                
+            } catch (error) {
+                console.error("Error guardando producto:", error);
+                showToast("Error al guardar el producto", 'error');
+            }
+        };
+
+        $('clientForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            if(!userId) return; 
+            
+            const isEditing = $('clientForm').dataset.editingId;
+            
+            const clientData = {
+                name: $('newClientName').value.trim(),
+                whatsapp: $('newClientWhatsapp').value.trim() || '',
+                email: $('newClientEmail').value.trim() || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                if (isEditing) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'clients', isEditing), clientData);
+                    showToast("Cliente actualizado correctamente", 'success');
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'clients'), clientData);
+                    showToast("Cliente agregado a la base de datos", 'success');
+                }
+                
+                $('newClientModal').classList.add('hidden');
+                $('clientForm').reset();
+                delete $('clientForm').dataset.editingId;
+                
+            } catch (error) {
+                console.error("Error guardando cliente:", error);
+                showToast("Error al guardar el cliente", 'error');
+            }
+        };
+
+        $('withdrawalForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            if(!userId) return; 
+            
+            const wdData = {
+                date: $('wdDate').value || getToday(),
+                amount: Math.abs(parseFloat($('wdAmount').value) || 0),
+                employee: $('wdEmployee').value.trim() || 'Sin encargado',
+                note: $('wdNote').value.trim() || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'withdrawals'), wdData);
+                showToast("Retiro registrado exitosamente", 'success');
+                $('withdrawalForm').reset();
+                $('wdDate').value = getToday();
+                sendNotificationToAll('Retiro de Caja', 
+                    `${wdData.employee} retiró ${fmtMoney(wdData.amount)} de caja`);
+                    
+            } catch (error) {
+                console.error("Error registrando retiro:", error);
+                showToast("Error al registrar el retiro", 'error');
+            }
+        };
+
+        $('adjustmentForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            if(!userId) return; 
+            
+            const adjData = {
+                date: $('adjDate').value || getToday(),
+                amount: parseFloat($('adjAmount').value) || 0,
+                employee: $('adjEmployee').value.trim() || 'Sin encargado',
+                note: $('adjNote').value.trim() || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'adjustments'), adjData);
+                showToast("Ajuste registrado exitosamente", 'success');
+                $('adjustmentForm').reset();
+                $('adjDate').value = getToday();
+                sendNotificationToAll('Ajuste de Caja', 
+                    `${adjData.employee} registró un ajuste de ${fmtMoney(adjData.amount)}`);
+                    
+            } catch (error) {
+                console.error("Error registrando ajuste:", error);
+                showToast("Error al registrar el ajuste", 'error');
+            }
+        };
+
+        $('editWithdrawalForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            if(!userId) return; 
+            
+            const wdId = $('editWid').value;
+            const wdData = {
+                date: $('editWdDate').value || getToday(),
+                amount: Math.abs(parseFloat($('editWdAmount').value) || 0),
+                employee: $('editWdEmployee').value.trim() || 'Sin encargado',
+                note: $('editWdNote').value.trim() || '',
+                updatedAt: new Date().toISOString()
+            };
+            
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'withdrawals', wdId), wdData);
+                showToast("Retiro actualizado correctamente", 'success');
+                $('editWithdrawalModal').classList.add('hidden');
+                $('editWithdrawalForm').reset();
+                
+            } catch (error) {
+                console.error("Error actualizando retiro:", error);
+                showToast("Error al actualizar el retiro", 'error');
+            }
+        };
+
+        $('editAdjustmentForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            if(!userId) return; 
+            
+            const adjId = $('editAdjId').value;
+            const adjData = {
+                date: $('editAdjDate').value || getToday(),
+                amount: parseFloat($('editAdjAmount').value) || 0,
+                employee: $('editAdjEmployee').value.trim() || 'Sin encargado',
+                note: $('editAdjNote').value.trim() || '',
+                updatedAt: new Date().toISOString()
+            };
+            
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'adjustments', adjId), adjData);
+                showToast("Ajuste actualizado correctamente", 'success');
+                $('editAdjustmentModal').classList.add('hidden');
+                $('editAdjustmentForm').reset();
+                
+            } catch (error) {
+                console.error("Error actualizando ajuste:", error);
+                showToast("Error al actualizar el ajuste", 'error');
+            }
+        };
+
+        $('addEmployeeForm').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            const emp = $('newEmployeeInput').value.trim();
+            if(!emp) return;
+            
+            if(settings.employees.includes(emp)) {
+                showToast("El empleado ya existe", 'info');
+                return;
+            }
+            
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                    { employees: arrayUnion(emp) }, { merge: true });
+                $('newEmployeeInput').value = '';
+                showToast("Empleado agregado", 'success');
+                sendNotificationToAll('Nuevo Empleado', `Se agregó a ${emp} a la lista de empleados`);
+            } catch (error) {
+                console.error("Error agregando empleado:", error);
+                showToast("Error al agregar empleado", 'error');
+            }
+        };
+
+        // AGREGAR TRABAJADOR DEL DÍA DESDE LISTA DE EMPLEADOS
+        window.addTodayWorkerFromList = (workerName) => {
+            addTodayWorker(workerName);
+        };
+        
+        // RENDERIZAR LISTA DE EMPLEADOS CON BOTÓN PARA AGREGAR COMO TRABAJADOR DEL DÍA
+        function renderEmployeeList() {
+            const container = $('employeeListContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            (settings.employees || []).forEach(emp => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100 hover:bg-gray-100 transition";
+                
+                const isTodayWorker = settings.todayWorkers && settings.todayWorkers.includes(emp);
+                
+                div.innerHTML = `
+                    <span class="font-medium text-sm">${emp}</span>
+                    <div class="flex gap-1">
+                        <button onclick="addTodayWorkerFromList('${emp}')" class="text-xs ${isTodayWorker ? 'bg-green-100 text-green-700 px-2 py-1 rounded-full' : 'text-blue-600 hover:text-blue-800'}" title="${isTodayWorker ? 'Ya trabajó hoy' : 'Agregar como trabajador de hoy'}">
+                            <i class="fas ${isTodayWorker ? 'fa-user-check' : 'fa-user-plus'}"></i>
+                        </button>
+                        <button onclick="deleteEmployee('${emp}')" class="text-red-600 hover:text-red-800 text-xs" title="Eliminar empleado">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+        
+        // FUNCIÓN PARA ELIMINAR EMPLEADO
+        window.deleteEmployee = async (emp) => {
+            if (!confirm(`¿Seguro que quieres eliminar a ${emp} de la lista de empleados?`)) return;
+            
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                    { employees: arrayRemove(emp) }, { merge: true });
+                showToast(`Empleado ${emp} eliminado`, 'info');
+                sendNotificationToAll('Empleado Eliminado', `Se eliminó a ${emp} de la lista de empleados`);
+            } catch (error) {
+                console.error("Error eliminando empleado:", error);
+                showToast("Error al eliminar empleado", 'error');
+            }
+        };
+
+        // GUARDAR NOTA DIARIA
+        $('saveNoteBtn').onclick = async () => {
+            const text = $('dailyNoteInput').value.trim();
+            if (!text) {
+                showToast("Escribe algo antes de guardar", 'warning');
+                return;
+            }
+            
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'dailyNotes'), {
+                    text: text,
+                    date: getToday(),
+                    timestamp: new Date().toISOString()
+                });
+                $('dailyNoteInput').value = '';
+                showToast("Nota guardada en el historial", 'success');
+                sendNotificationToAll('Nueva Nota', 'Se agregó una nueva nota al historial diario');
+            } catch (error) {
+                console.error("Error guardando nota:", error);
+                showToast("Error al guardar la nota", 'error');
+            }
+        };
+
+        // ENVIAR NOTA POR WHATSAPP
+        $('sendWhatsappBtn').onclick = () => {
+            const text = $('dailyNoteInput').value.trim();
+            if (!text) {
+                showToast("Escribe algo antes de enviar", 'warning');
+                return;
+            }
+            
+            const today = new Date().toLocaleDateString('es-ES');
+            const message = encodeURIComponent(`*Nota del día ${today}:*\n\n${text}`);
+            const whatsappUrl = `https://wa.me/?text=${message}`;
+            window.open(whatsappUrl, '_blank');
+            showToast("WhatsApp abierto con la nota", 'info');
+        };
+
+        // TOGGLE TEMA
+        $('themeToggle').onclick = () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = $('themeToggle').querySelector('i');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            showToast(`Modo ${newTheme === 'dark' ? 'oscuro' : 'claro'} activado`, 'info');
+        };
+
+        // INICIALIZAR CAMPOS DE FECHA EN FORMULARIOS DE RETIRO Y AJUSTE
+        function initializeDateFields() {
+            const today = getToday();
+            
+            // Formulario de retiro manual
+            if ($('wdDate')) {
+                $('wdDate').value = today;
+            }
+            
+            // Formulario de ajuste manual
+            if ($('adjDate')) {
+                $('adjDate').value = today;
+            }
+            
+            // Formulario de edición de retiro
+            if ($('editWdDate')) {
+                $('editWdDate').min = '2024-01-01';
+                $('editWdDate').max = today;
+            }
+            
+            // Formulario de edición de ajuste
+            if ($('editAdjDate')) {
+                $('editAdjDate').min = '2024-01-01';
+                $('editAdjDate').max = today;
+            }
+            
+            // Filtros de fecha en modales
+            document.querySelectorAll('input[type="date"]:not([id*="edit"])').forEach(input => {
+                if (!input.value && !input.id.includes('filter')) {
+                    input.value = today;
+                }
+                
+                // Establecer límites en filtros de fecha
+                if (input.id.includes('filter') && input.id.includes('Date')) {
+                    input.max = today;
+                    input.min = '2024-01-01';
+                }
+            });
+        }
+
+        // INICIALIZAR CAMPOS DE FECHA AL CARGAR
+        initializeDateFields();
+
+        // LISTENER PARA MODALES DE HISTORIAL
+        $('openInventarioBtn').onclick = () => { 
+            $('searchInventoryInput').value = ''; 
+            $('filterInvDate').value = ''; 
+            $('filterInvMonth').value = 'all'; 
+            $('filterInvYear').value = 'all'; 
+            renderInventory(); 
+            $('inventoryModal').classList.remove('hidden'); 
+        };
+        
+        $('openVentasHistoryBtn').onclick = () => { 
+            $('searchSaleInput').value = ''; 
+            $('filterSaleDate').value = ''; 
+            $('filterSaleMonth').value = 'all'; 
+            $('filterSaleYear').value = 'all'; 
+            $('filterSaleChannel').value = 'all'; 
+            renderSalesList(); 
+            $('salesHistoryModal').classList.remove('hidden'); 
+        };
+        
+        $('openGananciasHistoryBtn').onclick = () => { 
+            $('filterProfitMonth').value = new Date().getMonth().toString(); 
+            $('filterProfitYear').value = new Date().getFullYear().toString(); 
+            renderProfitReport(); 
+            $('gananciasDetailModal').classList.remove('hidden'); 
+        };
+        
+        $('openGastosHistoryBtn').onclick = () => { 
+            $('searchExpenseInput').value = ''; 
+            $('filterExpenseDate').value = ''; 
+            $('filterExpenseMonth').value = 'all'; 
+            $('filterExpenseYear').value = 'all'; 
+            renderExpensesList(); 
+            $('expensesHistoryModal').classList.remove('hidden'); 
+        };
+        
+        $('openClientesBtn').onclick = () => { 
+            $('searchClientInput').value = ''; 
+            $('filterClientMonth').value = 'all'; 
+            $('filterClientYear').value = 'all'; 
+            renderClientsTable(); 
+            $('clientsModal').classList.remove('hidden'); 
+        };
+        
+        $('btnOpenCashModal').onclick = () => { 
+            initializeDateFields(); 
+            renderCashMovements(); 
+            $('cashDetailModal').classList.remove('hidden'); 
+        };
+        
+        $('openNewsModalBtn').onclick = () => { 
+            renderNewsList(); 
+            $('newsHistoryModal').classList.remove('hidden'); 
+        };
+        
+        // LOGOUT
+        $('logoutBtn').onclick = async () => {
+            try {
+                await signOut(auth);
+                showToast("Sesión cerrada", 'info');
+                $('profileModal').classList.add('hidden');
+            } catch (error) {
+                console.error("Error cerrando sesión:", error);
+                showToast("Error al cerrar sesión", 'error');
+            }
+        };
+        
+        // LOGIN CON GOOGLE
+        $('googleLoginBtn').onclick = async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                showToast("Sesión iniciada con Google", 'success');
+            } catch (error) {
+                console.error("Error en login Google:", error);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    showToast("Error en login con Google", 'error');
+                }
+            }
+        };
+
+        // INICIALIZAR HORA
+        updateClock();
+    });
+
+    // INICIALIZAR SERVICE WORKER AL CARGAR
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            registerServiceWorker();
+        });
+    }
+
+    // FUNCIÓN PARA EXPORTAR DATOS
+    window.exportData = async () => {
+        try {
+            const data = {
+                timestamp: new Date().toISOString(),
+                products: products,
+                sales: sales,
+                expenses: expenses,
+                clients: clients,
+                withdrawals: withdrawals,
+                adjustments: adjustments,
+                settings: settings
+            };
+            
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup-negocio-${getToday()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast("Datos exportados exitosamente", 'success');
+        } catch (error) {
+            console.error("Error exportando datos:", error);
+            showToast("Error al exportar datos", 'error');
+        }
+    };
+
+    // FUNCIÓN PARA IMPORTAR DATOS
+    window.importData = async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                if (!confirm(`¿Importar ${data.products?.length || 0} productos, ${data.sales?.length || 0} ventas, ${data.expenses?.length || 0} gastos? Esto puede sobrescribir datos existentes.`)) {
+                    return;
+                }
+                
+                showToast("Importando datos...", 'info');
+                
+                // Importar productos
+                if (data.products && Array.isArray(data.products)) {
+                    for (const product of data.products) {
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'products'), product);
+                    }
+                }
+                
+                // Importar ventas
+                if (data.sales && Array.isArray(data.sales)) {
+                    for (const sale of data.sales) {
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'sales'), sale);
+                    }
+                }
+                
+                // Importar gastos
+                if (data.expenses && Array.isArray(data.expenses)) {
+                    for (const expense of data.expenses) {
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), expense);
+                    }
+                }
+                
+                showToast("Datos importados exitosamente", 'success');
+                sendNotificationToAll('Importación Exitosa', 'Se importaron datos de respaldo al sistema');
+                
+            } catch (error) {
+                console.error("Error importando datos:", error);
+                showToast("Error al importar datos. Verifica el formato del archivo.", 'error');
+            }
+        };
+        
+        input.click();
+    };
+
+    // CARGAR CONFIGURACIÓN INICIAL
+    window.addEventListener('load', () => {
+        // Verificar si hay una contraseña en localStorage (migración desde versiones anteriores)
+        const legacyPassword = localStorage.getItem('businessPassword');
+        if (legacyPassword && !settings.password) {
+            settings.password = legacyPassword;
+            localStorage.removeItem('businessPassword'); // Limpiar almacenamiento antiguo
+        }
+        
+        // Inicializar trabajadores del día si no existen
+        if (!settings.todayWorkers) {
+            settings.todayWorkers = [];
+        }
+        
+        // Inicializar horas de inicio si no existen
+        if (!settings.workerStartTimes) {
+            settings.workerStartTimes = {};
+        }
+        
+        // Actualizar display inicial
+        updateTodayWorkersDisplay();
+        updateDailySummary();
+        updateTodaySalesBreakdown();
+        
+        // Configurar eventos de entrada en campos de búsqueda
+        const setupSearchInput = (inputId, renderFunction, delay = 300) => {
+            const input = $(inputId);
+            if (input) {
+                let timeout;
+                input.addEventListener('input', () => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(renderFunction, delay);
+                });
+            }
+        };
+        
+        setupSearchInput('searchSaleInput', renderSalesList);
+        setupSearchInput('searchExpenseInput', renderExpensesList);
+        setupSearchInput('searchInventoryInput', renderInventory);
+        setupSearchInput('searchClientInput', renderClientsTable);
+        setupSearchInput('searchCashInput', renderCashMovements);
+    });
+
+    // EXPONER FUNCIONES GLOBALES PARA USO EN HTML
+    window.fmtMoney = fmtMoney;
+    window.fmtDate = fmtDate;
+    window.getToday = getToday;
+    window.showToast = showToast;
+    window.sendNotificationToAll = sendNotificationToAll;
+    window.initializeFCM = initializeFCM;
+    window.unsubscribeFromFCM = unsubscribeFromFCM;
+
+    console.log("Sistema de Gestión de Negocios v3.9.14 Pro - Cargado correctamente");
+</script>
+</body>
+</html>
