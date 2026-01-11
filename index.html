@@ -11,6 +11,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SDK Lemon Cash -->
+    <script type="module">
+        import { authenticate, deposit, isWebView, TransactionResult } from 'https://cdn.jsdelivr.net/npm/@lemoncash/mini-app-sdk@latest/+esm';
+        
+        // Hacer disponibles globalmente para el resto del código
+        window.LemonCashSDK = { authenticate, deposit, isWebView, TransactionResult };
+    </script>
     <style>
         :root { 
             font-family: 'Inter', system-ui, sans-serif;
@@ -559,107 +566,65 @@
             opacity: 1;
             background-color: rgba(239, 68, 68, 0.1);
         }
-        
-        /* Estilos para campos protegidos con contraseña */
-        .protected-content {
-            position: relative;
-            min-height: 40px;
-        }
-        
-        .protected-content.hidden {
-            filter: blur(8px);
-            user-select: none;
-            pointer-events: none;
-        }
-        
-        .protected-content.hidden::after {
-            content: "🔒";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            color: var(--text-secondary);
-            z-index: 2;
-        }
-        
-        .unlock-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
+
+        /* Estilos para datos protegidos */
+        .protected-data {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 100%);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
             cursor: pointer;
-            z-index: 3;
-            padding: 4px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-        
-        .unlock-btn:hover {
-            color: var(--text-primary);
-            background-color: var(--bg-tertiary);
-        }
-        
-        /* Estilos para el modal de contraseña */
-        .password-modal-content {
-            background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);
-            border-radius: 16px;
-            box-shadow: var(--shadow-xl);
-        }
-        
-        /* Nueva sección de hoy en dashboard */
-        .today-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .today-stat-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
             transition: all 0.3s ease;
+            user-select: none;
         }
-        
-        .today-stat-card:hover {
+
+        .protected-data:hover {
+            background: linear-gradient(135deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.08) 100%);
+        }
+
+        .protected-data.revealed {
+            font-family: 'Inter', system-ui, sans-serif;
+            letter-spacing: normal;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        }
+
+        /* Botón Lemon Cash */
+        .lemon-cash-btn {
+            background: linear-gradient(135deg, #d1fa1e 0%, #b0d800 100%);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(209, 250, 30, 0.3);
+        }
+
+        .lemon-cash-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 6px 16px rgba(209, 250, 30, 0.4);
         }
-        
-        .today-stat-title {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
+
+        .lemon-cash-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
         }
-        
-        .today-stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
+
+        /* Estilos para modal de contraseña */
+        .password-modal {
+            backdrop-filter: blur(10px);
         }
-        
-        .today-stat-detail {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-        
-        .payment-type-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .payment-type-item:last-child {
-            border-bottom: none;
+
+        .password-input {
+            font-family: monospace;
+            letter-spacing: 2px;
+            text-align: center;
+            font-size: 1.5rem;
         }
     </style>
 </head>
@@ -905,8 +870,11 @@
             <div class="space-y-4 mb-6">
                 <button id="btnOpenEmployeeStats" class="w-full bg-indigo-50 text-indigo-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-100 transition"><i class="fas fa-users-cog"></i> Ver Sueldos y Horas</button>
                 
-                <!-- BOTÓN PARA CONFIGURAR CONTRASEÑAS -->
-                <button id="btnOpenPasswordConfig" class="w-full bg-purple-50 text-purple-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition"><i class="fas fa-key"></i> Configurar Contraseñas</button>
+                <!-- NUEVO BOTÓN DE TUTORIALES -->
+                <button id="btnOpenTutorialsModal" class="w-full bg-blue-50 text-blue-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition"><i class="fas fa-question-circle"></i> Tutoriales</button>
+                
+                <!-- BOTÓN DE CONFIGURACIÓN CON CONTRASEÑA -->
+                <button id="btnOpenSecuritySettings" class="w-full bg-purple-50 text-purple-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition"><i class="fas fa-lock"></i> Configurar Contraseña</button>
             </div>
             
             <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Lista de Empleados</h4>
@@ -924,6 +892,11 @@
                     <div class="flex items-center gap-2 p-2 rounded-lg"><span id="storeNameDisplay" class="text-xl font-bold text-gray-800 tracking-tight">MI NEGOCIO</span></div>
                 </div>
                 <div class="flex gap-4 text-gray-500 items-center">
+                    <!-- BOTÓN LEMON CASH -->
+                    <button id="lemonCashBtn" class="lemon-cash-btn hidden">
+                        <i class="fas fa-wallet mr-2"></i> <span id="lemonCashText">Conectar Wallet</span>
+                    </button>
+                    
                     <button id="installAppBtn" class="hidden bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-200 transition"><i class="fas fa-download mr-1"></i> Instalar App</button>
                     <!-- BOTÓN CAMPANITA DE NOVEDADES -->
                     <button id="openNewsModalBtn" class="relative text-gray-500 hover:text-blue-600 text-xl transition transform hover:scale-110">
@@ -947,78 +920,6 @@
                 <div class="text-right bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex flex-col items-end min-w-[150px]">
                     <div id="currentDateDisplay" class="text-sm font-bold text-blue-600 capitalize">Cargando fecha...</div>
                     <div id="currentTimeDisplay" class="text-xs text-gray-400">--:--:--</div>
-                </div>
-            </div>
-
-            <!-- NUEVA SECCIÓN: HOY -->
-            <div class="mb-8">
-                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-day text-blue-500"></i> Hoy</h2>
-                
-                <div class="today-stats-grid">
-                    <!-- Venta de Hoy -->
-                    <div class="today-stat-card">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="today-stat-title">Venta de Hoy</div>
-                                <div class="today-stat-value" id="todaySalesTotal">$0.00</div>
-                                <div class="today-stat-detail">Total acumulado</div>
-                            </div>
-                            <button id="btnShowSalesToday" class="text-blue-500 hover:text-blue-700 text-sm font-medium" title="Ver detalle por medio de pago">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <div id="todaySalesBreakdown" class="mt-3 hidden">
-                            <!-- Aquí se cargará el desglose por medio de pago -->
-                            <div class="text-xs font-bold text-gray-500 mb-2">Desglose por medio de pago:</div>
-                            <div id="todaySalesByPayment" class="space-y-1">
-                                <!-- Se llenará dinámicamente -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Gastos de Hoy -->
-                    <div class="today-stat-card">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="today-stat-title">Gastos de Hoy</div>
-                                <div class="today-stat-value text-red-600" id="todayExpensesTotal">$0.00</div>
-                                <div class="today-stat-detail">Total acumulado</div>
-                            </div>
-                            <button id="btnShowExpensesToday" class="text-red-500 hover:text-red-700 text-sm font-medium" title="Ver detalle por categoría">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <div id="todayExpensesBreakdown" class="mt-3 hidden">
-                            <!-- Aquí se cargará el desglose por categoría -->
-                            <div class="text-xs font-bold text-gray-500 mb-2">Desglose por categoría:</div>
-                            <div id="todayExpensesByCategory" class="space-y-1">
-                                <!-- Se llenará dinámicamente -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Ganancia de Hoy -->
-                    <div class="today-stat-card">
-                        <div class="today-stat-title">Ganancia de Hoy</div>
-                        <div class="today-stat-value text-green-600" id="todayProfit">$0.00</div>
-                        <div class="today-stat-detail">Ventas - Gastos</div>
-                    </div>
-                    
-                    <!-- Encargado del Día -->
-                    <div class="today-stat-card">
-                        <div class="today-stat-title">Encargado del Día</div>
-                        <div class="flex items-center gap-2">
-                            <select id="todayEmployeeSelect" class="input-std text-sm flex-1">
-                                <option value="">Seleccionar encargado</option>
-                            </select>
-                            <button id="btnSaveTodayEmployee" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition">
-                                <i class="fas fa-save"></i>
-                            </button>
-                        </div>
-                        <div id="todayEmployeeInfo" class="mt-2 text-xs text-gray-500">
-                            <!-- Información del encargado seleccionado -->
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1053,33 +954,21 @@
             <div class="flex gap-3 mb-8">
                 <button id="btnNewProduct" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl shadow-lg shadow-blue-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Producto</button>
                 <button id="btnNewSale" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl shadow-lg shadow-gray-300 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Venta</button>
+                <!-- BOTÓN DE GASTOS MASIVOS AGREGADO -->
+                <button id="btnNewMassiveExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-layer-group"></i> Gastos Masivos</button>
                 <button id="btnNewExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-minus"></i> Gasto</button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-blue-500 relative">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div>
-                        <button class="unlock-btn" data-unlock="sales" title="Mostrar con contraseña">
-                            <i class="fas fa-lock"></i>
-                        </button>
-                    </div>
-                    <div class="protected-content hidden" id="protectedSales">
-                        <div class="text-2xl font-bold text-gray-900" id="cardVentasMes">$0.00</div>
-                        <div class="mt-2 text-xs text-green-600 flex items-center"><i class="fas fa-calendar-day mr-1"></i> Hoy: <span id="cardVentasHoy" class="ml-1 font-semibold">$0.00</span></div>
-                    </div>
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div><button class="text-gray-400 hover:text-blue-600 cursor-pointer" onclick="toggleProtectedData('sales')"><i class="fas fa-eye"></i></button></div>
+                    <div class="text-2xl font-bold text-gray-900 protected-data" id="cardVentasMes" data-type="sales">******</div>
+                    <div class="mt-2 text-xs text-green-600 flex items-center"><i class="fas fa-calendar-day mr-1"></i> Hoy: <span id="cardVentasHoy" class="ml-1 font-semibold">$0.00</span></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-green-500 relative">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div>
-                        <button class="unlock-btn" data-unlock="profit" title="Mostrar con contraseña">
-                            <i class="fas fa-lock"></i>
-                        </button>
-                    </div>
-                    <div class="protected-content hidden" id="protectedProfit">
-                        <div class="text-2xl font-bold text-gray-900" id="cardGananciaMes">$0.00</div>
-                        <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
-                    </div>
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div><button class="text-gray-400 hover:text-green-600 cursor-pointer" onclick="toggleProtectedData('profit')"><i class="fas fa-eye"></i></button></div>
+                    <div class="text-2xl font-bold text-gray-900 protected-data" id="cardGananciaMes" data-type="profit">******</div>
+                    <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
                 </div>
                 <!-- CAMBIO: Ahora es CUMULATIVO y Persistente -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-yellow-500 relative">
@@ -1091,6 +980,28 @@
                     <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Stock Total</div>
                     <div class="text-2xl font-bold text-gray-900" id="cardStockUnidades">0</div>
                     <div class="mt-2 text-xs text-gray-500">Unidades Físicas</div>
+                </div>
+            </div>
+
+            <!-- NUEVA SECCIÓN: GANANCIAS DEL DÍA -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-money-bill-wave text-green-500"></i> 
+                    Ganancia del Día de Hoy
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                        <div class="text-sm text-green-600 font-bold uppercase mb-2">Ventas Hoy</div>
+                        <div class="text-3xl font-bold text-green-700" id="gananciasVentasHoy">$0.00</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-200">
+                        <div class="text-sm text-red-600 font-bold uppercase mb-2">Gastos Hoy</div>
+                        <div class="text-3xl font-bold text-red-700" id="gananciasGastosHoy">$0.00</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                        <div class="text-sm text-blue-600 font-bold uppercase mb-2">Ganancia Neta Hoy</div>
+                        <div class="text-3xl font-bold text-blue-700" id="gananciasNetasHoy">$0.00</div>
+                    </div>
                 </div>
             </div>
 
@@ -1109,6 +1020,76 @@
 
     <!-- MODALES -->
 
+    <!-- MODAL DE CONTRASEÑA PARA DATOS PROTEGIDOS -->
+    <div id="passwordModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4 password-modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="p-6 bg-gray-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-lock mr-2"></i> Ingresar Contraseña</h3>
+                <button data-close="passwordModal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="passwordModalType" value="">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña de Seguridad</label>
+                    <input type="password" id="passwordInput" class="input-std password-input" placeholder="••••••" maxlength="6" autocomplete="off">
+                    <p class="text-xs text-gray-500 mt-2">Ingresa la contraseña configurada para ver los datos protegidos.</p>
+                </div>
+                <button id="submitPasswordBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition">
+                    <i class="fas fa-unlock mr-2"></i> Ver Datos
+                </button>
+                <div class="text-center">
+                    <button id="forgotPasswordBtn" class="text-sm text-gray-500 hover:text-blue-600">¿Olvidaste la contraseña?</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURACIÓN DE CONTRASEÑA -->
+    <div id="securitySettingsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="p-6 bg-purple-600 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-shield-alt mr-2"></i> Configurar Contraseña</h3>
+                <button data-close="securitySettingsModal" class="text-white opacity-80 hover:opacity-100"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-6">
+                <div>
+                    <h4 class="font-bold text-gray-800 mb-4">Configurar Contraseña de Seguridad</h4>
+                    <p class="text-sm text-gray-600 mb-4">Esta contraseña protegerá el acceso a datos sensibles como ventas y ganancias totales del mes.</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña (6 dígitos)</label>
+                            <input type="password" id="newPassword" class="input-std password-input" placeholder="••••••" maxlength="6" minlength="6">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                            <input type="password" id="confirmPassword" class="input-std password-input" placeholder="••••••" maxlength="6" minlength="6">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h5 class="font-bold text-yellow-800 text-sm mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> Importante</h5>
+                    <p class="text-xs text-yellow-700">
+                        • La contraseña debe tener exactamente 6 dígitos<br>
+                        • No podrás recuperarla si la olvidas<br>
+                        • Sin contraseña no podrás ver ventas y ganancias totales del mes<br>
+                        • Las ganancias del día de hoy SIEMPRE serán visibles
+                    </p>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button id="savePasswordBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-bold shadow-md">
+                        <i class="fas fa-save mr-2"></i> Guardar
+                    </button>
+                    <button id="removePasswordBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md">
+                        <i class="fas fa-trash mr-2"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="listManagerModal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl"><h3 class="font-bold text-gray-700">Gestionar Lista</h3><button data-close="listManagerModal" class="text-gray-400"><i class="fas fa-times"></i></button></div>
@@ -1119,94 +1100,156 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIGURAR CONTRASEÑAS (NUEVO) -->
-    <div id="passwordConfigModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden password-modal-content">
-            <div class="p-6 bg-purple-600 text-white flex justify-between items-center">
-                <h2 class="text-xl font-bold"><i class="fas fa-key mr-2"></i> Configurar Contraseñas</h2>
-                <button data-close="passwordConfigModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
+    <!-- MODAL TUTORIALES (NUEVO) -->
+    <div id="tutorialsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="p-6 bg-blue-600 text-white flex justify-between items-center rounded-t-2xl">
+                <h2 class="text-2xl font-bold"><i class="fas fa-graduation-cap mr-2"></i> Tutorial de Uso Rápido</h2>
+                <button data-close="tutorialsModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-6 space-y-6">
-                <div class="space-y-4">
-                    <h3 class="font-bold text-gray-700 border-b pb-2">Contraseña para Ver Ventas</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
-                            <input type="password" id="salesPasswordInput" class="input-std" placeholder="Ingrese nueva contraseña">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
-                            <input type="password" id="salesPasswordConfirm" class="input-std" placeholder="Confirme la contraseña">
-                        </div>
-                        <button id="btnSetSalesPassword" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-medium transition">
-                            Establecer Contraseña
-                        </button>
-                    </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Registro de Transacciones</h3>
+                
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-shopping-cart mr-2"></i> 1. Registrar una Venta</h4>
+                    <p class="text-gray-700 mb-3">La función principal es registrar cada venta de forma correcta para calcular comisiones y caja.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-xl border border-blue-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón grande que dice <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs font-mono">Venta</span> en el Panel de Control.</li>
+                        <li><span class="font-bold">Datos Cruciales:</span>
+                            <ul class="list-disc list-inside ml-5">
+                                <li><span class="font-medium">Monto ($):</span> El valor final cobrado.</li>
+                                <li><span class="font-medium">Producto y Cantidad:</span> Debes seleccionar el producto del **Inventario** y la **Cantidad Vendida** (esto resta del stock).</li>
+                                <li><span class="font-medium">Cliente:</span> Nombre (Si es cliente nuevo, se agrega automáticamente a la Base de Clientes).</li>
+                                <li><span class="font-medium">Encargado:</span> Tu nombre (¡Crucial para tu comisión!).</li>
+                                <li><span class="font-medium">Pago:</span> Tipo de pago (Efectivo, Tarjeta, Nave, etc.).</li>
+                            </ul>
+                        </li>
+                        <!-- NOTA: Aquí están implementadas las comisiones de Yael -->
+                        <li><span class="font-bold text-red-600">Comisiones:</span> Si la encargada es Yael, se aplica un 3% para pagos con QR, Nave, T. Crédito o T. Débito, y 7% para los demás. Para otros encargados la comisión es 0%.</li>
+                    </ul>
                 </div>
                 
-                <div class="space-y-4">
-                    <h3 class="font-bold text-gray-700 border-b pb-2">Contraseña para Ver Ganancias</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
-                            <input type="password" id="profitPasswordInput" class="input-std" placeholder="Ingrese nueva contraseña">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
-                            <input type="password" id="profitPasswordConfirm" class="input-std" placeholder="Confirme la contraseña">
-                        </div>
-                        <button id="btnSetProfitPassword" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-medium transition">
-                            Establecer Contraseña
-                        </button>
-                    </div>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-minus-circle mr-2"></i> 2. Registrar un Gasto</h4>
+                    <p class="text-gray-700 mb-3">Si pagas algo del negocio con dinero de la caja, debe quedar registrado como Gasto.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-red-50 p-4 rounded-xl border border-red-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón rojo <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-mono">Gasto</span>.</li>
+                        <li><span class="font-bold">Monto y Categoría:</span> Indica el monto y selecciona una categoría (ej: 'Mercadería', 'Alquiler').</li>
+                        <li><span class="font-bold">Método de Pago:</span> Indica con qué se pagó (Efectivo, Transferencia, etc.).</li>
+                        <li><span class="font-bold">Efecto:</span> Esto resta del dinero disponible en la <span class="font-bold text-yellow-700">Caja Actual</span>.</li>
+                    </ul>
+                </div>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-box-open mr-2"></i> 3. Agregar/Actualizar Inventario</h4>
+                    <p class="text-gray-700 mb-3">Registra nuevos productos o actualiza los existentes para tener control de stock y precios.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-orange-50 p-4 rounded-xl border border-orange-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el botón azul <span class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-mono">Producto</span>.</li>
+                        <li><span class="font-bold">Datos:</span> Ingresa el Nombre, Tipo, Precio ARS/USD y el Stock.</li>
+                        <li><span class="font-bold">Visualización:</span> Puedes ver todo el inventario en la tarjeta de <span class="font-bold text-orange-600">Inventario</span>.</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4">Historiales y Consultas</h3>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-history mr-2"></i> 4. Ver Historiales (Ventas, Gastos, Inventario, Clientes)</h4>
+                    <p class="text-gray-700 mb-3">Los historiales se acceden haciendo clic en las tarjetas del Panel de Control (ej: 'Ver Ventas', 'Ver Gastos').</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Uso de Filtros:</span> Todos los historiales tienen campos de filtro (<i class="fas fa-filter"></i>). Puedes filtrar por **Fecha, Mes o Año** y por palabras clave (ej: nombre del cliente o encargado).</li>
+                        <li><span class="font-bold">Gráficos:</span> Tienen un botón para mostrar un gráfico visual de la distribución (por tiempo o tipo de pago/producto).</li>
+                        <li><span class="font-bold text-red-600">Seguridad:</span> Para ver el historial de Ventas y Ganancias necesitarás ingresar la contraseña de seguridad configurada.</li>
+                    </ul>
+                </div>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-users-cog mr-2"></i> 5. Sueldos, Horas y Retiros de Empleados</h4>
+                    <p class="text-gray-700 mb-3">Esta es una sección privada para ver el rendimiento del equipo y el estado de la Caja.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                        <li><span class="font-bold">Retiros y Caja:</span>
+                            <ul>
+                                <li>Para ver el detalle de retiros, haz clic en el ícono <i class="fas fa-external-link-alt"></i> en la tarjeta <span class="font-bold text-yellow-700">Caja Actual</span>. Ahí también registras nuevos retiros.</li>
+                                <!-- NOTA: El historial de ajustes ya existe en el modal de caja -->
+                                <li><span class="font-bold text-green-600">Historial de Ajustes y Retiros:</span> En el mismo modal de caja, puedes ver todos los movimientos (retiros manuales y ajustes).</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-bold">Sueldos y Horas:</span>
+                            <ul>
+                                <li>Desde el Menú Lateral, pulsa <span class="font-bold text-indigo-700">Ver Sueldos y Horas</span>.</li>
+                                <li>Aquí verás un resumen de la Comisión Estimada (calculada por el sistema) y el total de Retiros hechos por cada empleado en el período filtrado.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <h3 class="text-2xl font-extrabold text-gray-900 border-b pb-2 mb-4 mt-6">Ajustes y Utilidades</h3>
+
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-sign-in-alt mr-2"></i> 6. Iniciar/Cerrar Sesión y Perfil</h4>
+                    <p class="text-gray-700 mb-3">La aplicación utiliza tu cuenta para guardar tus datos de forma segura. Si ves datos de prueba, inicia sesión.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Acceso:</span> Pulsa el ícono de perfil (<i class="fas fa-user-circle"></i>) en la esquina superior derecha.</li>
+                        <li><span class="font-bold">Iniciar Sesión:</span> Usa el botón de Google para iniciar sesión con tu cuenta.</li>
+                    </ul>
                 </div>
                 
-                <div class="space-y-4">
-                    <h3 class="font-bold text-gray-700 border-b pb-2">Contraseña para Arqueo de Caja</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
-                            <input type="password" id="cashPasswordInput" class="input-std" placeholder="Ingrese nueva contraseña">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
-                            <input type="password" id="cashPasswordConfirm" class="input-std" placeholder="Confirme la contraseña">
-                        </div>
-                        <button id="btnSetCashPassword" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-medium transition">
-                            Establecer Contraseña
-                        </button>
-                    </div>
+                <div class="border-b pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lock mr-2"></i> 7. Seguridad y Contraseñas</h4>
+                    <p class="text-gray-700 mb-3">Configura una contraseña para proteger datos sensibles como ventas y ganancias totales.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-purple-50 p-4 rounded-xl border border-purple-200">
+                        <li><span class="font-bold">Configurar Contraseña:</span> Desde el menú lateral, selecciona <span class="font-bold text-purple-700">Configurar Contraseña</span>.</li>
+                        <li><span class="font-bold">Datos Protegidos:</span> Las ventas totales del mes y ganancias netas del mes requieren contraseña.</li>
+                        <li><span class="font-bold">Datos Públicos:</span> Las ganancias del día de hoy siempre son visibles para todos.</li>
+                    </ul>
                 </div>
                 
-                <div class="pt-4 border-t border-gray-200">
-                    <div class="text-xs text-gray-500 space-y-2">
-                        <p><i class="fas fa-info-circle text-blue-500 mr-1"></i> Las contraseñas se almacenan de forma segura en su cuenta.</p>
-                        <p><i class="fas fa-exclamation-triangle text-yellow-500 mr-1"></i> Si olvida la contraseña, deberá establecer una nueva.</p>
-                    </div>
+                <div class="pb-4">
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lightbulb mr-2"></i> 8. Cambiar Tema (Modo Oscuro/Claro)</h4>
+                    <p class="text-gray-700 mb-3">Para mayor comodidad visual, puedes alternar entre el modo claro y oscuro.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <li><span class="font-bold">Ubicación:</span> Pulsa el ícono de la luna (<i class="fas fa-moon"></i>) o sol (<i class="fas fa-sun"></i>) en la barra superior de navegación.</li>
+                        <li>El cambio se guarda automáticamente.</li>
+                    </ul>
                 </div>
+
+            </div>
+            <div class="p-4 border-t bg-gray-50 text-center">
+                <p class="text-xs text-gray-500">¡Recuerda mantener toda la información al día para un cálculo de comisiones perfecto!</p>
             </div>
         </div>
     </div>
     
-    <!-- MODAL PARA INGRESAR CONTRASEÑA -->
-    <div id="passwordModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden password-modal-content">
-            <div class="p-6 bg-gray-800 text-white flex justify-between items-center">
-                <h2 class="text-xl font-bold"><i class="fas fa-lock mr-2"></i> Verificación</h2>
-                <button data-close="passwordModal" class="text-white opacity-80 hover:opacity-100 text-2xl"><i class="fas fa-times"></i></button>
+    <!-- MODAL CALCULADORA PORCENTAJES (NUEVO) -->
+    <div id="calculatorModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 bg-gray-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-calculator mr-2"></i> Calculadora</h3>
+                <button data-close="calculatorModal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 space-y-4">
-                <div id="passwordModalMessage" class="text-sm text-gray-600">
-                    <!-- Mensaje dinámico -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Monto Base</label>
+                    <input type="number" id="calcBaseAmount" class="input-std font-bold text-lg text-center" step="0.01">
+                </div>
+                <div class="flex gap-2 items-center justify-center">
+                    <button id="calcTypeSurcharge" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-blue-100 text-blue-700 font-bold text-sm hover:bg-blue-200 transition ring-2 ring-blue-500">RECARGO (+)</button>
+                    <button id="calcTypeDiscount" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-100 text-gray-600 font-bold text-sm hover:bg-green-100 hover:text-green-700 transition">DESCUENTO (-)</button>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                    <input type="password" id="passwordInput" class="input-std" placeholder="Ingrese la contraseña" autofocus>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porcentaje (%)</label>
+                    <div class="flex gap-2">
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=10; updateCalc();">10%</button>
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=15; updateCalc();">15%</button>
+                        <button class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200" onclick="$('calcPercentage').value=21; updateCalc();">21%</button>
+                        <input type="number" id="calcPercentage" class="input-std text-center font-bold" placeholder="0" oninput="updateCalc()">
+                    </div>
                 </div>
-                <div class="text-xs text-red-500 hidden" id="passwordError">Contraseña incorrecta. Intente nuevamente.</div>
-                <button id="btnVerifyPassword" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg font-bold transition">
-                    Verificar
-                </button>
+                <div class="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
+                    <div class="text-xs text-gray-400 uppercase font-bold mb-1">Resultado Final</div>
+                    <div id="calcResultDisplay" class="text-3xl font-bold text-gray-800">$0.00</div>
+                </div>
+                <button id="applyCalcResultBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition transform active:scale-95">Aplicar Resultado</button>
             </div>
         </div>
     </div>
@@ -1394,28 +1437,18 @@
                     <div class="text-lg font-bold text-yellow-800" id="cashModalOnlyCash">$0.00</div>
                 </div>
                 <!-- Ganancia Bruta con PIN -->
-                <div class="bg-green-50 p-3 rounded-lg relative">
+                <div class="bg-green-50 p-3 rounded-lg">
                     <div class="text-xs text-green-600 font-bold uppercase">Ganancia Bruta</div>
-                    <div class="protected-content hidden" id="protectedGross">
-                        <div class="text-lg font-bold text-green-800" id="cashModalGross">$0.00</div>
-                    </div>
-                    <button class="unlock-btn" data-unlock="cashGross" title="Mostrar con contraseña">
-                        <i class="fas fa-lock"></i>
-                    </button>
+                    <div class="text-lg font-bold text-green-800" id="cashModalGross">$0.00</div>
                 </div>
                 <div class="bg-red-50 p-3 rounded-lg">
                     <div class="text-xs text-red-600 font-bold uppercase">Retiros Manuales</div>
                     <div class="text-lg font-bold text-red-800" id="cashModalWithdrawals">$0.00</div>
                 </div>
                 <!-- Caja Real con PIN -->
-                <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200 relative">
+                <div class="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
                     <div class="text-xs text-yellow-600 font-bold uppercase">En Caja Real</div>
-                    <div class="protected-content hidden" id="protectedNet">
-                        <div class="2xl font-bold text-yellow-800" id="cashModalNet">$0.00</div>
-                    </div>
-                    <button class="unlock-btn" data-unlock="cashNet" title="Mostrar con contraseña">
-                        <i class="fas fa-lock"></i>
-                    </button>
+                    <div class="2xl font-bold text-yellow-800" id="cashModalNet">$0.00</div>
                 </div>
             </div>
             
@@ -1671,6 +1704,80 @@
     </div>
     <!-- FIN MODAL NUEVA VENTA (ACTUALIZADO) -->
     
+    <!-- MODAL GASTOS MASIVOS (NUEVO) -->
+    <div id="massiveExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-xl font-bold"><i class="fas fa-layer-group mr-2"></i> Gastos Masivos</h2>
+                <button data-close="massiveExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="massiveExpenseDate" class="input-std" value="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Encargado Predeterminado</label>
+                        <input type="text" id="massiveExpenseEmployee" list="managerList" class="input-std" placeholder="Encargado para todos los gastos">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Categoría Predeterminada</label>
+                        <input type="text" id="massiveExpenseCategory" list="categoryList" class="input-std" placeholder="Categoría para todos los gastos">
+                    </div>
+                </div>
+
+                <!-- TABLA DE GASTOS MASIVOS -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 massive-sale-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Método de Pago</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Encargado</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto ($)</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="massiveExpenseTableBody" class="bg-white divide-y divide-gray-100">
+                            <!-- Las filas se agregarán dinámicamente -->
+                            <tr id="massiveExpenseEmptyRow" class="text-center text-gray-400 py-8">
+                                <td colspan="7" class="py-8">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <i class="fas fa-receipt text-3xl text-gray-300"></i>
+                                        <p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-between items-center pt-4">
+                    <button type="button" onclick="addMassiveExpenseRow()" class="add-row-btn">
+                        <i class="fas fa-plus"></i> Agregar Fila
+                    </button>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-600 mb-2">
+                            <span class="font-bold">Total Gastos:</span> 
+                            <span id="massiveExpensesTotal" class="text-red-600 font-bold text-lg">$0.00</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span id="massiveExpensesCount">0</span> gastos registrados
+                        </div>
+                    </div>
+                </div>
+
+                <button id="saveMassiveExpensesBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer mt-4">
+                    <i class="fas fa-save mr-2"></i> Guardar Todos los Gastos
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- ACTUALIZADO: Modal Gasto con nuevo campo de método de pago -->
     <div id="newExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold">Registrar Gasto</h2><button data-close="newExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="expenseForm" class="p-6 space-y-4"><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Fecha</label><input type="date" id="expenseDate" class="input-std" required></div><div><label class="block text-sm font-medium text-gray-700">Monto ($)</label><input type="number" id="expenseAmount" step="0.01" class="input-std font-bold text-lg text-red-600" required></div></div><div class="grid grid-cols-2 gap-4"><div class="relative"><label class="block text-sm font-medium text-gray-700">Categoría</label><div class="flex gap-1"><input type="text" id="expenseCategory" list="categoryList" class="input-std"><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('category')"><i class="fas fa-cog"></i></button></div><datalist id="categoryList"></datalist></div><div class="relative"><label class="block text-sm font-medium text-gray-700">Método de Pago</label><input type="text" id="expensePaymentMethod" list="expensePaymentList" class="input-std" placeholder="Efectivo, Transferencia..." required><datalist id="expensePaymentList"><option value="Efectivo"><option value="Transferencia"><option value="Tarjeta Débito"><option value="Tarjeta Crédito"><option value="Otro"></datalist></div></div><div class="relative"><label class="block text-sm font-medium text-gray-700">Encargado</label><div class="flex gap-1"><input type="text" id="expenseManager" list="managerList" class="input-std"><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('manager')"><i class="fas fa-cog"></i></button></div></div><div><label class="block text-sm font-medium text-gray-700">Descripción <span class="text-xs text-gray-500">(Se verá en el historial de gastos)</span></label><input type="text" id="expenseDesc" class="input-std" placeholder="Descripción detallada del gasto..."></div><button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Guardar Gasto</button></form></div></div>
     <div id="productModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold">Nuevo Producto</h2><button data-close="productModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="productForm" class="p-6 space-y-4"><input type="text" id="prodName" placeholder="Nombre" class="input-std" required><div class="relative"><label class="block text-sm font-medium text-gray-700">Tipo</label><div class="flex gap-1"><input type="text" id="prodType" list="prodTypeList" class="input-std" required><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('prodType')"><i class="fas fa-cog"></i></button></div><datalist id="prodTypeList"><option value="Importado"><option value="Nacional"><option value="Nuevo"></datalist></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Precio ARS</label><input type="number" id="prodPrice" class="input-std"></div><div><label class="block text-sm font-medium text-gray-700">Precio USD</label><input type="number" id="prodPriceUsd" class="input-std"></div></div><div><label class="block text-sm font-medium text-gray-700">Stock</label><input type="number" id="prodStock" class="input-std" required></div><button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold cursor-pointer">Guardar</button></form></div></div>
@@ -1766,34 +1873,6 @@
         let products=[], sales=[], expenses=[], clients=[], withdrawals=[], news=[], adjustments=[]; // AÑADIDO: adjustments
         let settings = { storeName: "MI NEGOCIO", employees: [], blockedCategories: {}, processedReports: [] };
         
-        // Variables para contraseñas
-        let passwords = {
-            sales: null,
-            profit: null,
-            cash: null
-        };
-        
-        // Variables de verificación de sesión
-        let unlockedSections = {
-            sales: false,
-            profit: false,
-            cashGross: false,
-            cashNet: false,
-            salesHistory: false,
-            profitHistory: false
-        };
-        
-        // Variables para hoy
-        let todayStats = {
-            salesTotal: 0,
-            expensesTotal: 0,
-            profitTotal: 0,
-            salesByPayment: {},
-            expensesByCategory: {},
-            selectedEmployee: null,
-            employeeInfo: {}
-        };
-        
         // Variables para gráfico
         let salesChart = null;
         let expensesChart = null;
@@ -1821,6 +1900,17 @@
         // Variables para venta masiva
         let massiveSaleRows = [];
         let massiveSaleRowCounter = 0;
+        
+        // Variables para gastos masivos
+        let massiveExpenseRows = [];
+        let massiveExpenseRowCounter = 0;
+
+        // Variables para seguridad
+        let userPassword = null;
+        let passwordProtectedData = {
+            sales: false,
+            profit: false
+        };
 
         const $ = id => document.getElementById(id);
         const fmtMoney = n => `$${parseFloat(n||0).toLocaleString('es-AR',{minimumFractionDigits:2, maximumFractionDigits:2})}`;
@@ -1994,324 +2084,6 @@
             });
         }
 
-        // FUNCIÓN PARA CARGAR CONTRASEÑAS
-        async function loadPasswords() {
-            if (!userId) return;
-            
-            try {
-                const passwordDoc = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'passwords'));
-                if (passwordDoc.exists()) {
-                    passwords = { ...passwords, ...passwordDoc.data() };
-                    console.log('Contraseñas cargadas:', Object.keys(passwords).filter(k => passwords[k]));
-                }
-            } catch (error) {
-                console.error('Error cargando contraseñas:', error);
-            }
-        }
-
-        // FUNCIÓN PARA GUARDAR CONTRASEÑA
-        async function savePassword(type, newPassword) {
-            if (!userId) return false;
-            
-            try {
-                if (!newPassword || newPassword.trim() === '') {
-                    // Eliminar la contraseña si está vacía
-                    const updateData = { [type]: null };
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'passwords'), updateData, { merge: true });
-                    passwords[type] = null;
-                    showToast(`Contraseña de ${getPasswordTypeName(type)} eliminada`, 'success');
-                    return true;
-                } else {
-                    // Guardar la nueva contraseña (en una aplicación real, deberías hashearla)
-                    const updateData = { [type]: newPassword };
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'passwords'), updateData, { merge: true });
-                    passwords[type] = newPassword;
-                    showToast(`Contraseña de ${getPasswordTypeName(type)} actualizada`, 'success');
-                    return true;
-                }
-            } catch (error) {
-                console.error(`Error guardando contraseña ${type}:`, error);
-                showToast('Error al guardar la contraseña', 'error');
-                return false;
-            }
-        }
-
-        // FUNCIÓN PARA OBTENER NOMBRE DEL TIPO DE CONTRASEÑA
-        function getPasswordTypeName(type) {
-            const names = {
-                sales: 'Ventas',
-                profit: 'Ganancias',
-                cash: 'Arqueo de Caja'
-            };
-            return names[type] || type;
-        }
-
-        // FUNCIÓN PARA VERIFICAR CONTRASEÑA
-        function verifyPassword(type, inputPassword) {
-            const storedPassword = passwords[type];
-            if (!storedPassword) {
-                // Si no hay contraseña configurada, permitir acceso
-                return true;
-            }
-            return inputPassword === storedPassword;
-        }
-
-        // FUNCIÓN PARA MOSTRAR MODAL DE CONTRASEÑA
-        function showPasswordModal(type, target, callback) {
-            const modal = $('passwordModal');
-            const message = $('passwordModalMessage');
-            const input = $('passwordInput');
-            const error = $('passwordError');
-            
-            let messageText = '';
-            let unlockType = type;
-            
-            switch(type) {
-                case 'sales':
-                    messageText = 'Ingrese la contraseña para ver las Ventas del Mes';
-                    unlockType = 'sales';
-                    break;
-                case 'profit':
-                    messageText = 'Ingrese la contraseña para ver la Ganancia Neta del Mes';
-                    unlockType = 'profit';
-                    break;
-                case 'cashGross':
-                    messageText = 'Ingrese la contraseña para ver la Ganancia Bruta';
-                    unlockType = 'cash';
-                    break;
-                case 'cashNet':
-                    messageText = 'Ingrese la contraseña para ver el total En Caja Real';
-                    unlockType = 'cash';
-                    break;
-                case 'salesHistory':
-                    messageText = 'Ingrese la contraseña para ver el Historial de Ventas';
-                    unlockType = 'sales';
-                    break;
-                case 'profitHistory':
-                    messageText = 'Ingrese la contraseña para ver el Historial de Ganancias';
-                    unlockType = 'profit';
-                    break;
-                default:
-                    messageText = 'Ingrese la contraseña para continuar';
-            }
-            
-            message.textContent = messageText;
-            input.value = '';
-            error.classList.add('hidden');
-            
-            // Configurar el botón de verificación
-            const verifyBtn = $('btnVerifyPassword');
-            verifyBtn.onclick = () => {
-                const enteredPassword = input.value.trim();
-                
-                if (verifyPassword(unlockType, enteredPassword)) {
-                    // Contraseña correcta
-                    unlockedSections[type] = true;
-                    
-                    // Ejecutar callback si se proporciona
-                    if (callback && typeof callback === 'function') {
-                        callback();
-                    }
-                    
-                    // Mostrar contenido protegido
-                    if (target) {
-                        const protectedContent = $(target);
-                        if (protectedContent) {
-                            protectedContent.classList.remove('hidden');
-                            // Cambiar ícono de candado a desbloqueado
-                            const unlockBtn = protectedContent.closest('.relative')?.querySelector('.unlock-btn');
-                            if (unlockBtn) {
-                                unlockBtn.innerHTML = '<i class="fas fa-unlock"></i>';
-                                unlockBtn.title = "Contenido desbloqueado";
-                                unlockBtn.style.color = '#10b981';
-                                // Deshabilitar el botón temporalmente
-                                unlockBtn.style.pointerEvents = 'none';
-                                setTimeout(() => {
-                                    unlockBtn.innerHTML = '<i class="fas fa-lock"></i>';
-                                    unlockBtn.title = "Mostrar con contraseña";
-                                    unlockBtn.style.color = '';
-                                    unlockBtn.style.pointerEvents = 'auto';
-                                    protectedContent.classList.add('hidden');
-                                    unlockedSections[type] = false;
-                                }, 30000); // Bloquear después de 30 segundos
-                            }
-                        }
-                    }
-                    
-                    modal.classList.add('hidden');
-                    showToast('Contraseña correcta', 'success');
-                } else {
-                    // Contraseña incorrecta
-                    error.classList.remove('hidden');
-                    input.value = '';
-                    input.focus();
-                }
-            };
-            
-            // También permitir Enter para verificar
-            input.onkeypress = (e) => {
-                if (e.key === 'Enter') {
-                    verifyBtn.click();
-                }
-            };
-            
-            modal.classList.remove('hidden');
-            input.focus();
-        }
-
-        // FUNCIÓN PARA ACTUALIZAR ESTADÍSTICAS DE HOY
-        function updateTodayStats() {
-            const today = getToday();
-            
-            // Reiniciar estadísticas
-            todayStats.salesTotal = 0;
-            todayStats.expensesTotal = 0;
-            todayStats.profitTotal = 0;
-            todayStats.salesByPayment = {};
-            todayStats.expensesByCategory = {};
-            
-            // Procesar ventas de hoy
-            const todaySales = sales.filter(s => s.date === today);
-            todaySales.forEach(sale => {
-                const amount = parseFloat(sale.montoCobrado) || 0;
-                todayStats.salesTotal += amount;
-                
-                // Agrupar por método de pago
-                const paymentType = sale.paymentType || 'Sin especificar';
-                todayStats.salesByPayment[paymentType] = (todayStats.salesByPayment[paymentType] || 0) + amount;
-            });
-            
-            // Procesar gastos de hoy
-            const todayExpenses = expenses.filter(e => e.date === today);
-            todayExpenses.forEach(expense => {
-                const amount = parseFloat(expense.gastoTotal) || 0;
-                todayStats.expensesTotal += amount;
-                
-                // Agrupar por categoría
-                const category = expense.category || 'Sin categoría';
-                todayStats.expensesByCategory[category] = (todayStats.expensesByCategory[category] || 0) + amount;
-            });
-            
-            // Calcular ganancia de hoy
-            todayStats.profitTotal = todayStats.salesTotal - todayStats.expensesTotal;
-            
-            // Actualizar la interfaz
-            $('todaySalesTotal').textContent = fmtMoney(todayStats.salesTotal);
-            $('todayExpensesTotal').textContent = fmtMoney(todayStats.expensesTotal);
-            $('todayProfit').textContent = fmtMoney(todayStats.profitTotal);
-            
-            // Actualizar desglose de ventas por pago
-            const salesBreakdown = $('todaySalesByPayment');
-            if (salesBreakdown) {
-                salesBreakdown.innerHTML = '';
-                Object.entries(todayStats.salesByPayment).forEach(([payment, amount]) => {
-                    const item = document.createElement('div');
-                    item.className = 'payment-type-item';
-                    item.innerHTML = `
-                        <span class="text-xs">${payment}</span>
-                        <span class="text-xs font-bold">${fmtMoney(amount)}</span>
-                    `;
-                    salesBreakdown.appendChild(item);
-                });
-            }
-            
-            // Actualizar desglose de gastos por categoría
-            const expensesBreakdown = $('todayExpensesByCategory');
-            if (expensesBreakdown) {
-                expensesBreakdown.innerHTML = '';
-                Object.entries(todayStats.expensesByCategory).forEach(([category, amount]) => {
-                    const item = document.createElement('div');
-                    item.className = 'payment-type-item';
-                    item.innerHTML = `
-                        <span class="text-xs">${category}</span>
-                        <span class="text-xs font-bold text-red-600">${fmtMoney(amount)}</span>
-                    `;
-                    expensesBreakdown.appendChild(item);
-                });
-            }
-            
-            // Actualizar información del encargado del día
-            updateTodayEmployeeInfo();
-        }
-
-        // FUNCIÓN PARA ACTUALIZAR INFORMACIÓN DEL ENCARGADO DEL DÍA
-        async function updateTodayEmployeeInfo() {
-            const today = getToday();
-            const select = $('todayEmployeeSelect');
-            const infoDiv = $('todayEmployeeInfo');
-            
-            if (!select || !infoDiv) return;
-            
-            // Obtener empleado guardado para hoy
-            try {
-                const employeeDoc = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'dailyEmployees', today));
-                if (employeeDoc.exists()) {
-                    const data = employeeDoc.data();
-                    todayStats.selectedEmployee = data.employee;
-                    todayStats.employeeInfo = data;
-                    
-                    // Seleccionar en el dropdown
-                    select.value = data.employee || '';
-                    
-                    // Mostrar información
-                    let infoHTML = '';
-                    if (data.startTime) {
-                        infoHTML += `Hora inicio: ${data.startTime}<br>`;
-                    }
-                    if (data.endTime) {
-                        infoHTML += `Hora fin: ${data.endTime}<br>`;
-                    }
-                    if (data.notes) {
-                        infoHTML += `Notas: ${data.notes}`;
-                    }
-                    
-                    infoDiv.innerHTML = infoHTML || 'No hay información adicional';
-                } else {
-                    todayStats.selectedEmployee = null;
-                    todayStats.employeeInfo = {};
-                    select.value = '';
-                    infoDiv.innerHTML = 'No hay encargado asignado para hoy';
-                }
-            } catch (error) {
-                console.error('Error cargando encargado del día:', error);
-                infoDiv.innerHTML = 'Error al cargar información';
-            }
-        }
-
-        // FUNCIÓN PARA GUARDAR ENCARGADO DEL DÍA
-        async function saveTodayEmployee() {
-            const today = getToday();
-            const select = $('todayEmployeeSelect');
-            const employee = select.value.trim();
-            
-            if (!employee) {
-                showToast('Seleccione un encargado', 'error');
-                return;
-            }
-            
-            try {
-                const employeeData = {
-                    employee: employee,
-                    date: today,
-                    savedAt: new Date().toISOString()
-                };
-                
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'dailyEmployees', today), employeeData, { merge: true });
-                
-                todayStats.selectedEmployee = employee;
-                todayStats.employeeInfo = employeeData;
-                
-                showToast('Encargado guardado para hoy', 'success');
-                updateTodayEmployeeInfo();
-                
-                // Enviar notificación
-                sendNotificationToAll('Encargado del Día', `${employee} ha sido asignado como encargado para hoy`);
-            } catch (error) {
-                console.error('Error guardando encargado:', error);
-                showToast('Error al guardar encargado', 'error');
-            }
-        }
-
         // FUNCIÓN PARA CAMBIAR TIPO DE VENTA
         window.switchSaleType = (type) => {
             const unitForm = $('saleForm');
@@ -2429,6 +2201,78 @@
             updateMassiveSalesTotal();
         };
 
+        // FUNCIÓN PARA AGREGAR FILA A GASTOS MASIVOS
+        window.addMassiveExpenseRow = () => {
+            massiveExpenseRowCounter++;
+            const rowId = `massive-expense-row-${massiveExpenseRowCounter}`;
+            
+            // Ocultar fila vacía si existe
+            const emptyRow = $('massiveExpenseEmptyRow');
+            if (emptyRow) {
+                emptyRow.style.display = 'none';
+            }
+            
+            const rowHTML = `
+                <tr id="${rowId}" class="massive-sale-row">
+                    <td class="px-4 py-2">
+                        <input type="date" class="massive-sale-input expense-date" data-row="${rowId}" value="${getToday()}">
+                    </td>
+                    <td class="px-4 py-2">
+                        <input type="text" class="massive-sale-input expense-category" data-row="${rowId}" list="categoryList" placeholder="Categoría">
+                    </td>
+                    <td class="px-4 py-2">
+                        <input type="text" class="massive-sale-input expense-payment" data-row="${rowId}" list="expensePaymentList" placeholder="Método de pago">
+                    </td>
+                    <td class="px-4 py-2">
+                        <input type="text" class="massive-sale-input expense-employee" data-row="${rowId}" list="managerList" placeholder="Encargado">
+                    </td>
+                    <td class="px-4 py-2">
+                        <input type="number" step="0.01" class="massive-sale-input expense-amount" data-row="${rowId}" oninput="updateMassiveExpensesTotal()" placeholder="0.00">
+                    </td>
+                    <td class="px-4 py-2">
+                        <textarea class="massive-sale-input expense-desc" data-row="${rowId}" rows="1" placeholder="Descripción del gasto"></textarea>
+                    </td>
+                    <td class="px-4 py-2 text-center">
+                        <button type="button" onclick="removeMassiveExpenseRow('${rowId}')" class="delete-row-btn" title="Eliminar fila">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            
+            const tbody = $('massiveExpenseTableBody');
+            if (tbody.querySelector('#massiveExpenseEmptyRow')) {
+                tbody.innerHTML = rowHTML;
+            } else {
+                tbody.insertAdjacentHTML('beforeend', rowHTML);
+            }
+            
+            massiveExpenseRows.push(rowId);
+            
+            // Si hay valores predeterminados, aplicarlos
+            const defaultEmployee = $('massiveExpenseEmployee').value;
+            const defaultCategory = $('massiveExpenseCategory').value;
+            const defaultDate = $('massiveExpenseDate').value;
+            
+            if (defaultEmployee) {
+                const employeeInput = document.querySelector(`#${rowId} .expense-employee`);
+                if (employeeInput) employeeInput.value = defaultEmployee;
+            }
+            
+            if (defaultCategory) {
+                const categoryInput = document.querySelector(`#${rowId} .expense-category`);
+                if (categoryInput) categoryInput.value = defaultCategory;
+            }
+            
+            if (defaultDate) {
+                const dateInput = document.querySelector(`#${rowId} .expense-date`);
+                if (dateInput) dateInput.value = defaultDate;
+            }
+            
+            // Actualizar total
+            updateMassiveExpensesTotal();
+        };
+
         // FUNCIÓN PARA ACTUALIZAR INFORMACIÓN DEL PRODUCTO
         window.updateProductInfo = (rowId) => {
             const select = document.querySelector(`#${rowId} .massive-product`);
@@ -2482,6 +2326,25 @@
             }
         };
 
+        // FUNCIÓN PARA ELIMINAR FILA DE GASTOS MASIVOS
+        window.removeMassiveExpenseRow = (rowId) => {
+            const row = document.getElementById(rowId);
+            if (row) {
+                row.remove();
+                massiveExpenseRows = massiveExpenseRows.filter(id => id !== rowId);
+                
+                // Mostrar fila vacía si no hay filas
+                if (massiveExpenseRows.length === 0) {
+                    const emptyRow = $('massiveExpenseEmptyRow');
+                    if (emptyRow) {
+                        emptyRow.style.display = '';
+                    }
+                }
+                
+                updateMassiveExpensesTotal();
+            }
+        };
+
         // FUNCIÓN PARA ACTUALIZAR TOTAL DE VENTAS MASIVAS
         window.updateMassiveSalesTotal = () => {
             let total = 0;
@@ -2501,6 +2364,25 @@
             
             $('massiveSalesTotal').textContent = fmtMoney(total);
             $('massiveSalesCount').textContent = count;
+        };
+
+        // FUNCIÓN PARA ACTUALIZAR TOTAL DE GASTOS MASIVOS
+        window.updateMassiveExpensesTotal = () => {
+            let total = 0;
+            let count = 0;
+            
+            massiveExpenseRows.forEach(rowId => {
+                const amountInput = document.querySelector(`#${rowId} .expense-amount`);
+                
+                if (amountInput && amountInput.value) {
+                    const amount = parseFloat(amountInput.value) || 0;
+                    total += amount;
+                    count++;
+                }
+            });
+            
+            $('massiveExpensesTotal').textContent = fmtMoney(total);
+            $('massiveExpensesCount').textContent = count;
         };
 
         // FUNCIÓN PARA ORDENAR TABLAS
@@ -2773,12 +2655,14 @@
                     initListeners();
                     initializeNotifications();
                     listenToGlobalNotifications(); // Escuchar notificaciones globales
-                    loadPasswords(); // Cargar contraseñas
                     
                     // Verificar y configurar FCM después de la autenticación
                     setTimeout(() => {
                         checkAndSetupFCM();
                     }, 1000);
+                    
+                    // Cargar contraseña del usuario
+                    loadUserPassword();
                 } else {
                      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
                      else signInAnonymously(auth);
@@ -2786,6 +2670,193 @@
             });
         };
         initAuth();
+
+        // FUNCIONES DE SEGURIDAD
+        async function loadUserPassword() {
+            try {
+                const passwordDoc = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'security'));
+                if (passwordDoc.exists()) {
+                    const data = passwordDoc.data();
+                    userPassword = data.password;
+                    console.log('Contraseña cargada del servidor');
+                } else {
+                    // Verificar en localStorage como respaldo
+                    const storedPassword = localStorage.getItem(`userPassword_${userId}`);
+                    if (storedPassword) {
+                        userPassword = storedPassword;
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando contraseña:', error);
+                // Verificar en localStorage como respaldo
+                const storedPassword = localStorage.getItem(`userPassword_${userId}`);
+                if (storedPassword) {
+                    userPassword = storedPassword;
+                }
+            }
+        }
+
+        async function saveUserPassword(password) {
+            try {
+                // Guardar en Firestore
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'security'), {
+                    password: password,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+                
+                // Guardar en localStorage como respaldo
+                localStorage.setItem(`userPassword_${userId}`, password);
+                
+                userPassword = password;
+                showToast('Contraseña guardada exitosamente', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error guardando contraseña:', error);
+                showToast('Error al guardar la contraseña', 'error');
+                return false;
+            }
+        }
+
+        async function removeUserPassword() {
+            try {
+                // Eliminar de Firestore
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'security'));
+                
+                // Eliminar de localStorage
+                localStorage.removeItem(`userPassword_${userId}`);
+                
+                userPassword = null;
+                passwordProtectedData = {
+                    sales: false,
+                    profit: false
+                };
+                showToast('Contraseña eliminada exitosamente', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error eliminando contraseña:', error);
+                showToast('Error al eliminar la contraseña', 'error');
+                return false;
+            }
+        }
+
+        function checkPassword(inputPassword) {
+            return userPassword === inputPassword;
+        }
+
+        // Función para alternar datos protegidos
+        window.toggleProtectedData = (type) => {
+            if (!userPassword) {
+                showToast('Primero configura una contraseña en el menú lateral', 'info');
+                $('securitySettingsModal').classList.remove('hidden');
+                return;
+            }
+            
+            if (passwordProtectedData[type]) {
+                // Ya está desbloqueado, volver a bloquear
+                passwordProtectedData[type] = false;
+                updateProtectedDataDisplay();
+                showToast('Datos protegidos nuevamente', 'info');
+            } else {
+                // Solicitar contraseña
+                $('passwordModalType').value = type;
+                $('passwordInput').value = '';
+                $('passwordModal').classList.remove('hidden');
+            }
+        };
+
+        function updateProtectedDataDisplay() {
+            const today = getToday();
+            const thisMonth = today.slice(0,7);
+            
+            let salesTotal = 0; 
+            let expensesTotal = 0; 
+            
+            // Calcular ventas del mes
+            sales.forEach(s => { 
+                if (s.date.startsWith(thisMonth)) {
+                    salesTotal += parseFloat(s.montoCobrado) || 0;
+                }
+            });
+            
+            // Calcular gastos del mes
+            expenses.forEach(e => { 
+                if (e.date.startsWith(thisMonth)) {
+                    expensesTotal += parseFloat(e.gastoTotal) || 0;
+                }
+            });
+            
+            // Actualizar display según estado de protección
+            const salesElement = $('cardVentasMes');
+            const profitElement = $('cardGananciaMes');
+            
+            if (passwordProtectedData.sales) {
+                salesElement.textContent = fmtMoney(salesTotal);
+                salesElement.classList.add('revealed');
+            } else {
+                salesElement.textContent = '******';
+                salesElement.classList.remove('revealed');
+            }
+            
+            if (passwordProtectedData.profit) {
+                profitElement.textContent = fmtMoney(salesTotal - expensesTotal);
+                profitElement.classList.add('revealed');
+            } else {
+                profitElement.textContent = '******';
+                profitElement.classList.remove('revealed');
+            }
+        }
+
+        // Función para manejar la autenticación con Lemon Cash
+        async function handleLemonCashAuthentication() {
+            const lemonCashBtn = $('lemonCashBtn');
+            const lemonCashText = $('lemonCashText');
+            
+            if (!window.LemonCashSDK || !window.LemonCashSDK.isWebView()) {
+                lemonCashBtn.style.display = 'none';
+                return;
+            }
+            
+            try {
+                lemonCashBtn.disabled = true;
+                lemonCashText.textContent = 'Autenticando...';
+                
+                const result = await window.LemonCashSDK.authenticate();
+                
+                if (result.result === window.LemonCashSDK.TransactionResult.SUCCESS) {
+                    const wallet = result.data.wallet;
+                    const displayWallet = `${wallet.slice(0, 8)}...${wallet.slice(-8)}`;
+                    lemonCashText.innerHTML = `<i class="fas fa-wallet mr-2"></i> ${displayWallet}`;
+                    lemonCashBtn.disabled = false;
+                    lemonCashBtn.title = `Wallet conectada: ${displayWallet}`;
+                    
+                    // Configurar evento de depósito
+                    lemonCashBtn.onclick = async () => {
+                        try {
+                            const depositResult = await window.LemonCashSDK.deposit({
+                                amount: '100',
+                                tokenName: 'USDC',
+                            });
+                            console.log('Depósito exitoso:', depositResult.txHash);
+                            showToast('Depósito de 100 USDC enviado exitosamente', 'success');
+                        } catch (depositError) {
+                            console.error('Error en depósito:', depositError);
+                            showToast('Error en el depósito', 'error');
+                        }
+                    };
+                    
+                    showToast('Wallet de Lemon Cash conectada exitosamente', 'success');
+                } else {
+                    lemonCashText.textContent = 'Error de autenticación';
+                    lemonCashBtn.disabled = false;
+                    showToast('Error al conectar con Lemon Cash', 'error');
+                }
+            } catch (error) {
+                console.error('Error en autenticación Lemon Cash:', error);
+                lemonCashText.textContent = 'Conectar Wallet';
+                lemonCashBtn.disabled = false;
+                showToast('No se pudo conectar con Lemon Cash', 'error');
+            }
+        }
 
         function updateProductListForSale() {
             const select = $('saleProduct');
@@ -2809,33 +2880,6 @@
                     typeDisplay.textContent = productType ? `Tipo: ${productType}` : '';
                 }
             });
-        }
-
-        // FUNCIÓN PARA ACTUALIZAR LISTA DE EMPLEADOS EN EL SELECT DE HOY
-        function updateTodayEmployeeSelect() {
-            const select = $('todayEmployeeSelect');
-            if (!select) return;
-            
-            // Guardar valor actual
-            const currentValue = select.value;
-            
-            // Limpiar opciones
-            select.innerHTML = '<option value="">Seleccionar encargado</option>';
-            
-            // Agregar empleados de settings
-            if (settings.employees && settings.employees.length > 0) {
-                settings.employees.forEach(emp => {
-                    const option = document.createElement('option');
-                    option.value = emp;
-                    option.textContent = emp;
-                    select.appendChild(option);
-                });
-            }
-            
-            // Restaurar valor si existe
-            if (currentValue && Array.from(select.options).some(opt => opt.value === currentValue)) {
-                select.value = currentValue;
-            }
         }
 
         // ACTUALIZADO: Función para actualizar filtro de canales
@@ -2878,7 +2922,6 @@
                     $('storeNameDisplay').textContent = settings.storeName || "MI NEGOCIO";
                     renderEmployeeList();
                     updateDynamicLists(); 
-                    updateTodayEmployeeSelect(); // Actualizar select de empleados de hoy
                 }
             });
             
@@ -2898,7 +2941,6 @@
                 renderProfitReport();
                 updateDynamicLists(); 
                 updateChannelFilter(); // ACTUALIZADO: Actualizar filtro de canales
-                updateTodayStats(); // Actualizar estadísticas de hoy
                 
                 // Enviar notificación si hay nueva venta y notificaciones activadas
                 if (s.docs.length > 0 && notificationPermission) {
@@ -2917,7 +2959,6 @@
                 renderExpensesList();
                 renderProfitReport(); 
                 updateDynamicLists(); 
-                updateTodayStats(); // Actualizar estadísticas de hoy
                 
                 // Enviar notificación si hay nuevo gasto
                 if (s.docs.length > 0 && notificationPermission) {
@@ -2986,9 +3027,6 @@
             fill('paymentList', payMethods); fill('channelList', channels); 
             fill('categoryList', cats); fill('managerList', managers); fill('prodTypeList', prodTypes);
             fill('expensePaymentList', expensePayments); 
-            
-            // Actualizar también el select de empleados de hoy
-            updateTodayEmployeeSelect();
         }
 
         function openListManager(type) {
@@ -3038,13 +3076,21 @@
             let sMonth = 0; 
             
             let salesCashTotal = 0; 
-            let expensesCashTotal = 0; 
+            let expensesCashTotal = 0;
 
+            // Calcular ganancias del día
+            let ventasHoy = 0;
+            let gastosHoy = 0;
+            
             sales.forEach(s => { 
                 const a = parseFloat(s.montoCobrado)||0; 
                 sToday += (s.date === today) ? a : 0; 
                 sMonth += (s.date.startsWith(thisMonth)) ? a : 0; 
                 salesTotal += a; 
+                
+                if(s.date === today) {
+                    ventasHoy += a;
+                }
                 
                 if((s.paymentType||'').toLowerCase() === 'efectivo') {
                     salesCashTotal += a; 
@@ -3054,8 +3100,11 @@
             let eToday = 0, eMonth = 0;
             expenses.forEach(e => { 
                 const a = parseFloat(e.gastoTotal)||0; 
-                if(e.date===today) eToday+=a; 
-                if(e.date.startsWith(thisMonth)) eMonth+=a; 
+                if(e.date===today) {
+                    eToday += a;
+                    gastosHoy += a;
+                } 
+                if(e.date.startsWith(thisMonth)) eMonth += a; 
                 expensesTotal += a;
 
                 if((e.paymentMethod||'').toLowerCase() === 'efectivo') {
@@ -3085,25 +3134,17 @@
             $('cardStockUnidades').textContent = products.reduce((a,p)=>a+(parseInt(p.stock)||0),0);
             $('dashTotalClientes').textContent = clients.length;
             
-            // Actualizar valores protegidos solo si están desbloqueados
-            if (unlockedSections.sales) {
-                $('cardVentasMes').textContent = fmtMoney(sMonth);
-            }
+            // Actualizar ganancias del día
+            $('gananciasVentasHoy').textContent = fmtMoney(ventasHoy);
+            $('gananciasGastosHoy').textContent = fmtMoney(gastosHoy);
+            $('gananciasNetasHoy').textContent = fmtMoney(ventasHoy - gastosHoy);
             
-            if (unlockedSections.profit) {
-                $('cardGananciaMes').textContent = fmtMoney(sMonth - eMonth);
-            }
+            // Actualizar datos protegidos
+            updateProtectedDataDisplay();
             
             $('cardCaja').textContent = fmtMoney(cashOnlyTotal); 
-            
-            // Actualizar valores protegidos en caja solo si están desbloqueados
-            if (unlockedSections.cashGross) {
-                $('cashModalGross').textContent = fmtMoney(salesTotal - expensesTotal);
-            }
-            if (unlockedSections.cashNet) {
-                $('cashModalNet').textContent = fmtMoney(salesTotal - expensesTotal - wTotal);
-            }
-            
+            $('cashModalGross').textContent = fmtMoney(salesTotal - expensesTotal);
+            $('cashModalNet').textContent = fmtMoney(salesTotal - expensesTotal - wTotal);
             $('cashModalOnlyCash').textContent = fmtMoney(cashOnlyTotal); 
             $('cashModalWithdrawals').textContent = fmtMoney(wTotal);
         }
@@ -3881,6 +3922,108 @@
             }
         }
 
+        // FUNCIÓN PARA GUARDAR GASTOS MASIVOS
+        async function saveMassiveExpenses() {
+            if (!userId) return;
+
+            const defaultEmployee = $('massiveExpenseEmployee').value.trim();
+            const defaultCategory = $('massiveExpenseCategory').value.trim();
+            const defaultDate = $('massiveExpenseDate').value || getToday();
+            
+            let savedCount = 0;
+            let errorCount = 0;
+            const errors = [];
+
+            // Validar que haya al menos una fila
+            if (massiveExpenseRows.length === 0) {
+                showToast("Debe agregar al menos una fila para guardar.", 'error');
+                return;
+            }
+
+            // Procesar cada fila
+            for (const rowId of massiveExpenseRows) {
+                try {
+                    const amountInput = document.querySelector(`#${rowId} .expense-amount`);
+                    const amount = parseFloat(amountInput?.value) || 0;
+                    
+                    if (amount <= 0) {
+                        errors.push(`Fila ${rowId}: El monto debe ser mayor a 0.`);
+                        errorCount++;
+                        continue;
+                    }
+                    
+                    const employeeInput = document.querySelector(`#${rowId} .expense-employee`);
+                    const emp = employeeInput?.value.trim() || defaultEmployee || 'Sin encargado';
+                    
+                    const categoryInput = document.querySelector(`#${rowId} .expense-category`);
+                    const category = categoryInput?.value.trim() || defaultCategory || 'Varios';
+                    
+                    const paymentInput = document.querySelector(`#${rowId} .expense-payment`);
+                    const paymentMethod = paymentInput?.value.trim() || 'Efectivo';
+                    
+                    const dateInput = document.querySelector(`#${rowId} .expense-date`);
+                    const date = dateInput?.value || defaultDate;
+                    
+                    const descInput = document.querySelector(`#${rowId} .expense-desc`);
+                    const description = descInput?.value.trim() || '';
+                    
+                    // Crear o actualizar empleado
+                    if (emp && emp !== 'Sin encargado' && !settings.employees.includes(emp)) {
+                        await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                            { employees: arrayUnion(emp) }, { merge: true });
+                    }
+                    
+                    // Guardar el gasto
+                    const expenseData = {
+                        date: date,
+                        gastoTotal: amount,
+                        category: category,
+                        paymentMethod: paymentMethod,
+                        manager: emp,
+                        description: description,
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), expenseData);
+                    savedCount++;
+                    
+                } catch (error) {
+                    console.error(`Error procesando fila ${rowId}:`, error);
+                    errors.push(`Fila ${rowId}: Error interno del sistema.`);
+                    errorCount++;
+                }
+            }
+            
+            // Mostrar resultados
+            if (savedCount > 0) {
+                if (errorCount > 0) {
+                    showToast(`${savedCount} gastos guardados. ${errorCount} con errores.`, 'warning');
+                    if (errors.length > 0) {
+                        console.error("Errores:", errors);
+                    }
+                } else {
+                    showToast(`${savedCount} gastos guardados exitosamente.`, 'success');
+                    sendNotificationToAll('Gastos Masivos Registrados', 
+                        `Se registraron ${savedCount} gastos masivos. Total: ${$('massiveExpensesTotal').textContent}`);
+                }
+                
+                // Cerrar modal y resetear
+                $('massiveExpenseModal').classList.add('hidden');
+                massiveExpenseRows = [];
+                massiveExpenseRowCounter = 0;
+                const tbody = $('massiveExpenseTableBody');
+                tbody.innerHTML = '<tr id="massiveExpenseEmptyRow" class="text-center text-gray-400 py-8"><td colspan="7" class="py-8"><div class="flex flex-col items-center justify-center gap-2"><i class="fas fa-receipt text-3xl text-gray-300"></i><p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p></div></td></tr>';
+                $('massiveExpensesTotal').textContent = '$0.00';
+                $('massiveExpensesCount').textContent = '0';
+                
+            } else {
+                showToast("No se pudo guardar ningún gasto. Verifique los datos.", 'error');
+                if (errors.length > 0) {
+                    alert("Errores encontrados:\n" + errors.join('\n'));
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             registerServiceWorker();
 
@@ -3923,169 +4066,13 @@
             $('closeSideMenuBtn').onclick = closeMenu; 
             $('sideMenuOverlay').onclick = closeMenu;
             
-            // Botón para configurar contraseñas
-            $('btnOpenPasswordConfig').onclick = () => {
-                $('passwordConfigModal').classList.remove('hidden');
+            // BOTÓN DE CONFIGURACIÓN DE SEGURIDAD
+            $('btnOpenSecuritySettings').onclick = () => {
+                $('securitySettingsModal').classList.remove('hidden');
             };
             
-            // Configurar contraseñas
-            $('btnSetSalesPassword').onclick = async () => {
-                const password = $('salesPasswordInput').value;
-                const confirm = $('salesPasswordConfirm').value;
-                
-                if (password !== confirm) {
-                    showToast('Las contraseñas no coinciden', 'error');
-                    return;
-                }
-                
-                const success = await savePassword('sales', password);
-                if (success) {
-                    $('salesPasswordInput').value = '';
-                    $('salesPasswordConfirm').value = '';
-                }
-            };
-            
-            $('btnSetProfitPassword').onclick = async () => {
-                const password = $('profitPasswordInput').value;
-                const confirm = $('profitPasswordConfirm').value;
-                
-                if (password !== confirm) {
-                    showToast('Las contraseñas no coinciden', 'error');
-                    return;
-                }
-                
-                const success = await savePassword('profit', password);
-                if (success) {
-                    $('profitPasswordInput').value = '';
-                    $('profitPasswordConfirm').value = '';
-                }
-            };
-            
-            $('btnSetCashPassword').onclick = async () => {
-                const password = $('cashPasswordInput').value;
-                const confirm = $('cashPasswordConfirm').value;
-                
-                if (password !== confirm) {
-                    showToast('Las contraseñas no coinciden', 'error');
-                    return;
-                }
-                
-                const success = await savePassword('cash', password);
-                if (success) {
-                    $('cashPasswordInput').value = '';
-                    $('cashPasswordConfirm').value = '';
-                }
-            };
-            
-            // Botones de desbloqueo
-            document.querySelectorAll('.unlock-btn[data-unlock="sales"]').forEach(btn => {
-                btn.onclick = () => {
-                    if (passwords.sales) {
-                        showPasswordModal('sales', 'protectedSales', () => {
-                            updateDashboard();
-                        });
-                    } else {
-                        // Si no hay contraseña, mostrar directamente
-                        const protectedContent = $('protectedSales');
-                        if (protectedContent) {
-                            protectedContent.classList.remove('hidden');
-                            setTimeout(() => {
-                                protectedContent.classList.add('hidden');
-                            }, 30000);
-                        }
-                        unlockedSections.sales = true;
-                        updateDashboard();
-                    }
-                };
-            });
-            
-            document.querySelectorAll('.unlock-btn[data-unlock="profit"]').forEach(btn => {
-                btn.onclick = () => {
-                    if (passwords.profit) {
-                        showPasswordModal('profit', 'protectedProfit', () => {
-                            updateDashboard();
-                        });
-                    } else {
-                        // Si no hay contraseña, mostrar directamente
-                        const protectedContent = $('protectedProfit');
-                        if (protectedContent) {
-                            protectedContent.classList.remove('hidden');
-                            setTimeout(() => {
-                                protectedContent.classList.add('hidden');
-                            }, 30000);
-                        }
-                        unlockedSections.profit = true;
-                        updateDashboard();
-                    }
-                };
-            });
-            
-            document.querySelectorAll('.unlock-btn[data-unlock="cashGross"]').forEach(btn => {
-                btn.onclick = () => {
-                    if (passwords.cash) {
-                        showPasswordModal('cashGross', 'protectedGross', () => {
-                            updateDashboard();
-                        });
-                    } else {
-                        // Si no hay contraseña, mostrar directamente
-                        const protectedContent = $('protectedGross');
-                        if (protectedContent) {
-                            protectedContent.classList.remove('hidden');
-                            setTimeout(() => {
-                                protectedContent.classList.add('hidden');
-                            }, 30000);
-                        }
-                        unlockedSections.cashGross = true;
-                        updateDashboard();
-                    }
-                };
-            });
-            
-            document.querySelectorAll('.unlock-btn[data-unlock="cashNet"]').forEach(btn => {
-                btn.onclick = () => {
-                    if (passwords.cash) {
-                        showPasswordModal('cashNet', 'protectedNet', () => {
-                            updateDashboard();
-                        });
-                    } else {
-                        // Si no hay contraseña, mostrar directamente
-                        const protectedContent = $('protectedNet');
-                        if (protectedContent) {
-                            protectedContent.classList.remove('hidden');
-                            setTimeout(() => {
-                                protectedContent.classList.add('hidden');
-                            }, 30000);
-                        }
-                        unlockedSections.cashNet = true;
-                        updateDashboard();
-                    }
-                };
-            });
-            
-            // Funcionalidades de hoy
-            $('btnShowSalesToday').onclick = () => {
-                const breakdown = $('todaySalesBreakdown');
-                if (breakdown.classList.contains('hidden')) {
-                    breakdown.classList.remove('hidden');
-                    $('btnShowSalesToday').innerHTML = '<i class="fas fa-eye-slash"></i>';
-                } else {
-                    breakdown.classList.add('hidden');
-                    $('btnShowSalesToday').innerHTML = '<i class="fas fa-eye"></i>';
-                }
-            };
-            
-            $('btnShowExpensesToday').onclick = () => {
-                const breakdown = $('todayExpensesBreakdown');
-                if (breakdown.classList.contains('hidden')) {
-                    breakdown.classList.remove('hidden');
-                    $('btnShowExpensesToday').innerHTML = '<i class="fas fa-eye-slash"></i>';
-                } else {
-                    breakdown.classList.add('hidden');
-                    $('btnShowExpensesToday').innerHTML = '<i class="fas fa-eye"></i>';
-                }
-            };
-            
-            $('btnSaveTodayEmployee').onclick = saveTodayEmployee;
+            // BOTÓN LEMON CASH
+            $('lemonCashBtn').onclick = handleLemonCashAuthentication;
             
             $('btnNewSale').onclick = () => { 
                 // Resetear formulario de unidad
@@ -4123,6 +4110,23 @@
                 $('newSaleModal').classList.remove('hidden'); 
             };
             
+            // BOTÓN PARA ABRIR MODAL DE GASTOS MASIVOS
+            $('btnNewMassiveExpense').onclick = () => { 
+                $('massiveExpenseDate').value = getToday();
+                $('massiveExpenseEmployee').value = "";
+                $('massiveExpenseCategory').value = "";
+                
+                // Resetear tabla
+                massiveExpenseRows = [];
+                massiveExpenseRowCounter = 0;
+                const tbody = $('massiveExpenseTableBody');
+                tbody.innerHTML = '<tr id="massiveExpenseEmptyRow" class="text-center text-gray-400 py-8"><td colspan="7" class="py-8"><div class="flex flex-col items-center justify-center gap-2"><i class="fas fa-receipt text-3xl text-gray-300"></i><p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p></div></td></tr>';
+                $('massiveExpensesTotal').textContent = '$0.00';
+                $('massiveExpensesCount').textContent = '0';
+                
+                $('massiveExpenseModal').classList.remove('hidden'); 
+            };
+            
             $('btnNewExpense').onclick = () => { 
                 $('expenseDate').value = getToday(); 
                 delete $('expenseForm').dataset.editingId;
@@ -4153,6 +4157,8 @@
             };
             
             document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).classList.add('hidden'));
+            
+            $('btnOpenTutorialsModal').onclick = () => $('tutorialsModal').classList.remove('hidden');
             
             $('toggleSalesTimeChart').onclick = toggleSalesTimeChart;
             $('togglePaymentTypeChart').onclick = togglePaymentTypeChart;
@@ -4249,6 +4255,81 @@
 
             // BOTÓN PARA TOGGLE NOTIFICACIONES
             $('notificationToggleBtn').onclick = toggleNotifications;
+
+            // BOTÓN PARA GUARDAR GASTOS MASIVOS
+            $('saveMassiveExpensesBtn').onclick = saveMassiveExpenses;
+
+            // LISTENERS PARA SEGURIDAD
+            $('submitPasswordBtn').onclick = async () => {
+                const password = $('passwordInput').value;
+                const type = $('passwordModalType').value;
+                
+                if (!password || password.length !== 6) {
+                    showToast('La contraseña debe tener 6 dígitos', 'error');
+                    return;
+                }
+                
+                if (!checkPassword(password)) {
+                    showToast('Contraseña incorrecta', 'error');
+                    $('passwordInput').value = '';
+                    return;
+                }
+                
+                // Desbloquear los datos
+                passwordProtectedData[type] = true;
+                updateProtectedDataDisplay();
+                showToast('Datos desbloqueados correctamente', 'success');
+                $('passwordModal').classList.add('hidden');
+                $('passwordInput').value = '';
+            };
+            
+            $('forgotPasswordBtn').onclick = () => {
+                showToast('La contraseña no se puede recuperar. Debes configurar una nueva.', 'info');
+                $('passwordModal').classList.add('hidden');
+                $('securitySettingsModal').classList.remove('hidden');
+            };
+            
+            $('savePasswordBtn').onclick = async () => {
+                const newPassword = $('newPassword').value;
+                const confirmPassword = $('confirmPassword').value;
+                
+                if (!newPassword || newPassword.length !== 6) {
+                    showToast('La contraseña debe tener exactamente 6 dígitos', 'error');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    showToast('Las contraseñas no coinciden', 'error');
+                    return;
+                }
+                
+                const success = await saveUserPassword(newPassword);
+                if (success) {
+                    $('securitySettingsModal').classList.add('hidden');
+                    $('newPassword').value = '';
+                    $('confirmPassword').value = '';
+                }
+            };
+            
+            $('removePasswordBtn').onclick = async () => {
+                if (!confirm('¿Estás seguro de que quieres eliminar la contraseña? Esto dejará los datos desprotegidos.')) {
+                    return;
+                }
+                
+                const success = await removeUserPassword();
+                if (success) {
+                    $('securitySettingsModal').classList.add('hidden');
+                    $('newPassword').value = '';
+                    $('confirmPassword').value = '';
+                }
+            };
+            
+            // LISTENERS PARA LEMON CASH
+            $('passwordInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    $('submitPasswordBtn').click();
+                }
+            });
 
             // FORMULARIO DE VENTA MASIVA
             $('massiveSaleForm').onsubmit = async (e) => {
@@ -4864,41 +4945,52 @@
                 if(auth) signInWithPopup(auth, new GoogleAuthProvider()).then(()=>$('profileModal').classList.add('hidden')); 
             };
 
-            // MODIFICAR ABRIR HISTORIALES PARA SOLICITAR CONTRASEÑA
+            // FUNCIÓN PARA ABRIR HISTORIAL DE VENTAS CON VERIFICACIÓN DE CONTRASEÑA
+            const originalOpenVentasHistoryBtn = $('openVentasHistoryBtn').onclick;
             $('openVentasHistoryBtn').onclick = () => { 
-                if (passwords.sales && !unlockedSections.salesHistory) {
-                    showPasswordModal('salesHistory', null, () => {
-                        renderSalesList(); 
-                        $('salesHistoryModal').classList.remove('hidden');
-                    });
-                } else {
-                    renderSalesList(); 
-                    $('salesHistoryModal').classList.remove('hidden');
+                if (!userPassword) {
+                    showToast('Primero configura una contraseña en el menú lateral', 'info');
+                    $('securitySettingsModal').classList.remove('hidden');
+                    return;
                 }
+                
+                if (!passwordProtectedData.sales) {
+                    showToast('Necesitas ingresar la contraseña para ver el historial de ventas', 'info');
+                    $('passwordModalType').value = 'sales';
+                    $('passwordInput').value = '';
+                    $('passwordModal').classList.remove('hidden');
+                    return;
+                }
+                
+                renderSalesList(); 
+                $('salesHistoryModal').classList.remove('hidden'); 
             };
-            
+
+            // FUNCIÓN PARA ABRIR HISTORIAL DE GANANCIAS CON VERIFICACIÓN DE CONTRASEÑA
+            const originalOpenGananciasHistoryBtn = $('openGananciasHistoryBtn').onclick;
             $('openGananciasHistoryBtn').onclick = () => { 
-                if (passwords.profit && !unlockedSections.profitHistory) {
-                    showPasswordModal('profitHistory', null, () => {
-                        if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
-                        renderProfitReport(); 
-                        $('gananciasDetailModal').classList.remove('hidden');
-                    });
-                } else {
-                    if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
-                    renderProfitReport(); 
-                    $('gananciasDetailModal').classList.remove('hidden');
+                if (!userPassword) {
+                    showToast('Primero configura una contraseña en el menú lateral', 'info');
+                    $('securitySettingsModal').classList.remove('hidden');
+                    return;
                 }
+                
+                if (!passwordProtectedData.profit) {
+                    showToast('Necesitas ingresar la contraseña para ver el historial de ganancias', 'info');
+                    $('passwordModalType').value = 'profit';
+                    $('passwordInput').value = '';
+                    $('passwordModal').classList.remove('hidden');
+                    return;
+                }
+                
+                if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
+                renderProfitReport(); 
+                $('gananciasDetailModal').classList.remove('hidden'); 
             };
             
             $('openGastosHistoryBtn').onclick = () => { 
                 renderExpensesList(); 
                 $('expensesHistoryModal').classList.remove('hidden'); 
-            };
-            
-            $('openInventarioBtn').onclick = () => { 
-                renderInventory(); 
-                $('inventoryModal').classList.remove('hidden'); 
             };
             
             $('openClientesBtn').onclick = () => { 
@@ -4952,10 +5044,8 @@
 
             const themeToggle = $('themeToggle'); 
             const icon = themeToggle.querySelector('i'); 
-            if(document.documentElement.getAttribute('data-theme') === 'dark') { 
-                icon.classList.remove('fa-moon'); 
+            if(document.documentElement.getAttribute('data-theme') === 'dark') {                icon.classList.remove('fa-moon'); 
                 icon.classList.add('fa-sun'); 
-                icon.classList.add('text-yellow-400'); 
             }
             
             themeToggle.onclick = () => { 
@@ -4963,74 +5053,450 @@
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark'; 
                 document.documentElement.setAttribute('data-theme', newTheme); 
                 localStorage.setItem('theme', newTheme); 
+                
                 if(newTheme === 'dark') { 
                     icon.classList.remove('fa-moon'); 
                     icon.classList.add('fa-sun'); 
-                    icon.classList.add('text-yellow-400'); 
-                    themeToggle.classList.add('text-yellow-400'); 
-                    showToast("Modo Oscuro Activado", 'info', 1500); 
                 } else { 
                     icon.classList.remove('fa-sun'); 
-                    icon.classList.remove('text-yellow-400'); 
                     icon.classList.add('fa-moon'); 
-                    themeToggle.classList.remove('text-yellow-400'); 
-                    showToast("Modo Claro Activado", 'info', 1500); 
                 } 
             };
-        });
 
-        function renderEmployeeList() { 
-            const c = $('employeeListContainer'); c.innerHTML = ''; 
-            (settings.employees||[]).forEach(emp => { 
-                const div = document.createElement('div'); 
-                div.className = "flex justify-between items-center bg-gray-50 p-3 rounded-lg border"; 
-                div.innerHTML = `<span class="font-medium text-gray-700">${emp}</span>`; 
-                const btn = document.createElement('button'); 
-                btn.innerHTML = '<i class="fas fa-trash-alt"></i>'; 
-                btn.className = "text-red-400 hover:text-red-600"; 
-                btn.title = `Eliminar a ${emp}`;
-                btn.onclick = async () => { 
-                    try {
-                        await updateDoc(doc(db,'artifacts',appId,'users',userId,'settings','config'), {employees:arrayRemove(emp)}); 
-                        showToast(`${emp} eliminado de la lista de empleados.`, 'info');
-                        sendNotificationToAll('Empleado Eliminado', 
-                            `${emp} ha sido eliminado de la lista de empleados`);
-                    } catch (e) {
-                        console.error("Error deleting employee:", e);
-                        showToast(`Error al eliminar a ${emp}.`, 'error');
-                    }
+            $('openInventarioBtn').onclick = () => { 
+                renderInventory(); 
+                $('inventoryModal').classList.remove('hidden'); 
+            };
+            
+            $('openVentasHistoryBtn').onclick = () => { 
+                // Verificar contraseña antes de mostrar historial de ventas
+                if (!userPassword) {
+                    showToast('Primero configura una contraseña en el menú lateral', 'info');
+                    $('securitySettingsModal').classList.remove('hidden');
+                    return;
+                }
+                
+                if (!passwordProtectedData.sales) {
+                    showToast('Necesitas ingresar la contraseña para ver el historial de ventas', 'info');
+                    $('passwordModalType').value = 'sales';
+                    $('passwordInput').value = '';
+                    $('passwordModal').classList.remove('hidden');
+                    return;
+                }
+                
+                renderSalesList(); 
+                $('salesHistoryModal').classList.remove('hidden'); 
+            };
+
+            // FORMULARIO DE AJUSTE MANUAL
+            $('adjustmentForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+                
+                const date = $('adjDate').value || getToday(); 
+                const amount = parseFloat($('adjAmount').value) || 0; 
+                const employee = $('adjEmployee').value.trim(); 
+                const note = $('adjNote').value.trim(); 
+                
+                if(!employee) { 
+                    showToast("Debe indicar un encargado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    const adjData = { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        createdAt: new Date().toISOString() 
+                    }; 
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'adjustments'), adjData); 
+                    showToast("Ajuste registrado", 'success'); 
+                    sendNotificationToAll('Ajuste de Caja', 
+                        `${employee} registró un ajuste de ${amount >= 0 ? '+' : ''}${fmtMoney(amount)}: ${note}`);
+                    
+                    e.target.reset(); 
+                    $('adjDate').value = getToday(); 
+                } catch(err) { 
+                    console.error("Error guardando ajuste:", err); 
+                    showToast("Error al guardar ajuste", 'error'); 
+                } 
+            };
+            
+            // FORMULARIO DE RETIRO MANUAL
+            $('withdrawalForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+                
+                const date = $('wdDate').value || getToday(); 
+                const amount = parseFloat($('wdAmount').value) || 0; 
+                const employee = $('wdEmployee').value.trim(); 
+                const note = $('wdNote').value.trim(); 
+                
+                if(amount <= 0) { 
+                    showToast("El monto debe ser mayor a 0.", 'error'); 
+                    return; 
+                } 
+                if(!employee) { 
+                    showToast("Debe indicar un empleado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    const wData = { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        createdAt: new Date().toISOString() 
+                    }; 
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'withdrawals'), wData); 
+                    showToast("Retiro registrado", 'success'); 
+                    sendNotificationToAll('Retiro de Caja', 
+                        `${employee} retiró ${fmtMoney(amount)}: ${note || 'Sin motivo especificado'}`);
+                    
+                    e.target.reset(); 
+                    $('wdDate').value = getToday(); 
+                } catch(err) { 
+                    console.error("Error guardando retiro:", err); 
+                    showToast("Error al guardar retiro", 'error'); 
+                } 
+            };
+
+            // FORMULARIO DE EDICIÓN DE RETIRO
+            $('editWithdrawalForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                const wid = $('editWid').value; 
+                if(!wid || !userId) return; 
+                
+                const date = $('editWdDate').value || getToday(); 
+                const amount = parseFloat($('editWdAmount').value) || 0; 
+                const employee = $('editWdEmployee').value.trim(); 
+                const note = $('editWdNote').value.trim(); 
+                
+                if(amount <= 0) { 
+                    showToast("El monto debe ser mayor a 0.", 'error'); 
+                    return; 
+                } 
+                if(!employee) { 
+                    showToast("Debe indicar un empleado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'withdrawals', wid), { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        updatedAt: new Date().toISOString() 
+                    }); 
+                    showToast("Retiro actualizado", 'success'); 
+                    $('editWithdrawalModal').classList.add('hidden'); 
+                } catch(err) { 
+                    console.error("Error actualizando retiro:", err); 
+                    showToast("Error al actualizar retiro", 'error'); 
+                } 
+            };
+            
+            // FORMULARIO DE EDICIÓN DE AJUSTE
+            $('editAdjustmentForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                const adjId = $('editAdjId').value; 
+                if(!adjId || !userId) return; 
+                
+                const date = $('editAdjDate').value || getToday(); 
+                const amount = parseFloat($('editAdjAmount').value) || 0; 
+                const employee = $('editAdjEmployee').value.trim(); 
+                const note = $('editAdjNote').value.trim(); 
+                
+                if(!employee) { 
+                    showToast("Debe indicar un encargado.", 'error'); 
+                    return; 
+                } 
+                
+                try { 
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'adjustments', adjId), { 
+                        date: date, 
+                        amount: amount, 
+                        employee: employee, 
+                        note: note, 
+                        updatedAt: new Date().toISOString() 
+                    }); 
+                    showToast("Ajuste actualizado", 'success'); 
+                    $('editAdjustmentModal').classList.add('hidden'); 
+                } catch(err) { 
+                    console.error("Error actualizando ajuste:", err); 
+                    showToast("Error al actualizar ajuste", 'error'); 
+                } 
+            };
+
+            $('expenseForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+
+                const isEditing = $('expenseForm').dataset.editingId;
+                const amount = parseFloat($('expenseAmount').value) || 0; 
+                if(amount <= 0) { 
+                    showToast("El monto debe ser mayor a 0.", 'error'); 
+                    return; 
+                } 
+                
+                const expenseData = { 
+                    date: $('expenseDate').value || getToday(), 
+                    gastoTotal: amount, 
+                    category: $('expenseCategory').value.trim(), 
+                    paymentMethod: $('expensePaymentMethod').value.trim() || 'Efectivo', 
+                    manager: $('expenseManager').value.trim(), 
+                    description: $('expenseDesc').value.trim(), 
+                    updatedAt: new Date().toISOString()
                 }; 
-                div.appendChild(btn); c.appendChild(div); 
-            }); 
-        }
+                
+                try {
+                    if (isEditing) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'expenses', isEditing), expenseData);
+                        showToast("Gasto actualizado", 'success');
+                        sendNotificationToAll('Gasto Actualizado', 
+                            `${expenseData.manager} actualizó un gasto de ${fmtMoney(amount)}`);
+                        
+                        const submitBtn = $('expenseForm').querySelector('button[type="submit"]');
+                        submitBtn.textContent = "Guardar Gasto";
+                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        submitBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                        delete $('expenseForm').dataset.editingId;
+                    } else {
+                        expenseData.createdAt = new Date().toISOString();
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), expenseData);
+                        showToast("Gasto registrado", 'success');
+                        
+                        // Enviar notificación push a todos los usuarios
+                        sendNotificationToAll('Nuevo Gasto Registrado', 
+                            `${expenseData.manager} registró un gasto de ${fmtMoney(amount)} en ${expenseData.category}`);
+                    }
+                    
+                    $('newExpenseModal').classList.add('hidden'); 
+                    e.target.reset(); 
+                } catch(err) { 
+                    console.error("Error guardando gasto:", err); 
+                    showToast("Error al guardar gasto", 'error'); 
+                } 
+            };
 
-        // Hacer las funciones de edición globales
-        window.editProduct = editProduct;
-        window.editSale = editSale;
-        window.editExpense = editExpense;
-        window.editClient = editClient;
-        window.editWithdrawal = editWithdrawal;
-        window.editAdjustment = editAdjustment;
-        window.deleteProduct = deleteProduct;
-        window.deleteSale = deleteSale;
-        window.deleteExpense = deleteExpense;
-        window.deleteClient = deleteClient;
-        window.deleteWithdrawal = deleteWithdrawal;
-        window.deleteAdjustment = deleteAdjustment;
-        window.toggleNotifications = toggleNotifications;
-        window.initializeFCM = initializeFCM;
-        window.unsubscribeFromFCM = unsubscribeFromFCM;
-        window.checkAndSetupFCM = checkAndSetupFCM;
-        window.saveFCMTokenToFirestore = saveFCMTokenToFirestore;
-        window.switchSaleType = switchSaleType;
-        window.addMassiveSaleRow = addMassiveSaleRow;
-        window.updateProductInfo = updateProductInfo;
-        window.updateShift = updateShift;
-        window.removeMassiveSaleRow = removeMassiveSaleRow;
-        window.updateMassiveSalesTotal = updateMassiveSalesTotal;
-        window.sortTable = sortTable;
-        window.showPasswordModal = showPasswordModal;
-        window.saveTodayEmployee = saveTodayEmployee;
+            $('productForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+
+                const isEditing = $('productForm').dataset.editingId;
+                const productData = { 
+                    name: $('prodName').value.trim(), 
+                    prodType: $('prodType').value.trim(), 
+                    priceRetail: $('prodPrice').value || 0, 
+                    priceUsd: $('prodPriceUsd').value || 0, 
+                    stock: $('prodStock').value || 0, 
+                    updatedAt: new Date().toISOString()
+                }; 
+                
+                try {
+                    if (isEditing) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', isEditing), productData);
+                        showToast("Producto actualizado", 'success');
+                        sendNotificationToAll('Producto Actualizado', 
+                            `Se actualizó el producto "${productData.name}" en el inventario`);
+                        
+                        const submitBtn = $('productForm').querySelector('button[type="submit"]');
+                        submitBtn.textContent = "Guardar";
+                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                        delete $('productForm').dataset.editingId;
+                    } else {
+                        productData.createdAt = new Date().toISOString();
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'products'), productData);
+                        showToast("Producto agregado al inventario", 'success');
+                        
+                        // Enviar notificación push a todos los usuarios
+                        sendNotificationToAll('Nuevo Producto', 
+                            `Se agregó "${productData.name}" al inventario con ${productData.stock} unidades`);
+                    }
+                    
+                    $('productModal').classList.add('hidden'); 
+                    e.target.reset(); 
+                } catch(err) { 
+                    console.error("Error guardando producto:", err); 
+                    showToast("Error al guardar producto", 'error'); 
+                } 
+            };
+
+            $('clientForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+
+                const isEditing = $('clientForm').dataset.editingId;
+                const clientData = { 
+                    name: $('newClientName').value.trim(), 
+                    whatsapp: $('newClientWhatsapp').value.trim(), 
+                    email: $('newClientEmail').value.trim(), 
+                    updatedAt: new Date().toISOString()
+                }; 
+                
+                if(!clientData.name) { 
+                    showToast("El nombre es obligatorio", 'error'); 
+                    return; 
+                } 
+                
+                try {
+                    if (isEditing) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'clients', isEditing), clientData);
+                        showToast("Cliente actualizado", 'success');
+                        sendNotificationToAll('Cliente Actualizado', 
+                            `Se actualizó la información del cliente "${clientData.name}"`);
+                        
+                        const submitBtn = $('clientForm').querySelector('button[type="submit"]');
+                        submitBtn.textContent = "Guardar Cliente";
+                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        submitBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                        delete $('clientForm').dataset.editingId;
+                    } else {
+                        clientData.createdAt = new Date().toISOString();
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'clients'), clientData);
+                        showToast("Cliente agregado", 'success');
+                        
+                        // Enviar notificación push a todos los usuarios
+                        sendNotificationToAll('Nuevo Cliente', 
+                            `Se agregó a "${clientData.name}" a la base de clientes`);
+                    }
+                    
+                    $('newClientModal').classList.add('hidden'); 
+                    e.target.reset(); 
+                } catch(err) { 
+                    console.error("Error guardando cliente:", err); 
+                    showToast("Error al guardar cliente", 'error'); 
+                } 
+            };
+
+            $('addEmployeeForm').onsubmit = async(e) => { 
+                e.preventDefault(); 
+                if(!userId) return; 
+                
+                const newEmp = $('newEmployeeInput').value.trim(); 
+                if(!newEmp) { 
+                    showToast("Ingrese un nombre válido.", 'info'); 
+                    return; 
+                } 
+                if(settings.employees.includes(newEmp)) { 
+                    showToast("Ese empleado ya existe.", 'info'); 
+                    return; 
+                } 
+                
+                try { 
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                        { employees: arrayUnion(newEmp) }, 
+                        { merge: true } 
+                    ); 
+                    $('newEmployeeInput').value = ''; 
+                    showToast("Empleado agregado", 'success'); 
+                    sendNotificationToAll('Nuevo Empleado', 
+                        `Se agregó a "${newEmp}" al equipo de trabajo`);
+                } catch(err) { 
+                    console.error("Error agregando empleado:", err); 
+                    showToast("Error al agregar empleado", 'error'); 
+                } 
+            };
+
+            // AUTENTICACIÓN CON GOOGLE
+            const provider = new GoogleAuthProvider(); 
+            $('googleLoginBtn').onclick = async () => { 
+                try { 
+                    await signInWithPopup(auth, provider); 
+                    showToast("Autenticación exitosa", 'success'); 
+                    sendNotificationToAll('Nuevo Inicio de Sesión', 
+                        'Se ha iniciado sesión en el sistema con Google');
+                } catch(err) { 
+                    console.error("Error en autenticación Google:", err); 
+                    showToast("Error en autenticación", 'error'); 
+                } 
+            }; 
+            
+            $('logoutBtn').onclick = async () => { 
+                try { 
+                    await signOut(auth); 
+                    showToast("Sesión cerrada", 'info'); 
+                } catch(err) { 
+                    console.error("Error cerrando sesión:", err); 
+                    showToast("Error al cerrar sesión", 'error'); 
+                } 
+            };
+
+            function renderEmployeeList() {
+                const container = $('employeeListContainer');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                if (!settings.employees || settings.employees.length === 0) {
+                    container.innerHTML = '<div class="text-sm text-gray-400 text-center py-2">No hay empleados registrados</div>';
+                    return;
+                }
+                
+                settings.employees.forEach(emp => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-gray-50 p-2 rounded border';
+                    div.innerHTML = `<span class="text-sm font-medium text-gray-700">${emp}</span>`;
+                    
+                    const btn = document.createElement('button');
+                    btn.innerHTML = '<i class="fas fa-times text-red-500 hover:text-red-700"></i>';
+                    btn.title = "Eliminar empleado";
+                    btn.onclick = async () => {
+                        if (!confirm(`¿Eliminar a ${emp}?`)) return;
+                        
+                        try {
+                            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
+                                { employees: arrayRemove(emp) }, 
+                                { merge: true }
+                            );
+                            showToast(`Empleado ${emp} eliminado`, 'info');
+                            sendNotificationToAll('Empleado Eliminado', 
+                                `Se eliminó a "${emp}" del equipo de trabajo`);
+                        } catch(err) {
+                            console.error("Error eliminando empleado:", err);
+                            showToast("Error al eliminar empleado", 'error');
+                        }
+                    };
+                    
+                    div.appendChild(btn);
+                    container.appendChild(div);
+                });
+            }
+
+            // SETEO DE FECHAS POR DEFECTO
+            const today = getToday();
+            [$('saleDate'), $('expenseDate'), $('adjDate'), $('wdDate'), $('massiveSaleDate'), $('massiveExpenseDate'), 
+             $('filterSaleDate'), $('filterExpenseDate'), $('filterInvDate'), $('filterCashDate'), $('filterStatsDate')]
+                .forEach(el => { if(el) el.value = today; });
+            
+            [$('saleTime'), $('massiveSaleDate')].forEach(el => { 
+                if(el) el.value = new Date().toLocaleTimeString('es-ES', {hour12: false, hour: '2-digit', minute: '2-digit'}); 
+            });
+            
+            [$('filterProfitMonth'), $('filterSaleMonth'), $('filterExpenseMonth'), $('filterInvMonth'), $('filterCashMonth'), $('filterClientMonth'), $('filterStatsMonth')]
+                .forEach(el => { if(el) el.value = new Date().getMonth().toString(); });
+            
+            [$('filterProfitYear'), $('filterSaleYear'), $('filterExpenseYear'), $('filterInvYear'), $('filterCashYear'), $('filterClientYear'), $('filterStatsYear')]
+                .forEach(el => { if(el) el.value = new Date().getFullYear().toString(); });
+            
+            // Llamada final para actualizar
+            updateClock();
+            updateDashboard();
+            updateDynamicLists();
+            updateProductListForSale();
+            updateChannelFilter(); // ACTUALIZADO: Actualizar filtro de canales al cargar
+            
+            // Verificar si está en webview de Lemon Cash y mostrar botón
+            if (window.LemonCashSDK && window.LemonCashSDK.isWebView && window.LemonCashSDK.isWebView()) {
+                $('lemonCashBtn').classList.remove('hidden');
+            }
+            
+            console.log('Sistema cargado correctamente v3.9.13 Pro');
+        });
     </script>
 </body>
 </html>
