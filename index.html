@@ -11,13 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SDK Lemon Cash -->
-    <script type="module">
-        import { authenticate, deposit, isWebView, TransactionResult } from 'https://cdn.jsdelivr.net/npm/@lemoncash/mini-app-sdk@latest/+esm';
-        
-        // Hacer disponibles globalmente para el resto del código
-        window.LemonCashSDK = { authenticate, deposit, isWebView, TransactionResult };
-    </script>
     <style>
         :root { 
             font-family: 'Inter', system-ui, sans-serif;
@@ -566,66 +559,6 @@
             opacity: 1;
             background-color: rgba(239, 68, 68, 0.1);
         }
-
-        /* Estilos para datos protegidos */
-        .protected-data {
-            font-family: 'Courier New', monospace;
-            letter-spacing: 3px;
-            background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 100%);
-            padding: 8px 12px;
-            border-radius: 8px;
-            display: inline-block;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            user-select: none;
-        }
-
-        .protected-data:hover {
-            background: linear-gradient(135deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.08) 100%);
-        }
-
-        .protected-data.revealed {
-            font-family: 'Inter', system-ui, sans-serif;
-            letter-spacing: normal;
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
-            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-        }
-
-        /* Botón Lemon Cash */
-        .lemon-cash-btn {
-            background: linear-gradient(135deg, #d1fa1e 0%, #b0d800 100%);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            border-radius: 10px;
-            padding: 12px 24px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(209, 250, 30, 0.3);
-        }
-
-        .lemon-cash-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(209, 250, 30, 0.4);
-        }
-
-        .lemon-cash-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        /* Estilos para modal de contraseña */
-        .password-modal {
-            backdrop-filter: blur(10px);
-        }
-
-        .password-input {
-            font-family: monospace;
-            letter-spacing: 2px;
-            text-align: center;
-            font-size: 1.5rem;
-        }
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
@@ -872,9 +805,6 @@
                 
                 <!-- NUEVO BOTÓN DE TUTORIALES -->
                 <button id="btnOpenTutorialsModal" class="w-full bg-blue-50 text-blue-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition"><i class="fas fa-question-circle"></i> Tutoriales</button>
-                
-                <!-- BOTÓN DE CONFIGURACIÓN CON CONTRASEÑA -->
-                <button id="btnOpenSecuritySettings" class="w-full bg-purple-50 text-purple-700 py-3 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition"><i class="fas fa-lock"></i> Configurar Contraseña</button>
             </div>
             
             <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Lista de Empleados</h4>
@@ -892,11 +822,6 @@
                     <div class="flex items-center gap-2 p-2 rounded-lg"><span id="storeNameDisplay" class="text-xl font-bold text-gray-800 tracking-tight">MI NEGOCIO</span></div>
                 </div>
                 <div class="flex gap-4 text-gray-500 items-center">
-                    <!-- BOTÓN LEMON CASH -->
-                    <button id="lemonCashBtn" class="lemon-cash-btn hidden">
-                        <i class="fas fa-wallet mr-2"></i> <span id="lemonCashText">Conectar Wallet</span>
-                    </button>
-                    
                     <button id="installAppBtn" class="hidden bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-200 transition"><i class="fas fa-download mr-1"></i> Instalar App</button>
                     <!-- BOTÓN CAMPANITA DE NOVEDADES -->
                     <button id="openNewsModalBtn" class="relative text-gray-500 hover:text-blue-600 text-xl transition transform hover:scale-110">
@@ -961,13 +886,13 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-blue-500 relative">
-                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div><button class="text-gray-400 hover:text-blue-600 cursor-pointer" onclick="toggleProtectedData('sales')"><i class="fas fa-eye"></i></button></div>
-                    <div class="text-2xl font-bold text-gray-900 protected-data" id="cardVentasMes" data-type="sales">******</div>
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ventas (Mes)</div><button class="text-gray-400 hover:text-blue-600 cursor-pointer" data-toggle-privacy="sales"><i class="fas fa-eye"></i></button></div>
+                    <div class="text-2xl font-bold text-gray-900" id="cardVentasMes">$0.00</div>
                     <div class="mt-2 text-xs text-green-600 flex items-center"><i class="fas fa-calendar-day mr-1"></i> Hoy: <span id="cardVentasHoy" class="ml-1 font-semibold">$0.00</span></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-border-l border-green-500 relative">
-                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div><button class="text-gray-400 hover:text-green-600 cursor-pointer" onclick="toggleProtectedData('profit')"><i class="fas fa-eye"></i></button></div>
-                    <div class="text-2xl font-bold text-gray-900 protected-data" id="cardGananciaMes" data-type="profit">******</div>
+                    <div class="flex justify-between items-start mb-2"><div class="text-gray-500 text-xs font-bold uppercase tracking-wider">Ganancia Neta (Mes)</div><button class="text-gray-400 hover:text-green-600 cursor-pointer" data-toggle-privacy="profit"><i class="fas fa-eye"></i></button></div>
+                    <div class="text-2xl font-bold text-gray-900" id="cardGananciaMes">$0.00</div>
                     <div class="mt-2 text-xs text-gray-500 flex items-center">Ventas - Gastos</div>
                 </div>
                 <!-- CAMBIO: Ahora es CUMULATIVO y Persistente -->
@@ -980,28 +905,6 @@
                     <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Stock Total</div>
                     <div class="text-2xl font-bold text-gray-900" id="cardStockUnidades">0</div>
                     <div class="mt-2 text-xs text-gray-500">Unidades Físicas</div>
-                </div>
-            </div>
-
-            <!-- NUEVA SECCIÓN: GANANCIAS DEL DÍA -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
-                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i class="fas fa-money-bill-wave text-green-500"></i> 
-                    Ganancia del Día de Hoy
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-green-50 p-4 rounded-xl border border-green-200">
-                        <div class="text-sm text-green-600 font-bold uppercase mb-2">Ventas Hoy</div>
-                        <div class="text-3xl font-bold text-green-700" id="gananciasVentasHoy">$0.00</div>
-                    </div>
-                    <div class="bg-red-50 p-4 rounded-xl border border-red-200">
-                        <div class="text-sm text-red-600 font-bold uppercase mb-2">Gastos Hoy</div>
-                        <div class="text-3xl font-bold text-red-700" id="gananciasGastosHoy">$0.00</div>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
-                        <div class="text-sm text-blue-600 font-bold uppercase mb-2">Ganancia Neta Hoy</div>
-                        <div class="text-3xl font-bold text-blue-700" id="gananciasNetasHoy">$0.00</div>
-                    </div>
                 </div>
             </div>
 
@@ -1019,76 +922,6 @@
     </div>
 
     <!-- MODALES -->
-
-    <!-- MODAL DE CONTRASEÑA PARA DATOS PROTEGIDOS -->
-    <div id="passwordModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4 password-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div class="p-6 bg-gray-900 text-white flex justify-between items-center">
-                <h3 class="font-bold text-lg"><i class="fas fa-lock mr-2"></i> Ingresar Contraseña</h3>
-                <button data-close="passwordModal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <input type="hidden" id="passwordModalType" value="">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña de Seguridad</label>
-                    <input type="password" id="passwordInput" class="input-std password-input" placeholder="••••••" maxlength="6" autocomplete="off">
-                    <p class="text-xs text-gray-500 mt-2">Ingresa la contraseña configurada para ver los datos protegidos.</p>
-                </div>
-                <button id="submitPasswordBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition">
-                    <i class="fas fa-unlock mr-2"></i> Ver Datos
-                </button>
-                <div class="text-center">
-                    <button id="forgotPasswordBtn" class="text-sm text-gray-500 hover:text-blue-600">¿Olvidaste la contraseña?</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CONFIGURACIÓN DE CONTRASEÑA -->
-    <div id="securitySettingsModal" class="modal-overlay fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="p-6 bg-purple-600 text-white flex justify-between items-center">
-                <h3 class="font-bold text-lg"><i class="fas fa-shield-alt mr-2"></i> Configurar Contraseña</h3>
-                <button data-close="securitySettingsModal" class="text-white opacity-80 hover:opacity-100"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-6 space-y-6">
-                <div>
-                    <h4 class="font-bold text-gray-800 mb-4">Configurar Contraseña de Seguridad</h4>
-                    <p class="text-sm text-gray-600 mb-4">Esta contraseña protegerá el acceso a datos sensibles como ventas y ganancias totales del mes.</p>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña (6 dígitos)</label>
-                            <input type="password" id="newPassword" class="input-std password-input" placeholder="••••••" maxlength="6" minlength="6">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
-                            <input type="password" id="confirmPassword" class="input-std password-input" placeholder="••••••" maxlength="6" minlength="6">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                    <h5 class="font-bold text-yellow-800 text-sm mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> Importante</h5>
-                    <p class="text-xs text-yellow-700">
-                        • La contraseña debe tener exactamente 6 dígitos<br>
-                        • No podrás recuperarla si la olvidas<br>
-                        • Sin contraseña no podrás ver ventas y ganancias totales del mes<br>
-                        • Las ganancias del día de hoy SIEMPRE serán visibles
-                    </p>
-                </div>
-                
-                <div class="flex gap-3">
-                    <button id="savePasswordBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-bold shadow-md">
-                        <i class="fas fa-save mr-2"></i> Guardar
-                    </button>
-                    <button id="removePasswordBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md">
-                        <i class="fas fa-trash mr-2"></i> Eliminar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div id="listManagerModal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
@@ -1159,7 +992,6 @@
                     <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <li><span class="font-bold">Uso de Filtros:</span> Todos los historiales tienen campos de filtro (<i class="fas fa-filter"></i>). Puedes filtrar por **Fecha, Mes o Año** y por palabras clave (ej: nombre del cliente o encargado).</li>
                         <li><span class="font-bold">Gráficos:</span> Tienen un botón para mostrar un gráfico visual de la distribución (por tiempo o tipo de pago/producto).</li>
-                        <li><span class="font-bold text-red-600">Seguridad:</span> Para ver el historial de Ventas y Ganancias necesitarás ingresar la contraseña de seguridad configurada.</li>
                     </ul>
                 </div>
 
@@ -1194,18 +1026,8 @@
                     </ul>
                 </div>
                 
-                <div class="border-b pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lock mr-2"></i> 7. Seguridad y Contraseñas</h4>
-                    <p class="text-gray-700 mb-3">Configura una contraseña para proteger datos sensibles como ventas y ganancias totales.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-purple-50 p-4 rounded-xl border border-purple-200">
-                        <li><span class="font-bold">Configurar Contraseña:</span> Desde el menú lateral, selecciona <span class="font-bold text-purple-700">Configurar Contraseña</span>.</li>
-                        <li><span class="font-bold">Datos Protegidos:</span> Las ventas totales del mes y ganancias netas del mes requieren contraseña.</li>
-                        <li><span class="font-bold">Datos Públicos:</span> Las ganancias del día de hoy siempre son visibles para todos.</li>
-                    </ul>
-                </div>
-                
                 <div class="pb-4">
-                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lightbulb mr-2"></i> 8. Cambiar Tema (Modo Oscuro/Claro)</h4>
+                    <h4 class="text-xl font-bold text-blue-700 mb-3"><i class="fas fa-lightbulb mr-2"></i> 7. Cambiar Tema (Modo Oscuro/Claro)</h4>
                     <p class="text-gray-700 mb-3">Para mayor comodidad visual, puedes alternar entre el modo claro y oscuro.</p>
                     <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <li><span class="font-bold">Ubicación:</span> Pulsa el ícono de la luna (<i class="fas fa-moon"></i>) o sol (<i class="fas fa-sun"></i>) en la barra superior de navegación.</li>
@@ -1904,13 +1726,6 @@
         // Variables para gastos masivos
         let massiveExpenseRows = [];
         let massiveExpenseRowCounter = 0;
-
-        // Variables para seguridad
-        let userPassword = null;
-        let passwordProtectedData = {
-            sales: false,
-            profit: false
-        };
 
         const $ = id => document.getElementById(id);
         const fmtMoney = n => `$${parseFloat(n||0).toLocaleString('es-AR',{minimumFractionDigits:2, maximumFractionDigits:2})}`;
@@ -2660,9 +2475,6 @@
                     setTimeout(() => {
                         checkAndSetupFCM();
                     }, 1000);
-                    
-                    // Cargar contraseña del usuario
-                    loadUserPassword();
                 } else {
                      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
                      else signInAnonymously(auth);
@@ -2670,193 +2482,6 @@
             });
         };
         initAuth();
-
-        // FUNCIONES DE SEGURIDAD
-        async function loadUserPassword() {
-            try {
-                const passwordDoc = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'security'));
-                if (passwordDoc.exists()) {
-                    const data = passwordDoc.data();
-                    userPassword = data.password;
-                    console.log('Contraseña cargada del servidor');
-                } else {
-                    // Verificar en localStorage como respaldo
-                    const storedPassword = localStorage.getItem(`userPassword_${userId}`);
-                    if (storedPassword) {
-                        userPassword = storedPassword;
-                    }
-                }
-            } catch (error) {
-                console.error('Error cargando contraseña:', error);
-                // Verificar en localStorage como respaldo
-                const storedPassword = localStorage.getItem(`userPassword_${userId}`);
-                if (storedPassword) {
-                    userPassword = storedPassword;
-                }
-            }
-        }
-
-        async function saveUserPassword(password) {
-            try {
-                // Guardar en Firestore
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'security'), {
-                    password: password,
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
-                
-                // Guardar en localStorage como respaldo
-                localStorage.setItem(`userPassword_${userId}`, password);
-                
-                userPassword = password;
-                showToast('Contraseña guardada exitosamente', 'success');
-                return true;
-            } catch (error) {
-                console.error('Error guardando contraseña:', error);
-                showToast('Error al guardar la contraseña', 'error');
-                return false;
-            }
-        }
-
-        async function removeUserPassword() {
-            try {
-                // Eliminar de Firestore
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'security'));
-                
-                // Eliminar de localStorage
-                localStorage.removeItem(`userPassword_${userId}`);
-                
-                userPassword = null;
-                passwordProtectedData = {
-                    sales: false,
-                    profit: false
-                };
-                showToast('Contraseña eliminada exitosamente', 'success');
-                return true;
-            } catch (error) {
-                console.error('Error eliminando contraseña:', error);
-                showToast('Error al eliminar la contraseña', 'error');
-                return false;
-            }
-        }
-
-        function checkPassword(inputPassword) {
-            return userPassword === inputPassword;
-        }
-
-        // Función para alternar datos protegidos
-        window.toggleProtectedData = (type) => {
-            if (!userPassword) {
-                showToast('Primero configura una contraseña en el menú lateral', 'info');
-                $('securitySettingsModal').classList.remove('hidden');
-                return;
-            }
-            
-            if (passwordProtectedData[type]) {
-                // Ya está desbloqueado, volver a bloquear
-                passwordProtectedData[type] = false;
-                updateProtectedDataDisplay();
-                showToast('Datos protegidos nuevamente', 'info');
-            } else {
-                // Solicitar contraseña
-                $('passwordModalType').value = type;
-                $('passwordInput').value = '';
-                $('passwordModal').classList.remove('hidden');
-            }
-        };
-
-        function updateProtectedDataDisplay() {
-            const today = getToday();
-            const thisMonth = today.slice(0,7);
-            
-            let salesTotal = 0; 
-            let expensesTotal = 0; 
-            
-            // Calcular ventas del mes
-            sales.forEach(s => { 
-                if (s.date.startsWith(thisMonth)) {
-                    salesTotal += parseFloat(s.montoCobrado) || 0;
-                }
-            });
-            
-            // Calcular gastos del mes
-            expenses.forEach(e => { 
-                if (e.date.startsWith(thisMonth)) {
-                    expensesTotal += parseFloat(e.gastoTotal) || 0;
-                }
-            });
-            
-            // Actualizar display según estado de protección
-            const salesElement = $('cardVentasMes');
-            const profitElement = $('cardGananciaMes');
-            
-            if (passwordProtectedData.sales) {
-                salesElement.textContent = fmtMoney(salesTotal);
-                salesElement.classList.add('revealed');
-            } else {
-                salesElement.textContent = '******';
-                salesElement.classList.remove('revealed');
-            }
-            
-            if (passwordProtectedData.profit) {
-                profitElement.textContent = fmtMoney(salesTotal - expensesTotal);
-                profitElement.classList.add('revealed');
-            } else {
-                profitElement.textContent = '******';
-                profitElement.classList.remove('revealed');
-            }
-        }
-
-        // Función para manejar la autenticación con Lemon Cash
-        async function handleLemonCashAuthentication() {
-            const lemonCashBtn = $('lemonCashBtn');
-            const lemonCashText = $('lemonCashText');
-            
-            if (!window.LemonCashSDK || !window.LemonCashSDK.isWebView()) {
-                lemonCashBtn.style.display = 'none';
-                return;
-            }
-            
-            try {
-                lemonCashBtn.disabled = true;
-                lemonCashText.textContent = 'Autenticando...';
-                
-                const result = await window.LemonCashSDK.authenticate();
-                
-                if (result.result === window.LemonCashSDK.TransactionResult.SUCCESS) {
-                    const wallet = result.data.wallet;
-                    const displayWallet = `${wallet.slice(0, 8)}...${wallet.slice(-8)}`;
-                    lemonCashText.innerHTML = `<i class="fas fa-wallet mr-2"></i> ${displayWallet}`;
-                    lemonCashBtn.disabled = false;
-                    lemonCashBtn.title = `Wallet conectada: ${displayWallet}`;
-                    
-                    // Configurar evento de depósito
-                    lemonCashBtn.onclick = async () => {
-                        try {
-                            const depositResult = await window.LemonCashSDK.deposit({
-                                amount: '100',
-                                tokenName: 'USDC',
-                            });
-                            console.log('Depósito exitoso:', depositResult.txHash);
-                            showToast('Depósito de 100 USDC enviado exitosamente', 'success');
-                        } catch (depositError) {
-                            console.error('Error en depósito:', depositError);
-                            showToast('Error en el depósito', 'error');
-                        }
-                    };
-                    
-                    showToast('Wallet de Lemon Cash conectada exitosamente', 'success');
-                } else {
-                    lemonCashText.textContent = 'Error de autenticación';
-                    lemonCashBtn.disabled = false;
-                    showToast('Error al conectar con Lemon Cash', 'error');
-                }
-            } catch (error) {
-                console.error('Error en autenticación Lemon Cash:', error);
-                lemonCashText.textContent = 'Conectar Wallet';
-                lemonCashBtn.disabled = false;
-                showToast('No se pudo conectar con Lemon Cash', 'error');
-            }
-        }
 
         function updateProductListForSale() {
             const select = $('saleProduct');
@@ -3076,21 +2701,13 @@
             let sMonth = 0; 
             
             let salesCashTotal = 0; 
-            let expensesCashTotal = 0;
+            let expensesCashTotal = 0; 
 
-            // Calcular ganancias del día
-            let ventasHoy = 0;
-            let gastosHoy = 0;
-            
             sales.forEach(s => { 
                 const a = parseFloat(s.montoCobrado)||0; 
                 sToday += (s.date === today) ? a : 0; 
                 sMonth += (s.date.startsWith(thisMonth)) ? a : 0; 
                 salesTotal += a; 
-                
-                if(s.date === today) {
-                    ventasHoy += a;
-                }
                 
                 if((s.paymentType||'').toLowerCase() === 'efectivo') {
                     salesCashTotal += a; 
@@ -3100,11 +2717,8 @@
             let eToday = 0, eMonth = 0;
             expenses.forEach(e => { 
                 const a = parseFloat(e.gastoTotal)||0; 
-                if(e.date===today) {
-                    eToday += a;
-                    gastosHoy += a;
-                } 
-                if(e.date.startsWith(thisMonth)) eMonth += a; 
+                if(e.date===today) eToday+=a; 
+                if(e.date.startsWith(thisMonth)) eMonth+=a; 
                 expensesTotal += a;
 
                 if((e.paymentMethod||'').toLowerCase() === 'efectivo') {
@@ -3134,13 +2748,8 @@
             $('cardStockUnidades').textContent = products.reduce((a,p)=>a+(parseInt(p.stock)||0),0);
             $('dashTotalClientes').textContent = clients.length;
             
-            // Actualizar ganancias del día
-            $('gananciasVentasHoy').textContent = fmtMoney(ventasHoy);
-            $('gananciasGastosHoy').textContent = fmtMoney(gastosHoy);
-            $('gananciasNetasHoy').textContent = fmtMoney(ventasHoy - gastosHoy);
-            
-            // Actualizar datos protegidos
-            updateProtectedDataDisplay();
+            $('cardVentasMes').textContent = fmtMoney(sMonth);
+            $('cardGananciaMes').textContent = fmtMoney(sMonth - eMonth);
             
             $('cardCaja').textContent = fmtMoney(cashOnlyTotal); 
             $('cashModalGross').textContent = fmtMoney(salesTotal - expensesTotal);
@@ -4066,14 +3675,6 @@
             $('closeSideMenuBtn').onclick = closeMenu; 
             $('sideMenuOverlay').onclick = closeMenu;
             
-            // BOTÓN DE CONFIGURACIÓN DE SEGURIDAD
-            $('btnOpenSecuritySettings').onclick = () => {
-                $('securitySettingsModal').classList.remove('hidden');
-            };
-            
-            // BOTÓN LEMON CASH
-            $('lemonCashBtn').onclick = handleLemonCashAuthentication;
-            
             $('btnNewSale').onclick = () => { 
                 // Resetear formulario de unidad
                 $('saleDate').value = getToday(); 
@@ -4258,78 +3859,6 @@
 
             // BOTÓN PARA GUARDAR GASTOS MASIVOS
             $('saveMassiveExpensesBtn').onclick = saveMassiveExpenses;
-
-            // LISTENERS PARA SEGURIDAD
-            $('submitPasswordBtn').onclick = async () => {
-                const password = $('passwordInput').value;
-                const type = $('passwordModalType').value;
-                
-                if (!password || password.length !== 6) {
-                    showToast('La contraseña debe tener 6 dígitos', 'error');
-                    return;
-                }
-                
-                if (!checkPassword(password)) {
-                    showToast('Contraseña incorrecta', 'error');
-                    $('passwordInput').value = '';
-                    return;
-                }
-                
-                // Desbloquear los datos
-                passwordProtectedData[type] = true;
-                updateProtectedDataDisplay();
-                showToast('Datos desbloqueados correctamente', 'success');
-                $('passwordModal').classList.add('hidden');
-                $('passwordInput').value = '';
-            };
-            
-            $('forgotPasswordBtn').onclick = () => {
-                showToast('La contraseña no se puede recuperar. Debes configurar una nueva.', 'info');
-                $('passwordModal').classList.add('hidden');
-                $('securitySettingsModal').classList.remove('hidden');
-            };
-            
-            $('savePasswordBtn').onclick = async () => {
-                const newPassword = $('newPassword').value;
-                const confirmPassword = $('confirmPassword').value;
-                
-                if (!newPassword || newPassword.length !== 6) {
-                    showToast('La contraseña debe tener exactamente 6 dígitos', 'error');
-                    return;
-                }
-                
-                if (newPassword !== confirmPassword) {
-                    showToast('Las contraseñas no coinciden', 'error');
-                    return;
-                }
-                
-                const success = await saveUserPassword(newPassword);
-                if (success) {
-                    $('securitySettingsModal').classList.add('hidden');
-                    $('newPassword').value = '';
-                    $('confirmPassword').value = '';
-                }
-            };
-            
-            $('removePasswordBtn').onclick = async () => {
-                if (!confirm('¿Estás seguro de que quieres eliminar la contraseña? Esto dejará los datos desprotegidos.')) {
-                    return;
-                }
-                
-                const success = await removeUserPassword();
-                if (success) {
-                    $('securitySettingsModal').classList.add('hidden');
-                    $('newPassword').value = '';
-                    $('confirmPassword').value = '';
-                }
-            };
-            
-            // LISTENERS PARA LEMON CASH
-            $('passwordInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    $('submitPasswordBtn').click();
-                }
-            });
 
             // FORMULARIO DE VENTA MASIVA
             $('massiveSaleForm').onsubmit = async (e) => {
@@ -4945,44 +4474,17 @@
                 if(auth) signInWithPopup(auth, new GoogleAuthProvider()).then(()=>$('profileModal').classList.add('hidden')); 
             };
 
-            // FUNCIÓN PARA ABRIR HISTORIAL DE VENTAS CON VERIFICACIÓN DE CONTRASEÑA
-            const originalOpenVentasHistoryBtn = $('openVentasHistoryBtn').onclick;
+            $('openInventarioBtn').onclick = () => { 
+                renderInventory(); 
+                $('inventoryModal').classList.remove('hidden'); 
+            };
+            
             $('openVentasHistoryBtn').onclick = () => { 
-                if (!userPassword) {
-                    showToast('Primero configura una contraseña en el menú lateral', 'info');
-                    $('securitySettingsModal').classList.remove('hidden');
-                    return;
-                }
-                
-                if (!passwordProtectedData.sales) {
-                    showToast('Necesitas ingresar la contraseña para ver el historial de ventas', 'info');
-                    $('passwordModalType').value = 'sales';
-                    $('passwordInput').value = '';
-                    $('passwordModal').classList.remove('hidden');
-                    return;
-                }
-                
                 renderSalesList(); 
                 $('salesHistoryModal').classList.remove('hidden'); 
             };
-
-            // FUNCIÓN PARA ABRIR HISTORIAL DE GANANCIAS CON VERIFICACIÓN DE CONTRASEÑA
-            const originalOpenGananciasHistoryBtn = $('openGananciasHistoryBtn').onclick;
+            
             $('openGananciasHistoryBtn').onclick = () => { 
-                if (!userPassword) {
-                    showToast('Primero configura una contraseña en el menú lateral', 'info');
-                    $('securitySettingsModal').classList.remove('hidden');
-                    return;
-                }
-                
-                if (!passwordProtectedData.profit) {
-                    showToast('Necesitas ingresar la contraseña para ver el historial de ganancias', 'info');
-                    $('passwordModalType').value = 'profit';
-                    $('passwordInput').value = '';
-                    $('passwordModal').classList.remove('hidden');
-                    return;
-                }
-                
                 if($('filterProfitMonth')) $('filterProfitMonth').value = new Date().getMonth().toString(); 
                 renderProfitReport(); 
                 $('gananciasDetailModal').classList.remove('hidden'); 
@@ -5044,8 +4546,10 @@
 
             const themeToggle = $('themeToggle'); 
             const icon = themeToggle.querySelector('i'); 
-            if(document.documentElement.getAttribute('data-theme') === 'dark') {                icon.classList.remove('fa-moon'); 
+            if(document.documentElement.getAttribute('data-theme') === 'dark') { 
+                icon.classList.remove('fa-moon'); 
                 icon.classList.add('fa-sun'); 
+                icon.classList.add('text-yellow-400'); 
             }
             
             themeToggle.onclick = () => { 
@@ -5053,450 +4557,76 @@
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark'; 
                 document.documentElement.setAttribute('data-theme', newTheme); 
                 localStorage.setItem('theme', newTheme); 
-                
                 if(newTheme === 'dark') { 
                     icon.classList.remove('fa-moon'); 
                     icon.classList.add('fa-sun'); 
+                    icon.classList.add('text-yellow-400'); 
+                    themeToggle.classList.add('text-yellow-400'); 
+                    showToast("Modo Oscuro Activado", 'info', 1500); 
                 } else { 
                     icon.classList.remove('fa-sun'); 
+                    icon.classList.remove('text-yellow-400'); 
                     icon.classList.add('fa-moon'); 
+                    themeToggle.classList.remove('text-yellow-400'); 
+                    showToast("Modo Claro Activado", 'info', 1500); 
                 } 
             };
-
-            $('openInventarioBtn').onclick = () => { 
-                renderInventory(); 
-                $('inventoryModal').classList.remove('hidden'); 
-            };
-            
-            $('openVentasHistoryBtn').onclick = () => { 
-                // Verificar contraseña antes de mostrar historial de ventas
-                if (!userPassword) {
-                    showToast('Primero configura una contraseña en el menú lateral', 'info');
-                    $('securitySettingsModal').classList.remove('hidden');
-                    return;
-                }
-                
-                if (!passwordProtectedData.sales) {
-                    showToast('Necesitas ingresar la contraseña para ver el historial de ventas', 'info');
-                    $('passwordModalType').value = 'sales';
-                    $('passwordInput').value = '';
-                    $('passwordModal').classList.remove('hidden');
-                    return;
-                }
-                
-                renderSalesList(); 
-                $('salesHistoryModal').classList.remove('hidden'); 
-            };
-
-            // FORMULARIO DE AJUSTE MANUAL
-            $('adjustmentForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                if(!userId) return; 
-                
-                const date = $('adjDate').value || getToday(); 
-                const amount = parseFloat($('adjAmount').value) || 0; 
-                const employee = $('adjEmployee').value.trim(); 
-                const note = $('adjNote').value.trim(); 
-                
-                if(!employee) { 
-                    showToast("Debe indicar un encargado.", 'error'); 
-                    return; 
-                } 
-                
-                try { 
-                    const adjData = { 
-                        date: date, 
-                        amount: amount, 
-                        employee: employee, 
-                        note: note, 
-                        createdAt: new Date().toISOString() 
-                    }; 
-                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'adjustments'), adjData); 
-                    showToast("Ajuste registrado", 'success'); 
-                    sendNotificationToAll('Ajuste de Caja', 
-                        `${employee} registró un ajuste de ${amount >= 0 ? '+' : ''}${fmtMoney(amount)}: ${note}`);
-                    
-                    e.target.reset(); 
-                    $('adjDate').value = getToday(); 
-                } catch(err) { 
-                    console.error("Error guardando ajuste:", err); 
-                    showToast("Error al guardar ajuste", 'error'); 
-                } 
-            };
-            
-            // FORMULARIO DE RETIRO MANUAL
-            $('withdrawalForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                if(!userId) return; 
-                
-                const date = $('wdDate').value || getToday(); 
-                const amount = parseFloat($('wdAmount').value) || 0; 
-                const employee = $('wdEmployee').value.trim(); 
-                const note = $('wdNote').value.trim(); 
-                
-                if(amount <= 0) { 
-                    showToast("El monto debe ser mayor a 0.", 'error'); 
-                    return; 
-                } 
-                if(!employee) { 
-                    showToast("Debe indicar un empleado.", 'error'); 
-                    return; 
-                } 
-                
-                try { 
-                    const wData = { 
-                        date: date, 
-                        amount: amount, 
-                        employee: employee, 
-                        note: note, 
-                        createdAt: new Date().toISOString() 
-                    }; 
-                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'withdrawals'), wData); 
-                    showToast("Retiro registrado", 'success'); 
-                    sendNotificationToAll('Retiro de Caja', 
-                        `${employee} retiró ${fmtMoney(amount)}: ${note || 'Sin motivo especificado'}`);
-                    
-                    e.target.reset(); 
-                    $('wdDate').value = getToday(); 
-                } catch(err) { 
-                    console.error("Error guardando retiro:", err); 
-                    showToast("Error al guardar retiro", 'error'); 
-                } 
-            };
-
-            // FORMULARIO DE EDICIÓN DE RETIRO
-            $('editWithdrawalForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                const wid = $('editWid').value; 
-                if(!wid || !userId) return; 
-                
-                const date = $('editWdDate').value || getToday(); 
-                const amount = parseFloat($('editWdAmount').value) || 0; 
-                const employee = $('editWdEmployee').value.trim(); 
-                const note = $('editWdNote').value.trim(); 
-                
-                if(amount <= 0) { 
-                    showToast("El monto debe ser mayor a 0.", 'error'); 
-                    return; 
-                } 
-                if(!employee) { 
-                    showToast("Debe indicar un empleado.", 'error'); 
-                    return; 
-                } 
-                
-                try { 
-                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'withdrawals', wid), { 
-                        date: date, 
-                        amount: amount, 
-                        employee: employee, 
-                        note: note, 
-                        updatedAt: new Date().toISOString() 
-                    }); 
-                    showToast("Retiro actualizado", 'success'); 
-                    $('editWithdrawalModal').classList.add('hidden'); 
-                } catch(err) { 
-                    console.error("Error actualizando retiro:", err); 
-                    showToast("Error al actualizar retiro", 'error'); 
-                } 
-            };
-            
-            // FORMULARIO DE EDICIÓN DE AJUSTE
-            $('editAdjustmentForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                const adjId = $('editAdjId').value; 
-                if(!adjId || !userId) return; 
-                
-                const date = $('editAdjDate').value || getToday(); 
-                const amount = parseFloat($('editAdjAmount').value) || 0; 
-                const employee = $('editAdjEmployee').value.trim(); 
-                const note = $('editAdjNote').value.trim(); 
-                
-                if(!employee) { 
-                    showToast("Debe indicar un encargado.", 'error'); 
-                    return; 
-                } 
-                
-                try { 
-                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'adjustments', adjId), { 
-                        date: date, 
-                        amount: amount, 
-                        employee: employee, 
-                        note: note, 
-                        updatedAt: new Date().toISOString() 
-                    }); 
-                    showToast("Ajuste actualizado", 'success'); 
-                    $('editAdjustmentModal').classList.add('hidden'); 
-                } catch(err) { 
-                    console.error("Error actualizando ajuste:", err); 
-                    showToast("Error al actualizar ajuste", 'error'); 
-                } 
-            };
-
-            $('expenseForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                if(!userId) return; 
-
-                const isEditing = $('expenseForm').dataset.editingId;
-                const amount = parseFloat($('expenseAmount').value) || 0; 
-                if(amount <= 0) { 
-                    showToast("El monto debe ser mayor a 0.", 'error'); 
-                    return; 
-                } 
-                
-                const expenseData = { 
-                    date: $('expenseDate').value || getToday(), 
-                    gastoTotal: amount, 
-                    category: $('expenseCategory').value.trim(), 
-                    paymentMethod: $('expensePaymentMethod').value.trim() || 'Efectivo', 
-                    manager: $('expenseManager').value.trim(), 
-                    description: $('expenseDesc').value.trim(), 
-                    updatedAt: new Date().toISOString()
-                }; 
-                
-                try {
-                    if (isEditing) {
-                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'expenses', isEditing), expenseData);
-                        showToast("Gasto actualizado", 'success');
-                        sendNotificationToAll('Gasto Actualizado', 
-                            `${expenseData.manager} actualizó un gasto de ${fmtMoney(amount)}`);
-                        
-                        const submitBtn = $('expenseForm').querySelector('button[type="submit"]');
-                        submitBtn.textContent = "Guardar Gasto";
-                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                        submitBtn.classList.add('bg-red-500', 'hover:bg-red-600');
-                        delete $('expenseForm').dataset.editingId;
-                    } else {
-                        expenseData.createdAt = new Date().toISOString();
-                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), expenseData);
-                        showToast("Gasto registrado", 'success');
-                        
-                        // Enviar notificación push a todos los usuarios
-                        sendNotificationToAll('Nuevo Gasto Registrado', 
-                            `${expenseData.manager} registró un gasto de ${fmtMoney(amount)} en ${expenseData.category}`);
-                    }
-                    
-                    $('newExpenseModal').classList.add('hidden'); 
-                    e.target.reset(); 
-                } catch(err) { 
-                    console.error("Error guardando gasto:", err); 
-                    showToast("Error al guardar gasto", 'error'); 
-                } 
-            };
-
-            $('productForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                if(!userId) return; 
-
-                const isEditing = $('productForm').dataset.editingId;
-                const productData = { 
-                    name: $('prodName').value.trim(), 
-                    prodType: $('prodType').value.trim(), 
-                    priceRetail: $('prodPrice').value || 0, 
-                    priceUsd: $('prodPriceUsd').value || 0, 
-                    stock: $('prodStock').value || 0, 
-                    updatedAt: new Date().toISOString()
-                }; 
-                
-                try {
-                    if (isEditing) {
-                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', isEditing), productData);
-                        showToast("Producto actualizado", 'success');
-                        sendNotificationToAll('Producto Actualizado', 
-                            `Se actualizó el producto "${productData.name}" en el inventario`);
-                        
-                        const submitBtn = $('productForm').querySelector('button[type="submit"]');
-                        submitBtn.textContent = "Guardar";
-                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                        submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
-                        delete $('productForm').dataset.editingId;
-                    } else {
-                        productData.createdAt = new Date().toISOString();
-                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'products'), productData);
-                        showToast("Producto agregado al inventario", 'success');
-                        
-                        // Enviar notificación push a todos los usuarios
-                        sendNotificationToAll('Nuevo Producto', 
-                            `Se agregó "${productData.name}" al inventario con ${productData.stock} unidades`);
-                    }
-                    
-                    $('productModal').classList.add('hidden'); 
-                    e.target.reset(); 
-                } catch(err) { 
-                    console.error("Error guardando producto:", err); 
-                    showToast("Error al guardar producto", 'error'); 
-                } 
-            };
-
-            $('clientForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                if(!userId) return; 
-
-                const isEditing = $('clientForm').dataset.editingId;
-                const clientData = { 
-                    name: $('newClientName').value.trim(), 
-                    whatsapp: $('newClientWhatsapp').value.trim(), 
-                    email: $('newClientEmail').value.trim(), 
-                    updatedAt: new Date().toISOString()
-                }; 
-                
-                if(!clientData.name) { 
-                    showToast("El nombre es obligatorio", 'error'); 
-                    return; 
-                } 
-                
-                try {
-                    if (isEditing) {
-                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'clients', isEditing), clientData);
-                        showToast("Cliente actualizado", 'success');
-                        sendNotificationToAll('Cliente Actualizado', 
-                            `Se actualizó la información del cliente "${clientData.name}"`);
-                        
-                        const submitBtn = $('clientForm').querySelector('button[type="submit"]');
-                        submitBtn.textContent = "Guardar Cliente";
-                        submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                        submitBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
-                        delete $('clientForm').dataset.editingId;
-                    } else {
-                        clientData.createdAt = new Date().toISOString();
-                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'clients'), clientData);
-                        showToast("Cliente agregado", 'success');
-                        
-                        // Enviar notificación push a todos los usuarios
-                        sendNotificationToAll('Nuevo Cliente', 
-                            `Se agregó a "${clientData.name}" a la base de clientes`);
-                    }
-                    
-                    $('newClientModal').classList.add('hidden'); 
-                    e.target.reset(); 
-                } catch(err) { 
-                    console.error("Error guardando cliente:", err); 
-                    showToast("Error al guardar cliente", 'error'); 
-                } 
-            };
-
-            $('addEmployeeForm').onsubmit = async(e) => { 
-                e.preventDefault(); 
-                if(!userId) return; 
-                
-                const newEmp = $('newEmployeeInput').value.trim(); 
-                if(!newEmp) { 
-                    showToast("Ingrese un nombre válido.", 'info'); 
-                    return; 
-                } 
-                if(settings.employees.includes(newEmp)) { 
-                    showToast("Ese empleado ya existe.", 'info'); 
-                    return; 
-                } 
-                
-                try { 
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
-                        { employees: arrayUnion(newEmp) }, 
-                        { merge: true } 
-                    ); 
-                    $('newEmployeeInput').value = ''; 
-                    showToast("Empleado agregado", 'success'); 
-                    sendNotificationToAll('Nuevo Empleado', 
-                        `Se agregó a "${newEmp}" al equipo de trabajo`);
-                } catch(err) { 
-                    console.error("Error agregando empleado:", err); 
-                    showToast("Error al agregar empleado", 'error'); 
-                } 
-            };
-
-            // AUTENTICACIÓN CON GOOGLE
-            const provider = new GoogleAuthProvider(); 
-            $('googleLoginBtn').onclick = async () => { 
-                try { 
-                    await signInWithPopup(auth, provider); 
-                    showToast("Autenticación exitosa", 'success'); 
-                    sendNotificationToAll('Nuevo Inicio de Sesión', 
-                        'Se ha iniciado sesión en el sistema con Google');
-                } catch(err) { 
-                    console.error("Error en autenticación Google:", err); 
-                    showToast("Error en autenticación", 'error'); 
-                } 
-            }; 
-            
-            $('logoutBtn').onclick = async () => { 
-                try { 
-                    await signOut(auth); 
-                    showToast("Sesión cerrada", 'info'); 
-                } catch(err) { 
-                    console.error("Error cerrando sesión:", err); 
-                    showToast("Error al cerrar sesión", 'error'); 
-                } 
-            };
-
-            function renderEmployeeList() {
-                const container = $('employeeListContainer');
-                if (!container) return;
-                
-                container.innerHTML = '';
-                if (!settings.employees || settings.employees.length === 0) {
-                    container.innerHTML = '<div class="text-sm text-gray-400 text-center py-2">No hay empleados registrados</div>';
-                    return;
-                }
-                
-                settings.employees.forEach(emp => {
-                    const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center bg-gray-50 p-2 rounded border';
-                    div.innerHTML = `<span class="text-sm font-medium text-gray-700">${emp}</span>`;
-                    
-                    const btn = document.createElement('button');
-                    btn.innerHTML = '<i class="fas fa-times text-red-500 hover:text-red-700"></i>';
-                    btn.title = "Eliminar empleado";
-                    btn.onclick = async () => {
-                        if (!confirm(`¿Eliminar a ${emp}?`)) return;
-                        
-                        try {
-                            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
-                                { employees: arrayRemove(emp) }, 
-                                { merge: true }
-                            );
-                            showToast(`Empleado ${emp} eliminado`, 'info');
-                            sendNotificationToAll('Empleado Eliminado', 
-                                `Se eliminó a "${emp}" del equipo de trabajo`);
-                        } catch(err) {
-                            console.error("Error eliminando empleado:", err);
-                            showToast("Error al eliminar empleado", 'error');
-                        }
-                    };
-                    
-                    div.appendChild(btn);
-                    container.appendChild(div);
-                });
-            }
-
-            // SETEO DE FECHAS POR DEFECTO
-            const today = getToday();
-            [$('saleDate'), $('expenseDate'), $('adjDate'), $('wdDate'), $('massiveSaleDate'), $('massiveExpenseDate'), 
-             $('filterSaleDate'), $('filterExpenseDate'), $('filterInvDate'), $('filterCashDate'), $('filterStatsDate')]
-                .forEach(el => { if(el) el.value = today; });
-            
-            [$('saleTime'), $('massiveSaleDate')].forEach(el => { 
-                if(el) el.value = new Date().toLocaleTimeString('es-ES', {hour12: false, hour: '2-digit', minute: '2-digit'}); 
-            });
-            
-            [$('filterProfitMonth'), $('filterSaleMonth'), $('filterExpenseMonth'), $('filterInvMonth'), $('filterCashMonth'), $('filterClientMonth'), $('filterStatsMonth')]
-                .forEach(el => { if(el) el.value = new Date().getMonth().toString(); });
-            
-            [$('filterProfitYear'), $('filterSaleYear'), $('filterExpenseYear'), $('filterInvYear'), $('filterCashYear'), $('filterClientYear'), $('filterStatsYear')]
-                .forEach(el => { if(el) el.value = new Date().getFullYear().toString(); });
-            
-            // Llamada final para actualizar
-            updateClock();
-            updateDashboard();
-            updateDynamicLists();
-            updateProductListForSale();
-            updateChannelFilter(); // ACTUALIZADO: Actualizar filtro de canales al cargar
-            
-            // Verificar si está en webview de Lemon Cash y mostrar botón
-            if (window.LemonCashSDK && window.LemonCashSDK.isWebView && window.LemonCashSDK.isWebView()) {
-                $('lemonCashBtn').classList.remove('hidden');
-            }
-            
-            console.log('Sistema cargado correctamente v3.9.13 Pro');
         });
+
+        function renderEmployeeList() { 
+            const c = $('employeeListContainer'); c.innerHTML = ''; 
+            (settings.employees||[]).forEach(emp => { 
+                const div = document.createElement('div'); 
+                div.className = "flex justify-between items-center bg-gray-50 p-3 rounded-lg border"; 
+                div.innerHTML = `<span class="font-medium text-gray-700">${emp}</span>`; 
+                const btn = document.createElement('button'); 
+                btn.innerHTML = '<i class="fas fa-trash-alt"></i>'; 
+                btn.className = "text-red-400 hover:text-red-600"; 
+                btn.title = `Eliminar a ${emp}`;
+                btn.onclick = async () => { 
+                    try {
+                        await updateDoc(doc(db,'artifacts',appId,'users',userId,'settings','config'), {employees:arrayRemove(emp)}); 
+                        showToast(`${emp} eliminado de la lista de empleados.`, 'info');
+                        sendNotificationToAll('Empleado Eliminado', 
+                            `${emp} ha sido eliminado de la lista de empleados`);
+                    } catch (e) {
+                        console.error("Error deleting employee:", e);
+                        showToast(`Error al eliminar a ${emp}.`, 'error');
+                    }
+                }; 
+                div.appendChild(btn); c.appendChild(div); 
+            }); 
+        }
+
+        // Hacer las funciones de edición globales
+        window.editProduct = editProduct;
+        window.editSale = editSale;
+        window.editExpense = editExpense;
+        window.editClient = editClient;
+        window.editWithdrawal = editWithdrawal;
+        window.editAdjustment = editAdjustment;
+        window.deleteProduct = deleteProduct;
+        window.deleteSale = deleteSale;
+        window.deleteExpense = deleteExpense;
+        window.deleteClient = deleteClient;
+        window.deleteWithdrawal = deleteWithdrawal;
+        window.deleteAdjustment = deleteAdjustment;
+        window.toggleNotifications = toggleNotifications;
+        window.initializeFCM = initializeFCM;
+        window.unsubscribeFromFCM = unsubscribeFromFCM;
+        window.checkAndSetupFCM = checkAndSetupFCM;
+        window.saveFCMTokenToFirestore = saveFCMTokenToFirestore;
+        window.switchSaleType = switchSaleType;
+        window.addMassiveSaleRow = addMassiveSaleRow;
+        window.updateProductInfo = updateProductInfo;
+        window.updateShift = updateShift;
+        window.removeMassiveSaleRow = removeMassiveSaleRow;
+        window.updateMassiveSalesTotal = updateMassiveSalesTotal;
+        window.addMassiveExpenseRow = addMassiveExpenseRow;
+        window.removeMassiveExpenseRow = removeMassiveExpenseRow;
+        window.updateMassiveExpensesTotal = updateMassiveExpensesTotal;
+        window.saveMassiveExpenses = saveMassiveExpenses;
+        window.sortTable = sortTable;
     </script>
 </body>
 </html>
