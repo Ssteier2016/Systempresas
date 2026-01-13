@@ -879,8 +879,6 @@
             <div class="flex gap-3 mb-8">
                 <button id="btnNewProduct" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl shadow-lg shadow-blue-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Producto</button>
                 <button id="btnNewSale" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl shadow-lg shadow-gray-300 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Venta</button>
-                <!-- BOTÓN DE GASTOS MASIVOS AGREGADO -->
-                <button id="btnNewMassiveExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-layer-group"></i> Gastos Masivos</button>
                 <button id="btnNewExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-minus"></i> Gasto</button>
             </div>
 
@@ -1526,80 +1524,6 @@
     </div>
     <!-- FIN MODAL NUEVA VENTA (ACTUALIZADO) -->
     
-    <!-- MODAL GASTOS MASIVOS (NUEVO) -->
-    <div id="massiveExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 class="text-xl font-bold"><i class="fas fa-layer-group mr-2"></i> Gastos Masivos</h2>
-                <button data-close="massiveExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <div class="p-6 space-y-4">
-                <div class="grid grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
-                        <input type="date" id="massiveExpenseDate" class="input-std" value="">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Encargado Predeterminado</label>
-                        <input type="text" id="massiveExpenseEmployee" list="managerList" class="input-std" placeholder="Encargado para todos los gastos">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Categoría Predeterminada</label>
-                        <input type="text" id="massiveExpenseCategory" list="categoryList" class="input-std" placeholder="Categoría para todos los gastos">
-                    </div>
-                </div>
-
-                <!-- TABLA DE GASTOS MASIVOS -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 massive-sale-table">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Método de Pago</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Encargado</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto ($)</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="massiveExpenseTableBody" class="bg-white divide-y divide-gray-100">
-                            <!-- Las filas se agregarán dinámicamente -->
-                            <tr id="massiveExpenseEmptyRow" class="text-center text-gray-400 py-8">
-                                <td colspan="7" class="py-8">
-                                    <div class="flex flex-col items-center justify-center gap-2">
-                                        <i class="fas fa-receipt text-3xl text-gray-300"></i>
-                                        <p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="flex justify-between items-center pt-4">
-                    <button type="button" onclick="addMassiveExpenseRow()" class="add-row-btn">
-                        <i class="fas fa-plus"></i> Agregar Fila
-                    </button>
-                    <div class="text-right">
-                        <div class="text-sm text-gray-600 mb-2">
-                            <span class="font-bold">Total Gastos:</span> 
-                            <span id="massiveExpensesTotal" class="text-red-600 font-bold text-lg">$0.00</span>
-                        </div>
-                        <div class="text-xs text-gray-500">
-                            <span id="massiveExpensesCount">0</span> gastos registrados
-                        </div>
-                    </div>
-                </div>
-
-                <button id="saveMassiveExpensesBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer mt-4">
-                    <i class="fas fa-save mr-2"></i> Guardar Todos los Gastos
-                </button>
-            </div>
-        </div>
-    </div>
-    
     <!-- ACTUALIZADO: Modal Gasto con nuevo campo de método de pago -->
     <div id="newExpenseModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold">Registrar Gasto</h2><button data-close="newExpenseModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="expenseForm" class="p-6 space-y-4"><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Fecha</label><input type="date" id="expenseDate" class="input-std" required></div><div><label class="block text-sm font-medium text-gray-700">Monto ($)</label><input type="number" id="expenseAmount" step="0.01" class="input-std font-bold text-lg text-red-600" required></div></div><div class="grid grid-cols-2 gap-4"><div class="relative"><label class="block text-sm font-medium text-gray-700">Categoría</label><div class="flex gap-1"><input type="text" id="expenseCategory" list="categoryList" class="input-std"><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('category')"><i class="fas fa-cog"></i></button></div><datalist id="categoryList"></datalist></div><div class="relative"><label class="block text-sm font-medium text-gray-700">Método de Pago</label><input type="text" id="expensePaymentMethod" list="expensePaymentList" class="input-std" placeholder="Efectivo, Transferencia..." required><datalist id="expensePaymentList"><option value="Efectivo"><option value="Transferencia"><option value="Tarjeta Débito"><option value="Tarjeta Crédito"><option value="Otro"></datalist></div></div><div class="relative"><label class="block text-sm font-medium text-gray-700">Encargado</label><div class="flex gap-1"><input type="text" id="expenseManager" list="managerList" class="input-std"><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('manager')"><i class="fas fa-cog"></i></button></div></div><div><label class="block text-sm font-medium text-gray-700">Descripción <span class="text-xs text-gray-500">(Se verá en el historial de gastos)</span></label><input type="text" id="expenseDesc" class="input-std" placeholder="Descripción detallada del gasto..."></div><button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Guardar Gasto</button></form></div></div>
     <div id="productModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold">Nuevo Producto</h2><button data-close="productModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="productForm" class="p-6 space-y-4"><input type="text" id="prodName" placeholder="Nombre" class="input-std" required><div class="relative"><label class="block text-sm font-medium text-gray-700">Tipo</label><div class="flex gap-1"><input type="text" id="prodType" list="prodTypeList" class="input-std" required><button type="button" class="text-gray-400 hover:text-blue-600 px-2" onclick="openManager('prodType')"><i class="fas fa-cog"></i></button></div><datalist id="prodTypeList"><option value="Importado"><option value="Nacional"><option value="Nuevo"></datalist></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Precio ARS</label><input type="number" id="prodPrice" class="input-std"></div><div><label class="block text-sm font-medium text-gray-700">Precio USD</label><input type="number" id="prodPriceUsd" class="input-std"></div></div><div><label class="block text-sm font-medium text-gray-700">Stock</label><input type="number" id="prodStock" class="input-std" required></div><button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold cursor-pointer">Guardar</button></form></div></div>
@@ -1722,10 +1646,6 @@
         // Variables para venta masiva
         let massiveSaleRows = [];
         let massiveSaleRowCounter = 0;
-        
-        // Variables para gastos masivos
-        let massiveExpenseRows = [];
-        let massiveExpenseRowCounter = 0;
 
         const $ = id => document.getElementById(id);
         const fmtMoney = n => `$${parseFloat(n||0).toLocaleString('es-AR',{minimumFractionDigits:2, maximumFractionDigits:2})}`;
@@ -2016,78 +1936,6 @@
             updateMassiveSalesTotal();
         };
 
-        // FUNCIÓN PARA AGREGAR FILA A GASTOS MASIVOS
-        window.addMassiveExpenseRow = () => {
-            massiveExpenseRowCounter++;
-            const rowId = `massive-expense-row-${massiveExpenseRowCounter}`;
-            
-            // Ocultar fila vacía si existe
-            const emptyRow = $('massiveExpenseEmptyRow');
-            if (emptyRow) {
-                emptyRow.style.display = 'none';
-            }
-            
-            const rowHTML = `
-                <tr id="${rowId}" class="massive-sale-row">
-                    <td class="px-4 py-2">
-                        <input type="date" class="massive-sale-input expense-date" data-row="${rowId}" value="${getToday()}">
-                    </td>
-                    <td class="px-4 py-2">
-                        <input type="text" class="massive-sale-input expense-category" data-row="${rowId}" list="categoryList" placeholder="Categoría">
-                    </td>
-                    <td class="px-4 py-2">
-                        <input type="text" class="massive-sale-input expense-payment" data-row="${rowId}" list="expensePaymentList" placeholder="Método de pago">
-                    </td>
-                    <td class="px-4 py-2">
-                        <input type="text" class="massive-sale-input expense-employee" data-row="${rowId}" list="managerList" placeholder="Encargado">
-                    </td>
-                    <td class="px-4 py-2">
-                        <input type="number" step="0.01" class="massive-sale-input expense-amount" data-row="${rowId}" oninput="updateMassiveExpensesTotal()" placeholder="0.00">
-                    </td>
-                    <td class="px-4 py-2">
-                        <textarea class="massive-sale-input expense-desc" data-row="${rowId}" rows="1" placeholder="Descripción del gasto"></textarea>
-                    </td>
-                    <td class="px-4 py-2 text-center">
-                        <button type="button" onclick="removeMassiveExpenseRow('${rowId}')" class="delete-row-btn" title="Eliminar fila">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            
-            const tbody = $('massiveExpenseTableBody');
-            if (tbody.querySelector('#massiveExpenseEmptyRow')) {
-                tbody.innerHTML = rowHTML;
-            } else {
-                tbody.insertAdjacentHTML('beforeend', rowHTML);
-            }
-            
-            massiveExpenseRows.push(rowId);
-            
-            // Si hay valores predeterminados, aplicarlos
-            const defaultEmployee = $('massiveExpenseEmployee').value;
-            const defaultCategory = $('massiveExpenseCategory').value;
-            const defaultDate = $('massiveExpenseDate').value;
-            
-            if (defaultEmployee) {
-                const employeeInput = document.querySelector(`#${rowId} .expense-employee`);
-                if (employeeInput) employeeInput.value = defaultEmployee;
-            }
-            
-            if (defaultCategory) {
-                const categoryInput = document.querySelector(`#${rowId} .expense-category`);
-                if (categoryInput) categoryInput.value = defaultCategory;
-            }
-            
-            if (defaultDate) {
-                const dateInput = document.querySelector(`#${rowId} .expense-date`);
-                if (dateInput) dateInput.value = defaultDate;
-            }
-            
-            // Actualizar total
-            updateMassiveExpensesTotal();
-        };
-
         // FUNCIÓN PARA ACTUALIZAR INFORMACIÓN DEL PRODUCTO
         window.updateProductInfo = (rowId) => {
             const select = document.querySelector(`#${rowId} .massive-product`);
@@ -2141,25 +1989,6 @@
             }
         };
 
-        // FUNCIÓN PARA ELIMINAR FILA DE GASTOS MASIVOS
-        window.removeMassiveExpenseRow = (rowId) => {
-            const row = document.getElementById(rowId);
-            if (row) {
-                row.remove();
-                massiveExpenseRows = massiveExpenseRows.filter(id => id !== rowId);
-                
-                // Mostrar fila vacía si no hay filas
-                if (massiveExpenseRows.length === 0) {
-                    const emptyRow = $('massiveExpenseEmptyRow');
-                    if (emptyRow) {
-                        emptyRow.style.display = '';
-                    }
-                }
-                
-                updateMassiveExpensesTotal();
-            }
-        };
-
         // FUNCIÓN PARA ACTUALIZAR TOTAL DE VENTAS MASIVAS
         window.updateMassiveSalesTotal = () => {
             let total = 0;
@@ -2179,25 +2008,6 @@
             
             $('massiveSalesTotal').textContent = fmtMoney(total);
             $('massiveSalesCount').textContent = count;
-        };
-
-        // FUNCIÓN PARA ACTUALIZAR TOTAL DE GASTOS MASIVOS
-        window.updateMassiveExpensesTotal = () => {
-            let total = 0;
-            let count = 0;
-            
-            massiveExpenseRows.forEach(rowId => {
-                const amountInput = document.querySelector(`#${rowId} .expense-amount`);
-                
-                if (amountInput && amountInput.value) {
-                    const amount = parseFloat(amountInput.value) || 0;
-                    total += amount;
-                    count++;
-                }
-            });
-            
-            $('massiveExpensesTotal').textContent = fmtMoney(total);
-            $('massiveExpensesCount').textContent = count;
         };
 
         // FUNCIÓN PARA ORDENAR TABLAS
@@ -3531,108 +3341,6 @@
             }
         }
 
-        // FUNCIÓN PARA GUARDAR GASTOS MASIVOS
-        async function saveMassiveExpenses() {
-            if (!userId) return;
-
-            const defaultEmployee = $('massiveExpenseEmployee').value.trim();
-            const defaultCategory = $('massiveExpenseCategory').value.trim();
-            const defaultDate = $('massiveExpenseDate').value || getToday();
-            
-            let savedCount = 0;
-            let errorCount = 0;
-            const errors = [];
-
-            // Validar que haya al menos una fila
-            if (massiveExpenseRows.length === 0) {
-                showToast("Debe agregar al menos una fila para guardar.", 'error');
-                return;
-            }
-
-            // Procesar cada fila
-            for (const rowId of massiveExpenseRows) {
-                try {
-                    const amountInput = document.querySelector(`#${rowId} .expense-amount`);
-                    const amount = parseFloat(amountInput?.value) || 0;
-                    
-                    if (amount <= 0) {
-                        errors.push(`Fila ${rowId}: El monto debe ser mayor a 0.`);
-                        errorCount++;
-                        continue;
-                    }
-                    
-                    const employeeInput = document.querySelector(`#${rowId} .expense-employee`);
-                    const emp = employeeInput?.value.trim() || defaultEmployee || 'Sin encargado';
-                    
-                    const categoryInput = document.querySelector(`#${rowId} .expense-category`);
-                    const category = categoryInput?.value.trim() || defaultCategory || 'Varios';
-                    
-                    const paymentInput = document.querySelector(`#${rowId} .expense-payment`);
-                    const paymentMethod = paymentInput?.value.trim() || 'Efectivo';
-                    
-                    const dateInput = document.querySelector(`#${rowId} .expense-date`);
-                    const date = dateInput?.value || defaultDate;
-                    
-                    const descInput = document.querySelector(`#${rowId} .expense-desc`);
-                    const description = descInput?.value.trim() || '';
-                    
-                    // Crear o actualizar empleado
-                    if (emp && emp !== 'Sin encargado' && !settings.employees.includes(emp)) {
-                        await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), 
-                            { employees: arrayUnion(emp) }, { merge: true });
-                    }
-                    
-                    // Guardar el gasto
-                    const expenseData = {
-                        date: date,
-                        gastoTotal: amount,
-                        category: category,
-                        paymentMethod: paymentMethod,
-                        manager: emp,
-                        description: description,
-                        createdAt: new Date().toISOString()
-                    };
-                    
-                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'expenses'), expenseData);
-                    savedCount++;
-                    
-                } catch (error) {
-                    console.error(`Error procesando fila ${rowId}:`, error);
-                    errors.push(`Fila ${rowId}: Error interno del sistema.`);
-                    errorCount++;
-                }
-            }
-            
-            // Mostrar resultados
-            if (savedCount > 0) {
-                if (errorCount > 0) {
-                    showToast(`${savedCount} gastos guardados. ${errorCount} con errores.`, 'warning');
-                    if (errors.length > 0) {
-                        console.error("Errores:", errors);
-                    }
-                } else {
-                    showToast(`${savedCount} gastos guardados exitosamente.`, 'success');
-                    sendNotificationToAll('Gastos Masivos Registrados', 
-                        `Se registraron ${savedCount} gastos masivos. Total: ${$('massiveExpensesTotal').textContent}`);
-                }
-                
-                // Cerrar modal y resetear
-                $('massiveExpenseModal').classList.add('hidden');
-                massiveExpenseRows = [];
-                massiveExpenseRowCounter = 0;
-                const tbody = $('massiveExpenseTableBody');
-                tbody.innerHTML = '<tr id="massiveExpenseEmptyRow" class="text-center text-gray-400 py-8"><td colspan="7" class="py-8"><div class="flex flex-col items-center justify-center gap-2"><i class="fas fa-receipt text-3xl text-gray-300"></i><p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p></div></td></tr>';
-                $('massiveExpensesTotal').textContent = '$0.00';
-                $('massiveExpensesCount').textContent = '0';
-                
-            } else {
-                showToast("No se pudo guardar ningún gasto. Verifique los datos.", 'error');
-                if (errors.length > 0) {
-                    alert("Errores encontrados:\n" + errors.join('\n'));
-                }
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             registerServiceWorker();
 
@@ -3709,23 +3417,6 @@
                 // Cambiar a modo unidad por defecto
                 switchSaleType('single');
                 $('newSaleModal').classList.remove('hidden'); 
-            };
-            
-            // BOTÓN PARA ABRIR MODAL DE GASTOS MASIVOS
-            $('btnNewMassiveExpense').onclick = () => { 
-                $('massiveExpenseDate').value = getToday();
-                $('massiveExpenseEmployee').value = "";
-                $('massiveExpenseCategory').value = "";
-                
-                // Resetear tabla
-                massiveExpenseRows = [];
-                massiveExpenseRowCounter = 0;
-                const tbody = $('massiveExpenseTableBody');
-                tbody.innerHTML = '<tr id="massiveExpenseEmptyRow" class="text-center text-gray-400 py-8"><td colspan="7" class="py-8"><div class="flex flex-col items-center justify-center gap-2"><i class="fas fa-receipt text-3xl text-gray-300"></i><p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p></div></td></tr>';
-                $('massiveExpensesTotal').textContent = '$0.00';
-                $('massiveExpensesCount').textContent = '0';
-                
-                $('massiveExpenseModal').classList.remove('hidden'); 
             };
             
             $('btnNewExpense').onclick = () => { 
@@ -3856,9 +3547,6 @@
 
             // BOTÓN PARA TOGGLE NOTIFICACIONES
             $('notificationToggleBtn').onclick = toggleNotifications;
-
-            // BOTÓN PARA GUARDAR GASTOS MASIVOS
-            $('saveMassiveExpensesBtn').onclick = saveMassiveExpenses;
 
             // FORMULARIO DE VENTA MASIVA
             $('massiveSaleForm').onsubmit = async (e) => {
@@ -4622,10 +4310,6 @@
         window.updateShift = updateShift;
         window.removeMassiveSaleRow = removeMassiveSaleRow;
         window.updateMassiveSalesTotal = updateMassiveSalesTotal;
-        window.addMassiveExpenseRow = addMassiveExpenseRow;
-        window.removeMassiveExpenseRow = removeMassiveExpenseRow;
-        window.updateMassiveExpensesTotal = updateMassiveExpensesTotal;
-        window.saveMassiveExpenses = saveMassiveExpenses;
         window.sortTable = sortTable;
     </script>
 </body>
