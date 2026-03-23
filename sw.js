@@ -1,5 +1,5 @@
-// sw.js - Service Worker para Gestión de Negocios Pro v3.9.14 (Full Experimental + Chrome Fix)
-const CACHE_NAME = 'business-app-v3.9.14';
+// sw.js - Service Worker para Gestión de Negocios Pro v3.9.15 (Full Experimental + Chrome & CORS Fix)
+const CACHE_NAME = 'business-app-v3.9.15';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -10,7 +10,6 @@ const urlsToCache = [
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',
-  // FCM scripts
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js'
 ];
@@ -32,467 +31,142 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Configuración de FCM para notificaciones en segundo plano
+// MANEJO DE NOTIFICACIONES EN SEGUNDO PLANO
 messaging.onBackgroundMessage((payload) => {
-  console.log('[Service Worker] Mensaje FCM recibido en segundo plano:', payload);
-  console.log('[Service Worker] Payload completo:', JSON.stringify(payload));
-  
-  // Extraer título y cuerpo del payload
-  const notificationTitle = payload.data?.title || 
-                           payload.notification?.title || 
-                           'Gestión de Negocios';
-  
-  const notificationBody = payload.data?.body || 
-                          payload.notification?.body || 
-                          'Tienes una nueva notificación';
-
-  // Opciones de la notificación
+  console.log('[Service Worker] Mensaje FCM recibido:', payload);
+  const notificationTitle = payload.data?.title || payload.notification?.title || 'Gestión de Negocios';
   const notificationOptions = {
-    body: notificationBody,
+    body: payload.data?.body || payload.notification?.body || 'Nueva notificación del sistema',
     icon: '/icon-192.png',
     badge: '/icon-72.png',
-    vibrate: [200, 100, 200, 100, 200],
-    data: {
-      url: payload.data?.url || '/',
-      click_action: payload.data?.click_action || payload.fcmOptions?.link || '/',
-      type: payload.data?.type || 'general',
-      timestamp: Date.now()
-    },
-    actions: [
-      { action: 'open', title: '📊 Abrir App' },
-      { action: 'dismiss', title: '❌ Cerrar' }
-    ],
-    tag: payload.data?.tag || 'business-notification',
+    vibrate: [200, 100, 200],
+    data: { url: payload.data?.url || '/' },
+    tag: 'business-notification',
     renotify: true,
-    requireInteraction: true,
-    silent: false
+    requireInteraction: true
   };
-
-  console.log('[Service Worker] Mostrando notificación:', notificationTitle);
-  
-  // Mostrar la notificación
-  return self.registration.showNotification(notificationTitle, notificationOptions)
-    .then(() => {
-      console.log('[Service Worker] Notificación mostrada correctamente');
-    })
-    .catch(error => {
-      console.error('[Service Worker] Error mostrando notificación:', error);
-    });
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Instalación del Service Worker
+// INSTALACIÓN RESILIENTE (Ignora fallos de CORS en archivos individuales)
 self.addEventListener('install', event => {
-  console.log('[Service Worker] Instalando...');
+  console.log('[Service Worker] Instalando v3.9.15...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Cacheando archivos');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => {
-        console.log('[Service Worker] Instalación completada');
-        return self.skipWaiting();
-      })
-      .catch(error => {
-        console.error('[Service Worker] Error durante instalación:', error);
-      })
-  );
-});
-
-// Activación del Service Worker
-self.addEventListener('activate', event => {
-  console.log('[Service Worker] Activando...');
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Borrando cache viejo:', cacheName);
-            return caches.delete(cacheName);
-          }
+    caches.open(CACHE_NAME).then(cache => {
+      return Promise.allSettled(
+        urlsToCache.map(url => {
+          return fetch(url).then(res => {
+            if (res.ok) return cache.put(url, res);
+          }).catch(err => console.log('[SW] No se pudo cachear al instalar:', url));
         })
       );
-    }).then(() => {
-      console.log('[Service Worker] Activación completada');
-      return self.clients.claim();
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
-// Estrategia de Fetch: Network First con fallback a Cache
+// ACTIVACIÓN Y LIMPIEZA
+self.addEventListener('activate', event => {
+  console.log('[Service Worker] Activando y limpiando caches viejos...');
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => { if (key !== CACHE_NAME) return caches.delete(key); })
+    )).then(() => self.clients.claim())
+  );
+});
+
+// ESTRATEGIA FETCH CON FIX DE PROTOCOLO CRÍTICO
 self.addEventListener('fetch', event => {
-  // CORRECCIÓN CRÍTICA: Ignorar peticiones que no sean http o https (como chrome-extension://)
-  if (!(event.request.url.indexOf('http') === 0)) return;
+  const url = event.request.url;
 
-  // Excluir requests de Firebase y otras APIs dinámicas
-  if (event.request.url.includes('firebaseio.com') || 
-      event.request.url.includes('googleapis.com') || 
-      event.request.url.includes('firestore.googleapis.com')) {
-    return;
-  }
+  // --- SOLUCIÓN AL ERROR DE CHROME-EXTENSION ---
+  if (!url.startsWith('http')) return;
 
-  // Para archivos HTML, usar Network First
+  // Excluir peticiones dinámicas de Firebase
+  if (url.includes('firebaseio.com') || url.includes('googleapis.com')) return;
+
+  // Lógica Network First para HTML
   if (event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // Solo cachear respuestas exitosas
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseClone);
-              });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request)
-            .then(cachedResponse => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // Si no hay cache, mostrar la página offline
-              return caches.match('/');
-            });
-        })
+      fetch(event.request).then(response => {
+        if (response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
+        return response;
+      }).catch(() => caches.match(event.request).then(cached => cached || caches.match('/')))
     );
     return;
   }
 
-  // Para otros recursos (CSS, JS, imágenes), usar Cache First
+  // Lógica Cache First para el resto
   event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        if (cachedResponse) {
-          return cachedResponse;
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
+        const copy = response.clone();
+        // Doble validación antes del put para evitar el error de scheme
+        if (event.request.url.startsWith('http')) {
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         }
-        
-        return fetch(event.request)
-          .then(response => {
-            // No cachear respuestas que no sean exitosas
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // Clonar la respuesta para guardarla en cache
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-            
-            return response;
-          })
-          .catch(error => {
-            console.log('[Service Worker] Fetch failed:', event.request.url, error);
-            // Para recursos críticos, podrías retornar una versión alternativa
-            if (event.request.url.includes('.css')) {
-              return new Response('/* Fallback CSS */', {
-                headers: { 'Content-Type': 'text/css' }
-              });
-            }
-            if (event.request.url.includes('.js')) {
-              return new Response('// Fallback JS', {
-                headers: { 'Content-Type': 'application/javascript' }
-              });
-            }
-          });
-      })
+        return response;
+      }).catch(() => {});
+    })
   );
 });
 
-// Manejo de clics en notificaciones
+// CLIC EN NOTIFICACIONES
 self.addEventListener('notificationclick', event => {
-  console.log('[Service Worker] Clic en notificación:', event.notification.tag);
-  
-  const notification = event.notification;
-  const action = event.action;
-  const notificationData = notification.data || {};
-  
-  notification.close();
-  
-  if (action === 'dismiss') {
-    console.log('[Service Worker] Notificación descartada');
-    return;
-  }
-  
-  // Por defecto, abrir la app
+  event.notification.close();
   event.waitUntil(
-    clients.matchAll({
-      type: 'window',
-      includeUncontrolled: true
-    })
-    .then(clientList => {
-      // Buscar una ventana ya abierta
-      for (const client of clientList) {
-        if (client.url.includes('/') && 'focus' in client) {
-          console.log('[Service Worker] Enfocando ventana existente');
-          return client.focus();
-        }
-      }
-      
-      // Si no hay ventana abierta, abrir una nueva
-      if (clients.openWindow) {
-        console.log('[Service Worker] Abriendo nueva ventana:', notificationData.url || '/');
-        return clients.openWindow(notificationData.url || '/');
-      }
-    })
-    .catch(error => {
-      console.error('[Service Worker] Error manejando clic de notificación:', error);
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) { if (client.url.includes('/') && 'focus' in client) return client.focus(); }
+      if (clients.openWindow) return clients.openWindow(event.notification.data?.url || '/');
     })
   );
 });
 
-// Manejo de cierre de notificaciones
-self.addEventListener('notificationclose', event => {
-  console.log('[Service Worker] Notificación cerrada:', event.notification.tag);
-});
-
-// Sincronización en segundo plano
+// BACKGROUND SYNC (EXPERIMENTAL)
 self.addEventListener('sync', event => {
-  console.log('[Service Worker] Sincronización en segundo plano:', event.tag);
-  
-  if (event.tag === 'sync-sales') {
-    event.waitUntil(
-      syncPendingSales()
-    );
-  }
-  
-  if (event.tag === 'sync-expenses') {
-    event.waitUntil(
-      syncPendingExpenses()
-    );
-  }
+  console.log('[SW] Sincronización pendiente:', event.tag);
 });
 
-// Función para sincronizar ventas pendientes
-function syncPendingSales() {
-  return new Promise((resolve, reject) => {
-    console.log('[Service Worker] Sincronizando ventas pendientes...');
-    
-    // Aquí implementarías la lógica para sincronizar ventas
-    // guardadas localmente cuando no había conexión
-    
-    // Por ahora, solo log
-    setTimeout(() => {
-      console.log('[Service Worker] Ventas sincronizadas');
-      resolve();
-    }, 1000);
-  });
-}
-
-// Función para sincronizar gastos pendientes
-function syncPendingExpenses() {
-  return new Promise((resolve, reject) => {
-    console.log('[Service Worker] Sincronizando gastos pendientes...');
-    
-    setTimeout(() => {
-      console.log('[Service Worker] Gastos sincronizados');
-      resolve();
-    }, 1000);
-  });
-}
-
-// Manejo de mensajes desde la app
+// MENSAJERÍA AVANZADA
 self.addEventListener('message', event => {
-  console.log('[Service Worker] Mensaje recibido:', event.data);
-  
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[Service Worker] Saltando espera...');
-    self.skipWaiting();
-  }
-  
-  if (event.data && event.data.type === 'CACHE_NEW_RESOURCE') {
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.add(event.data.url);
-      })
-      .then(() => {
-        if (event.ports && event.ports[0]) {
-          event.ports[0].postMessage({status: 'cached', url: event.data.url});
-        }
-      })
-      .catch(error => {
-        if (event.ports && event.ports[0]) {
-          event.ports[0].postMessage({status: 'error', error: error.message});
-        }
-      });
-  }
-  
-  if (event.data && event.data.type === 'GET_CACHE_INFO') {
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.keys();
-      })
-      .then(keys => {
-        if (event.ports && event.ports[0]) {
-          event.ports[0].postMessage({
-            status: 'success',
-            cacheName: CACHE_NAME,
-            cachedItems: keys.length
-          });
-        }
-      });
-  }
-});
-
-// Función para manejar conexión offline
-self.addEventListener('offline', () => {
-  console.log('[Service Worker] App está offline');
-  
-  // Notificar a todas las ventanas abiertas
-  self.clients.matchAll()
-    .then(clients => {
-      clients.forEach(client => {
-        client.postMessage({
-          type: 'NETWORK_STATUS',
-          status: 'offline',
-          timestamp: Date.now()
-        });
-      });
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data?.type === 'GET_CACHE_INFO' && event.ports[0]) {
+    caches.open(CACHE_NAME).then(c => c.keys()).then(k => {
+      event.ports[0].postMessage({ status: 'success', cachedItems: k.length });
     });
+  }
 });
 
-self.addEventListener('online', () => {
-  console.log('[Service Worker] App está online nuevamente');
-  
-  // Notificar a todas las ventanas abiertas
-  self.clients.matchAll()
-    .then(clients => {
-      clients.forEach(client => {
-        client.postMessage({
-          type: 'NETWORK_STATUS',
-          status: 'online',
-          timestamp: Date.now()
-        });
-      });
-    })
-    .then(() => {
-      // Intentar sincronizar datos pendientes
-      return self.registration.sync.register('sync-sales');
-    })
-    .then(() => {
-      return self.registration.sync.register('sync-expenses');
-    })
-    .catch(error => {
-      console.error('[Service Worker] Error registrando sync:', error);
-    });
-});
+// ESTADO DE RED
+self.addEventListener('online', () => notifyNetworkStatus('online'));
+self.addEventListener('offline', () => notifyNetworkStatus('offline'));
 
-// Función para verificar actualizaciones por contenido
+function notifyNetworkStatus(status) {
+  self.clients.matchAll().then(clients => {
+    clients.forEach(c => c.postMessage({ type: 'NETWORK_STATUS', status }));
+  });
+}
+
+// AUTO-UPDATE CHECK (COMPARACIÓN DE TEXTO)
 function checkForUpdates() {
-  console.log('[Service Worker] Verificando actualizaciones...');
-  
-  fetch('/index.html?v=' + Date.now(), { cache: 'no-store' })
-    .then(response => {
-      if (response.status === 200) {
-        caches.open(CACHE_NAME)
-          .then(cache => {
-            cache.match('/index.html')
-              .then(cachedResponse => {
-                if (cachedResponse) {
-                  cachedResponse.text().then(cachedText => {
-                    response.clone().text().then(newText => {
-                      if (cachedText !== newText) {
-                        console.log('[Service Worker] Nueva versión disponible por contenido');
-                        notifyClientsAboutUpdate();
-                      }
-                    });
-                  });
-                }
-              });
-          });
-      }
-    })
-    .catch(error => {
-      console.error('[Service Worker] Error verificando actualizaciones:', error);
-    });
-}
-
-// Notificar a los clientes sobre actualización
-function notifyClientsAboutUpdate() {
-  self.clients.matchAll()
-    .then(clients => {
-      clients.forEach(client => {
-        client.postMessage({
-          type: 'APP_UPDATE_AVAILABLE',
-          message: 'Hay una nueva versión disponible. Recarga para actualizar.',
-          timestamp: Date.now()
+  fetch('/index.html?v=' + Date.now(), { cache: 'no-store' }).then(res => {
+    if (res.status === 200) {
+      caches.open(CACHE_NAME).then(cache => {
+        cache.match('/index.html').then(oldRes => {
+          if (oldRes) {
+            Promise.all([res.clone().text(), oldRes.text()]).then(texts => {
+              if (texts[0] !== texts[1]) {
+                self.clients.matchAll().then(c => c.forEach(client => client.postMessage({ type: 'APP_UPDATE_AVAILABLE' })));
+              }
+            });
+          }
         });
       });
-    });
+    }
+  }).catch(() => {});
 }
-
-// Verificar actualizaciones periódicamente cada 5 minutos
-setInterval(checkForUpdates, 5 * 60 * 1000);
-
-// Evento de error
-self.addEventListener('error', event => {
-  console.error('[Service Worker] Error:', event.error);
-});
-
-// Evento de rechazo de promesa no manejado
-self.addEventListener('unhandledrejection', event => {
-  console.error('[Service Worker] Promesa rechazada no manejada:', event.reason);
-});
-
-// Función helper para cachear recursos dinámicamente
-function cacheResource(request, response) {
-  if (response && response.status === 200 && response.type === 'basic') {
-    const responseClone = response.clone();
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        cache.put(request, responseClone);
-      })
-      .catch(error => {
-        console.error('[Service Worker] Error cacheando recurso:', error);
-      });
-  }
-}
-
-// Función para manejar notificaciones push personalizadas (no FCM)
-self.addEventListener('push', event => {
-  if (!event.data) {
-    console.log('[Service Worker] Notificación push sin datos');
-    return;
-  }
-  
-  try {
-    const data = event.data.json();
-    console.log('[Service Worker] Notificación push personalizada:', data);
-    
-    const options = {
-      body: data.body || 'Nueva notificación',
-      icon: '/icon-192.png',
-      badge: '/icon-72.png',
-      vibrate: [200, 100, 200],
-      data: {
-        url: data.url || '/',
-        type: data.type || 'custom'
-      },
-      actions: [
-        { action: 'open', title: 'Abrir' },
-        { action: 'dismiss', title: 'Cerrar' }
-      ],
-      tag: data.tag || 'custom-notification'
-    };
-    
-    event.waitUntil(
-      self.registration.showNotification(
-        data.title || 'Gestión de Negocios',
-        options
-      )
-    );
-  } catch (error) {
-    console.error('[Service Worker] Error procesando notificación push:', error);
-    
-    // Fallback: mostrar notificación simple
-    event.waitUntil(
-      self.registration.showNotification('Gestión de Negocios', {
-        body: 'Tienes una nueva notificación',
-        icon: '/icon-192.png'
-      })
-    );
-  }
-});
+setInterval(checkForUpdates, 10 * 60 * 1000); // Cada 10 min
