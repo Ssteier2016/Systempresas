@@ -20,15 +20,15 @@ importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
 // Configuración de Firebase - USA LA MISMA QUE EN TU HTML
-firebase.initializeApp({
-  apiKey: "AIzaSyBIGUo2-YFCHKF6Nc8I-lB_NmGZiQ5pHJI",
-  authDomain: "cryptotracker-8a6fd.firebaseapp.com",
-  projectId: "cryptotracker-8a6fd",
-  storageBucket: "cryptotracker-8a6fd.firebaseStorage.app",
-  messagingSenderId: "720112375781",
-  appId: "1:720112375781:web:7995dcbd6fe7470aea810c",
-  measurementId: "G-2VW050K6PC"
-});
+const firebaseConfig = {
+  apiKey: "AIzaSyDM9GK7_gnd0GaVbxwK9xnwl0qk75MnFXw",
+  authDomain: "playmobil-2d74d.firebaseapp.com",
+  projectId: "playmobil-2d74d",
+  storageBucket: "playmobil-2d74d.firebasestorage.app",
+  messagingSenderId: "85202851148",
+  appId: "1:85202851148:web:bf8eba63238c06c7b4ebe9",
+  measurementId: "G-MX2B76PCD6"
+};
 
 const messaging = firebase.messaging();
 
