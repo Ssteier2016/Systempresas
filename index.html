@@ -1846,13 +1846,7 @@
             <div class="flex-1 h-px bg-gray-200"></div><span class="text-xs text-gray-400">o</span><div class="flex-1 h-px bg-gray-200"></div>
           </div>
 
-          <!-- Tabs Email / Teléfono -->
-          <div class="flex bg-gray-100 rounded-xl p-1 mb-4">
-            <button id="tabEmailBtn" onclick="switchAuthTab('email')" class="flex-1 text-xs py-1.5 rounded-lg font-semibold transition bg-white shadow text-gray-800">📧 Email</button>
-            <button id="tabPhoneBtn" onclick="switchAuthTab('phone')" class="flex-1 text-xs py-1.5 rounded-lg font-semibold transition text-gray-400">📱 Teléfono</button>
-          </div>
-
-          <!-- Tab Email/Contraseña -->
+          <!-- Email/Contraseña -->
           <div id="authTabEmail">
             <div class="flex bg-gray-100 rounded-xl p-1 mb-3">
               <button id="modeLoginBtn" onclick="switchEmailMode('login')" class="flex-1 text-xs py-1.5 rounded-lg font-semibold transition bg-white shadow text-gray-800">Iniciar sesión</button>
@@ -1865,22 +1859,6 @@
             <input id="emailPasswordInput" type="password" placeholder="Contraseña (mín. 6 caracteres)" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-400 mb-3">
             <p id="emailAuthError" class="text-red-500 text-xs text-center mb-2 hidden"></p>
             <button id="emailAuthBtn" class="w-full bg-blue-500 text-white py-2.5 rounded-xl font-semibold hover:bg-blue-600 transition text-sm">Iniciar sesión</button>
-          </div>
-
-          <!-- Tab Teléfono SMS -->
-          <div id="authTabPhone" class="hidden">
-            <div id="phoneStep1">
-              <input id="phoneNumberInput" type="tel" placeholder="+54 9 11 1234-5678" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-400 mb-2">
-              <div id="recaptcha-container" class="flex justify-center mb-2"></div>
-              <button id="sendSmsBtn" class="w-full bg-blue-500 text-white py-2.5 rounded-xl font-semibold hover:bg-blue-600 transition text-sm">Enviar código SMS</button>
-            </div>
-            <div id="phoneStep2" class="hidden">
-              <p class="text-sm text-gray-500 mb-2 text-center">Código enviado. Ingresalo acá:</p>
-              <input id="smsCodeInput" type="text" placeholder="000000" maxlength="6" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-green-400 mb-3 text-center text-xl tracking-widest font-bold">
-              <button id="verifySmsBtn" class="w-full bg-green-500 text-white py-2.5 rounded-xl font-semibold hover:bg-green-600 transition text-sm">Verificar código</button>
-              <button id="backToPhoneBtn" class="w-full text-gray-400 text-xs mt-2">← Cambiar número</button>
-            </div>
-            <p id="phoneAuthError" class="text-red-500 text-xs text-center mt-2 hidden"></p>
           </div>
 
           <!-- Anónimo -->
@@ -4879,18 +4857,6 @@
             };
             
             // ── HELPERS DE AUTH UI ──────────────────────────────────────────
-            window.switchAuthTab = (tab) => {
-                const isEmail = tab === 'email';
-                $('authTabEmail').classList.toggle('hidden', !isEmail);
-                $('authTabPhone').classList.toggle('hidden', isEmail);
-                $('tabEmailBtn').className = `flex-1 text-xs py-1.5 rounded-lg font-semibold transition ${isEmail ? 'bg-white shadow text-gray-800' : 'text-gray-400'}`;
-                $('tabPhoneBtn').className = `flex-1 text-xs py-1.5 rounded-lg font-semibold transition ${!isEmail ? 'bg-white shadow text-gray-800' : 'text-gray-400'}`;
-                // Inicializar reCAPTCHA cuando se abre el tab de teléfono
-                if (!isEmail && !window._recaptchaVerifier && auth) {
-                    window._recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'normal' });
-                    window._recaptchaVerifier.render();
-                }
-            };
             window.switchEmailMode = (mode) => {
                 const isLogin = mode === 'login';
                 $('emailRegisterNameWrap').classList.toggle('hidden', isLogin);
@@ -4937,48 +4903,6 @@
                     errEl.textContent = msgs[e.code] || e.message;
                     errEl.classList.remove('hidden');
                 }
-            };
-
-            // ── TELÉFONO SMS ──
-            $('sendSmsBtn').onclick = async () => {
-                // Limpiar el número: conservar solo + y dígitos → E.164
-                const raw   = $('phoneNumberInput').value.trim();
-                const phone = raw.replace(/[^\+\d]/g, '');
-                const errEl = $('phoneAuthError');
-                errEl.classList.add('hidden');
-                if (!phone || phone.length < 8) { errEl.textContent='Ingresá tu número en formato +54 9 11 XXXX-XXXX.'; errEl.classList.remove('hidden'); return; }
-                if (!window._recaptchaVerifier) {
-                    window._recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'normal' });
-                    await window._recaptchaVerifier.render();
-                }
-                try {
-                    window._confirmationResult = await signInWithPhoneNumber(auth, phone, window._recaptchaVerifier);
-                    $('phoneStep1').classList.add('hidden');
-                    $('phoneStep2').classList.remove('hidden');
-                } catch(e) {
-                    errEl.textContent = 'Error al enviar SMS: '+e.message;
-                    errEl.classList.remove('hidden');
-                    if (window._recaptchaVerifier) { window._recaptchaVerifier.clear(); window._recaptchaVerifier = null; }
-                }
-            };
-            $('verifySmsBtn').onclick = async () => {
-                const code  = $('smsCodeInput').value.trim();
-                const errEl = $('phoneAuthError');
-                errEl.classList.add('hidden');
-                if (!code) return;
-                try {
-                    await window._confirmationResult.confirm(code);
-                    $('profileModal').classList.add('hidden');
-                } catch(e) {
-                    errEl.textContent = 'Código incorrecto o vencido.';
-                    errEl.classList.remove('hidden');
-                }
-            };
-            $('backToPhoneBtn').onclick = () => {
-                $('phoneStep2').classList.add('hidden');
-                $('phoneStep1').classList.remove('hidden');
-                $('smsCodeInput').value = '';
-                if (window._recaptchaVerifier) { window._recaptchaVerifier.clear(); window._recaptchaVerifier = null; }
             };
 
             // ── ANÓNIMO ──

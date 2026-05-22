@@ -9,46 +9,21 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-96.png",
-      "sizes": "96x96",
+      "src": "/favicon.png",
+      "sizes": "64x64",
       "type": "image/png"
     },
     {
-      "src": "/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-192.png",
+      "src": "/logo192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
+      "src": "/icon512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "scope": "/",
@@ -67,14 +42,14 @@
       "short_name": "Venta",
       "description": "Registrar nueva venta",
       "url": "/?action=new-sale",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/favicon.png", "sizes": "64x64" }]
     },
     {
       "name": "Ver Historial",
       "short_name": "Historial",
       "description": "Ver historial de ventas",
       "url": "/?action=sales-history",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/favicon.png", "sizes": "64x64" }]
     }
   ]
 }
