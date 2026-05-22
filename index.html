@@ -1073,7 +1073,7 @@
             <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <button id="openSideMenuBtn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-bars"></i></button>
-                    <div class="flex items-center gap-2 p-2 rounded-lg"><span id="storeNameDisplay" class="text-xl font-bold text-gray-800 tracking-tight">MI NEGOCIO</span></div>
+                    <div class="flex items-center gap-2 p-2 rounded-lg"><span id="storeNameDisplay" class="text-xl font-bold text-gray-800 tracking-tight cursor-pointer hover:text-blue-600 transition-colors" title="Tocá para editar el nombre">MI NEGOCIO</span></div>
                 </div>
                 <div class="flex gap-4 text-gray-500 items-center">
                     <button id="installAppBtn" class="hidden bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-200 transition"><i class="fas fa-download mr-1"></i> Instalar App</button>
@@ -4074,19 +4074,15 @@
                 $('dailyDetailsModal').classList.remove('hidden');
             };
             
-            $('btnNewSale').onclick = () => { 
-                // Resetear formulario de unidad
-                $('saleDate').value = getToday(); 
-                $('saleTime').value = new Date().toLocaleTimeString('es-ES', {hour12: false, hour: '2-digit', minute: '2-digit'}); 
-                $('saleShift').value = detectShift($('saleTime').value); 
-                $('saleProduct').value = ""; 
-                $('saleQuantity').value = 1; 
-                $('saleAmount').value = ""; 
-                $('saleEmployee').value = ""; 
-                $('saleClient').value = ""; 
-                $('salePayment').value = ""; 
-                $('saleChannel').value = ""; 
-                $('saleNotes').value = ""; 
+            // btnNewSale → wizard (handler definitivo se aplica al final del script)
+            $('btnNewSale')._legacyOpen = () => {
+                $('saleDate').value = getToday();
+                $('saleTime').value = new Date().toLocaleTimeString('es-ES', {hour12: false, hour: '2-digit', minute: '2-digit'});
+                $('saleShift').value = detectShift($('saleTime').value);
+                $('saleProduct').value = ""; $('saleQuantity').value = 1;
+                $('saleAmount').value = ""; $('saleEmployee').value = "";
+                $('saleClient').value = ""; $('salePayment').value = "";
+                $('saleChannel').value = ""; $('saleNotes').value = "";
                 delete $('saleForm').dataset.editingId;
                 delete $('saleForm').dataset.originalQuantity;
                 delete $('saleForm').dataset.originalProductId;
@@ -4094,20 +4090,10 @@
                 submitBtn.textContent = "Guardar Venta";
                 submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
                 submitBtn.classList.add('bg-gray-900', 'hover:bg-gray-800');
-                
-                // Resetear formulario masivo
-                massiveSaleRows = [];
-                massiveSaleRowCounter = 0;
-                $('massiveSaleDate').value = getToday();
-                $('massiveSaleEmployee').value = "";
-                const tbody = $('massiveSaleTableBody');
-                tbody.innerHTML = '<tr id="massiveSaleEmptyRow" class="text-center text-gray-400 py-8"><td colspan="13" class="py-8"><div class="flex flex-col items-center justify-center gap-2"><i class="fas fa-layer-group text-3xl text-gray-300"></i><p>No hay filas agregadas. Haz clic en "Agregar Fila" para comenzar.</p></div></td></tr>';
-                $('massiveSalesTotal').textContent = '$0.00';
-                $('massiveSalesCount').textContent = '0';
-                
-                // Cambiar a modo unidad por defecto
+                massiveSaleRows = []; massiveSaleRowCounter = 0;
+                $('massiveSaleDate').value = getToday(); $('massiveSaleEmployee').value = "";
                 switchSaleType('single');
-                $('newSaleModal').classList.remove('hidden'); 
+                $('newSaleModal').classList.remove('hidden');
             };
             
             $('btnNewExpense').onclick = () => { 
@@ -5149,6 +5135,319 @@
         window.checkAndSetupFCM = checkAndSetupFCM;
         window.toggleNetProfitVisibility = toggleNetProfitVisibility;
         window.loadDailyDetails = loadDailyDetails;
+
+        // Exponer para el wizard de ventas (módulo externo)
+        window.db       = db;
+        window.appId    = appId;
+        window.userId   = userId;
+        window.products = products;
+        window.settings = settings;
+        window.payMethods = payMethods;
+        window.getToday    = getToday;
+        window.detectShift = detectShift;
+        window.showToast   = showToast;
+        window.sendNotificationToAll = sendNotificationToAll;
+        window._firestoreRef = { addDoc, collection, updateDoc, doc, setDoc };
+
+        // Sincronizar userId cuando cambia auth
+        onAuthStateChanged(auth, u => {
+            window.userId = u ? u.uid : null;
+        });
+
+        // Botón Nueva Venta → abre el wizard fullscreen
+        $('btnNewSale').onclick = () => {
+            if (window.openSaleWizard) window.openSaleWizard();
+        };
+    </script>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         WIZARD DE NUEVA VENTA — Pantalla completa, paso a paso
+    ══════════════════════════════════════════════════════════════ -->
+    <div id="saleWizard" class="fixed inset-0 z-[70] hidden bg-white flex flex-col" style="height:100dvh">
+
+      <!-- Barra de progreso -->
+      <div class="h-1.5 bg-gray-100 flex-shrink-0">
+        <div id="wizardProgress" class="h-1.5 bg-blue-500 transition-all duration-300" style="width:25%"></div>
+      </div>
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-5 py-3 border-b flex-shrink-0">
+        <button id="wizardBack" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl invisible">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <p id="wizardStepLabel" class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Paso 1 de 4</p>
+        <button id="wizardClose" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- ── PASO 1: Monto + Cantidad ── -->
+      <div id="wizardStep1" class="flex-1 flex flex-col items-center justify-center px-6 gap-8 overflow-y-auto">
+        <h2 class="text-2xl font-bold text-gray-600">¿Cuánto cobraste?</h2>
+
+        <div class="w-full text-center">
+          <p class="text-xs text-gray-400 uppercase tracking-widest mb-3">Monto en pesos</p>
+          <div class="flex items-center justify-center gap-1">
+            <span class="text-5xl font-light text-gray-300">$</span>
+            <input id="wAmount" type="number" inputmode="decimal" min="0" step="0.01"
+                   placeholder="0"
+                   class="text-7xl font-black text-gray-900 w-full text-center border-none outline-none bg-transparent placeholder-gray-200 leading-none">
+          </div>
+        </div>
+
+        <div class="w-full space-y-2">
+          <p class="text-xs text-gray-400 uppercase tracking-widest text-center">Cantidad (opcional)</p>
+          <div class="flex gap-3">
+            <input id="wQty" type="number" inputmode="decimal" min="0" step="any"
+                   placeholder="—"
+                   class="flex-1 text-4xl font-bold text-center border-2 border-gray-200 rounded-2xl py-4 outline-none focus:border-blue-400 transition-colors">
+            <select id="wUnit" class="text-base font-semibold border-2 border-gray-200 rounded-2xl px-4 outline-none focus:border-blue-400 bg-white">
+              <option value="unidades">unid.</option>
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="l">litros</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PASO 2: Tipo de pago ── -->
+      <div id="wizardStep2" class="hidden flex-1 flex flex-col items-center justify-center px-6 gap-6 overflow-y-auto">
+        <h2 class="text-2xl font-bold text-gray-600">¿Cómo pagó?</h2>
+        <div id="wPaymentBtns" class="w-full grid grid-cols-2 gap-3"></div>
+        <div class="w-full">
+          <input id="wPaymentCustom" type="text" placeholder="Otro método de pago..."
+                 class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-center text-base outline-none focus:border-blue-400 transition-colors">
+        </div>
+      </div>
+
+      <!-- ── PASO 3: Producto vendido ── -->
+      <div id="wizardStep3" class="hidden flex-1 flex flex-col px-6 pt-6 gap-4 overflow-hidden">
+        <h2 class="text-2xl font-bold text-gray-600 text-center flex-shrink-0">¿Qué vendiste?</h2>
+        <div class="relative flex-shrink-0">
+          <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input id="wProductSearch" type="text" placeholder="Buscar producto..."
+                 class="w-full border-2 border-gray-200 rounded-2xl pl-11 pr-4 py-4 text-base outline-none focus:border-blue-400 transition-colors">
+        </div>
+        <div id="wProductList" class="flex-1 overflow-y-auto space-y-2 pb-2"></div>
+        <p class="text-xs text-gray-400 text-center flex-shrink-0 pb-1">Campo opcional — podés saltar este paso</p>
+      </div>
+
+      <!-- ── PASO 4: Notas + Cliente ── -->
+      <div id="wizardStep4" class="hidden flex-1 flex flex-col px-6 pt-6 gap-5 overflow-y-auto">
+        <h2 class="text-2xl font-bold text-gray-600 text-center">Notas y cliente</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-gray-400 uppercase tracking-widest block mb-1.5">Cliente (opcional)</label>
+            <input id="wClient" type="text" list="clientList" placeholder="Nombre del cliente..."
+                   class="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 text-base outline-none focus:border-blue-400 transition-colors">
+          </div>
+          <div>
+            <label class="text-xs text-gray-400 uppercase tracking-widest block mb-1.5">Nota (opcional)</label>
+            <textarea id="wNotes" rows="5" placeholder="Anotaciones sobre esta venta..."
+                      class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-base outline-none focus:border-blue-400 transition-colors resize-none"></textarea>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 text-center">La fecha y hora se guardan automáticamente</p>
+      </div>
+
+      <!-- Botones fijos al pie -->
+      <div class="px-6 pb-6 pt-4 flex gap-3 border-t flex-shrink-0 bg-white">
+        <button id="wizardSave"
+                class="flex-1 bg-green-500 text-white py-4 rounded-2xl text-lg font-bold shadow-sm hover:bg-green-600 active:scale-95 transition-all">
+          <i class="fas fa-check mr-1"></i> Guardar
+        </button>
+        <button id="wizardNext"
+                class="flex-1 bg-gray-900 text-white py-4 rounded-2xl text-lg font-bold shadow-sm hover:bg-gray-800 active:scale-95 transition-all">
+          Siguiente <i class="fas fa-chevron-right ml-1"></i>
+        </button>
+      </div>
+    </div>
+
+    <script>
+    // ══════════════════════════════════════════════════════════════
+    //  WIZARD DE NUEVA VENTA
+    // ══════════════════════════════════════════════════════════════
+    (function() {
+      const TOTAL_STEPS = 4;
+      let wStep = 1;
+      let wSelectedProduct = null;
+      let wSelectedPayment  = '';
+
+      function $(id) { return document.getElementById(id); }
+
+      function openWizard() {
+        wStep = 1; wSelectedProduct = null; wSelectedPayment = '';
+        ['wAmount','wQty','wPaymentCustom','wProductSearch','wClient','wNotes'].forEach(id => {
+          const el = $(id); if (el) el.value = '';
+        });
+        updateUI(); renderPayButtons(); renderProdList('');
+        $('saleWizard').classList.remove('hidden');
+        setTimeout(() => $('wAmount').focus(), 100);
+      }
+
+      function updateUI() {
+        for (let i = 1; i <= TOTAL_STEPS; i++) {
+          const el = $('wizardStep' + i);
+          if (el) { el.classList.toggle('hidden', i !== wStep); el.classList.toggle('flex', i === wStep); }
+        }
+        $('wizardProgress').style.width = ((wStep / TOTAL_STEPS) * 100) + '%';
+        $('wizardStepLabel').textContent = 'Paso ' + wStep + ' de ' + TOTAL_STEPS;
+        $('wizardBack').style.visibility = wStep > 1 ? 'visible' : 'hidden';
+        $('wizardNext').classList.toggle('hidden', wStep === TOTAL_STEPS);
+      }
+
+      function renderPayButtons() {
+        // Toma métodos de pago registrados o usa defaults
+        const saved = window.payMethods ? [...window.payMethods].filter(Boolean) : [];
+        const methods = saved.length ? saved : ['Efectivo','Transferencia','QR','Tarjeta débito','Tarjeta crédito','Cuenta corriente'];
+        $('wPaymentBtns').innerHTML = methods.map(m => {
+          const sel = wSelectedPayment === m;
+          return `<button onclick="window._wSelectPay('${m.replace(/'/g,"\\'")}')"`
+            + ` class="py-4 rounded-2xl text-base font-semibold border-2 transition-all `
+            + (sel ? 'bg-blue-500 text-white border-blue-500 shadow-md' : 'border-gray-200 text-gray-700 hover:border-blue-300')
+            + `">${m}</button>`;
+        }).join('');
+      }
+
+      window._wSelectPay = function(m) {
+        wSelectedPayment = (wSelectedPayment === m) ? '' : m;
+        $('wPaymentCustom').value = '';
+        renderPayButtons();
+      };
+
+      function renderProdList(q) {
+        const all = window.products || [];
+        const filtered = q ? all.filter(p => p.name.toLowerCase().includes(q.toLowerCase())) : all;
+        const list = $('wProductList');
+        if (!filtered.length) { list.innerHTML = '<p class="text-center text-gray-400 py-10">Sin resultados</p>'; return; }
+        list.innerHTML = filtered.slice(0, 20).map(p => {
+          const sel = wSelectedProduct && wSelectedProduct.id === p.id;
+          return `<button onclick="window._wSelectProd('${p.id}')" `
+            + `class="w-full text-left p-4 rounded-xl border-2 transition-all flex items-center justify-between `
+            + (sel ? 'border-blue-500 bg-blue-50' : 'border-gray-100 hover:border-blue-200')
+            + `"><div><p class="font-semibold text-gray-800">${p.name}</p>`
+            + (p.prodType ? `<p class="text-xs text-gray-400">${p.prodType}</p>` : '')
+            + `</div><div class="text-right">`
+            + (p.stock != null ? `<p class="text-xs text-gray-400">Stock: ${p.stock}</p>` : '')
+            + (sel ? '<i class="fas fa-check-circle text-blue-500 text-lg mt-1"></i>' : '')
+            + `</div></button>`;
+        }).join('');
+      }
+
+      window._wSelectProd = function(id) {
+        const p = (window.products || []).find(x => x.id === id);
+        wSelectedProduct = (wSelectedProduct && wSelectedProduct.id === id) ? null : p;
+        renderProdList($('wProductSearch').value);
+      };
+
+      async function saveWizard() {
+        const uid = window.userId;
+        if (!uid) { window.showToast && window.showToast('Iniciá sesión primero','error'); return; }
+        const amount = parseFloat($('wAmount').value) || 0;
+        if (amount <= 0) { window.showToast && window.showToast('El monto debe ser mayor a 0','error'); return; }
+
+        const payType = $('wPaymentCustom').value.trim() || wSelectedPayment || 'Efectivo';
+        const qty     = parseFloat($('wQty').value) || 1;
+        const unit    = $('wUnit').value;
+        const client  = $('wClient').value.trim() || 'Cliente no registrado';
+        const notes   = $('wNotes').value.trim();
+        const now     = new Date();
+        const today   = window.getToday ? window.getToday() : now.toISOString().slice(0,10);
+        const timeStr = now.toLocaleTimeString('es-ES',{hour12:false,hour:'2-digit',minute:'2-digit'});
+        const shift   = window.detectShift ? window.detectShift(timeStr) : '';
+
+        if (wSelectedProduct) {
+          const curStock = parseInt(wSelectedProduct.stock) || 0;
+          if (curStock > 0) {
+            const {updateDoc, doc} = window._firestoreRef || {};
+            if (updateDoc && doc && window.db && window.appId) {
+              updateDoc(doc(window.db,'artifacts',window.appId,'users',uid,'products',wSelectedProduct.id),
+                { stock: (curStock-1).toString(), lastSale: now.toISOString() }).catch(()=>{});
+            }
+          }
+        }
+
+        const saleData = {
+          date: today, time: timeStr, shift,
+          montoCobrado: amount, clientName: client, paymentType: payType,
+          salesChannel: '', productName: wSelectedProduct ? wSelectedProduct.name : '',
+          productId: wSelectedProduct ? wSelectedProduct.id : '',
+          quantitySold: qty, quantityUnit: unit,
+          employee: (window.settings && window.settings.employees && window.settings.employees[0]) || 'Sin encargado',
+          notes, createdAt: now.toISOString(), updatedAt: now.toISOString(),
+          commissionRate: '0.0000', commissionAmount: '0.00'
+        };
+
+        try {
+          const {addDoc, collection} = window._firestoreRef || {};
+          if (addDoc && collection && window.db && window.appId) {
+            await addDoc(collection(window.db,'artifacts',window.appId,'users',uid,'sales'), saleData);
+          }
+          $('saleWizard').classList.add('hidden');
+          window.showToast && window.showToast('Venta guardada ✓','success');
+          window.sendNotificationToAll && window.sendNotificationToAll('Nueva Venta', `Venta de $${amount.toLocaleString('es-AR')}`);
+        } catch(e) {
+          window.showToast && window.showToast('Error: '+e.message,'error');
+        }
+      }
+
+      // Eventos
+      $('wizardClose').onclick = () => $('saleWizard').classList.add('hidden');
+      $('wizardBack').onclick  = () => { if (wStep > 1) { wStep--; updateUI(); } };
+      $('wizardSave').onclick  = saveWizard;
+      $('wizardNext').onclick  = () => {
+        if (wStep === 1 && !(parseFloat($('wAmount').value) > 0)) {
+          window.showToast && window.showToast('Ingresá un monto para continuar','error'); return;
+        }
+        if (wStep < TOTAL_STEPS) { wStep++; updateUI(); }
+      };
+      $('wProductSearch').oninput = e => renderProdList(e.target.value);
+      $('wPaymentCustom').oninput = () => { wSelectedPayment = ''; renderPayButtons(); };
+
+      // Exponer para uso externo
+      window.openSaleWizard = openWizard;
+    })();
+
+    // ══════════════════════════════════════════════════════════════
+    //  NOMBRE DEL NEGOCIO EDITABLE
+    // ══════════════════════════════════════════════════════════════
+    (function attachStoreName() {
+      const span = document.getElementById('storeNameDisplay');
+      if (!span) { setTimeout(attachStoreName, 500); return; }
+      span.onclick = function() {
+        const current = span.textContent.trim();
+        const input = document.createElement('input');
+        input.value = current;
+        input.className = 'text-xl font-bold text-blue-600 tracking-tight border-b-2 border-blue-400 outline-none bg-transparent w-44';
+        span.replaceWith(input);
+        input.focus(); input.select();
+
+        async function save() {
+          const newName = input.value.trim() || 'MI NEGOCIO';
+          const newSpan = document.createElement('span');
+          newSpan.id = 'storeNameDisplay';
+          newSpan.className = 'text-xl font-bold text-gray-800 tracking-tight cursor-pointer hover:text-blue-600 transition-colors';
+          newSpan.title = 'Tocá para editar el nombre';
+          newSpan.textContent = newName;
+          input.replaceWith(newSpan);
+          newSpan.onclick = span.onclick; // reasignar
+
+          if (window.settings) window.settings.storeName = newName;
+          // Guardar en Firestore
+          const uid = window.userId;
+          if (uid && window.db && window.appId && window._firestoreRef) {
+            const {setDoc, doc} = window._firestoreRef;
+            await setDoc(doc(window.db,'artifacts',window.appId,'users',uid,'settings','config'),
+              { storeName: newName }, { merge: true }).catch(()=>{});
+          }
+          window.showToast && window.showToast('Nombre actualizado','success');
+        }
+
+        input.onblur   = save;
+        input.onkeydown = e => { if (e.key==='Enter') input.blur(); if (e.key==='Escape') { input.value = current; input.blur(); } };
+      };
+    })();
     </script>
 </body>
 </html>
