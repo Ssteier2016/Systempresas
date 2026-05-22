@@ -4871,9 +4871,11 @@
             $('searchInventoryInput').oninput = renderInventory;
             $('searchClientInput').oninput = renderClientsTable;
             
-            $('logoutBtn').onclick = () => { 
-                if(auth) signOut(auth).then(()=>$('profileModal').classList.add('hidden')); 
-                showToast("Sesión cerrada.", 'info'); 
+            $('logoutBtn').onclick = () => {
+                if(auth) signOut(auth).then(() => {
+                    showToast("Sesión cerrada.", 'info');
+                    setTimeout(() => window.location.reload(), 800);
+                });
             };
             
             // ── HELPERS DE AUTH UI ──────────────────────────────────────────
@@ -4939,10 +4941,12 @@
 
             // ── TELÉFONO SMS ──
             $('sendSmsBtn').onclick = async () => {
-                const phone = $('phoneNumberInput').value.trim();
+                // Limpiar el número: conservar solo + y dígitos → E.164
+                const raw   = $('phoneNumberInput').value.trim();
+                const phone = raw.replace(/[^\+\d]/g, '');
                 const errEl = $('phoneAuthError');
                 errEl.classList.add('hidden');
-                if (!phone) { errEl.textContent='Ingresá tu número.'; errEl.classList.remove('hidden'); return; }
+                if (!phone || phone.length < 8) { errEl.textContent='Ingresá tu número en formato +54 9 11 XXXX-XXXX.'; errEl.classList.remove('hidden'); return; }
                 if (!window._recaptchaVerifier) {
                     window._recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'normal' });
                     await window._recaptchaVerifier.render();
