@@ -5228,11 +5228,34 @@
       <!-- ── PASO 3: Producto vendido ── -->
       <div id="wizardStep3" class="hidden flex-1 flex flex-col px-6 pt-6 gap-4 overflow-hidden">
         <h2 class="text-2xl font-bold text-gray-600 text-center flex-shrink-0">¿Qué vendiste?</h2>
-        <div class="relative flex-shrink-0">
-          <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-          <input id="wProductSearch" type="text" placeholder="Buscar producto..."
-                 class="w-full border-2 border-gray-200 rounded-2xl pl-11 pr-4 py-4 text-base outline-none focus:border-blue-400 transition-colors">
+
+        <!-- Barra de búsqueda + botones guardar y limpiar -->
+        <div class="relative flex-shrink-0 flex gap-2">
+          <div class="relative flex-1">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input id="wProductSearch" type="text" placeholder="Buscar o escribir nuevo producto..."
+                   class="w-full border-2 border-gray-200 rounded-2xl pl-11 pr-4 py-4 text-base outline-none focus:border-blue-400 transition-colors">
+          </div>
+          <!-- Guardar nuevo producto -->
+          <button id="wProductSaveNew" onclick="window._wSaveNewProduct()"
+                  title="Guardar como nuevo producto"
+                  class="w-14 flex-shrink-0 flex items-center justify-center rounded-2xl border-2 border-green-200 bg-green-50 text-green-500 hover:bg-green-100 hover:border-green-400 transition-all text-xl">
+            <i class="fas fa-save"></i>
+          </button>
+          <!-- Limpiar selección -->
+          <button onclick="window._wClearProduct()"
+                  title="Quitar producto seleccionado"
+                  class="w-14 flex-shrink-0 flex items-center justify-center rounded-2xl border-2 border-red-100 bg-red-50 text-red-400 hover:bg-red-100 hover:border-red-300 transition-all text-xl">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
+
+        <!-- Producto seleccionado (badge) -->
+        <div id="wSelectedProductBadge" class="hidden flex-shrink-0 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2">
+          <i class="fas fa-check-circle text-blue-500"></i>
+          <span id="wSelectedProductName" class="text-sm font-semibold text-blue-700 flex-1"></span>
+        </div>
+
         <div id="wProductList" class="flex-1 overflow-y-auto space-y-2 pb-2"></div>
         <p class="text-xs text-gray-400 text-center flex-shrink-0 pb-1">Campo opcional — podés saltar este paso</p>
       </div>
@@ -5297,6 +5320,7 @@
           const el = $(id); if (el) el.value = '';
         });
         window._wSetUnit('kg');
+        updateProductBadge();
         updateUI(); renderPayButtons(); renderProdList('');
         $('saleWizard').classList.remove('hidden');
         setTimeout(() => $('wAmount').focus(), 100);
@@ -5380,8 +5404,56 @@
       window._wSelectProd = function(id) {
         const p = (window.products || []).find(x => x.id === id);
         wSelectedProduct = (wSelectedProduct && wSelectedProduct.id === id) ? null : p;
+        updateProductBadge();
         renderProdList($('wProductSearch').value);
       };
+
+      window._wClearProduct = function() {
+        wSelectedProduct = null;
+        $('wProductSearch').value = '';
+        updateProductBadge();
+        renderProdList('');
+      };
+
+      window._wSaveNewProduct = async function() {
+        const name = $('wProductSearch').value.trim();
+        if (!name) { window.showToast && window.showToast('Escribí el nombre del producto','error'); return; }
+        const uid = window.userId;
+        if (!uid || !window.db || !window.appId || !window._firestoreRef) {
+          // Si no hay Firestore disponible, usarlo como producto custom sin guardar
+          wSelectedProduct = { id: '_custom_' + Date.now(), name, stock: null };
+          updateProductBadge();
+          window.showToast && window.showToast('Producto seleccionado: ' + name,'success');
+          return;
+        }
+        try {
+          const {addDoc, collection} = window._firestoreRef;
+          const ref = await addDoc(
+            collection(window.db,'artifacts',window.appId,'users',uid,'products'),
+            { name, stock: '', prodType: '', price: '', createdAt: new Date().toISOString() }
+          );
+          wSelectedProduct = { id: ref.id, name, stock: '' };
+          updateProductBadge();
+          renderProdList('');
+          window.showToast && window.showToast('Producto "'+name+'" guardado ✓','success');
+          $('wProductSearch').value = '';
+        } catch(e) {
+          window.showToast && window.showToast('Error al guardar: '+e.message,'error');
+        }
+      };
+
+      function updateProductBadge() {
+        const badge = $('wSelectedProductBadge');
+        const nameEl = $('wSelectedProductName');
+        if (wSelectedProduct && badge && nameEl) {
+          nameEl.textContent = wSelectedProduct.name;
+          badge.classList.remove('hidden');
+          badge.classList.add('flex');
+        } else if (badge) {
+          badge.classList.add('hidden');
+          badge.classList.remove('flex');
+        }
+      }
 
       async function saveWizard() {
         const uid = window.userId;
