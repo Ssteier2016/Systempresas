@@ -5181,29 +5181,36 @@
       </div>
 
       <!-- ── PASO 1: Monto + Cantidad ── -->
-      <div id="wizardStep1" class="flex-1 flex flex-col items-center justify-center px-6 gap-8 overflow-y-auto">
-        <h2 class="text-2xl font-bold text-gray-600">¿Cuánto cobraste?</h2>
+      <div id="wizardStep1" class="flex-1 flex flex-col justify-center px-6 gap-6 overflow-hidden">
+        <h2 class="text-xl font-bold text-gray-500 text-center">¿Cuánto cobraste?</h2>
 
+        <!-- Monto -->
         <div class="w-full text-center">
-          <p class="text-xs text-gray-400 uppercase tracking-widest mb-3">Monto en pesos</p>
-          <div class="flex items-center justify-center gap-1">
-            <span class="text-5xl font-light text-gray-300">$</span>
+          <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Monto en pesos</p>
+          <div class="flex items-center justify-center border-b-2 border-gray-200 focus-within:border-blue-400 pb-2 transition-colors">
+            <span class="text-4xl font-light text-gray-300 mr-1">$</span>
             <input id="wAmount" type="number" inputmode="decimal" min="0" step="0.01"
                    placeholder="0"
-                   class="text-7xl font-black text-gray-900 w-full text-center border-none outline-none bg-transparent placeholder-gray-200 leading-none">
+                   class="text-6xl font-black text-gray-900 w-full text-center border-none outline-none bg-transparent placeholder-gray-200 leading-none">
           </div>
         </div>
 
-        <div class="w-full space-y-2">
-          <p class="text-xs text-gray-400 uppercase tracking-widest text-center">Cantidad (opcional)</p>
-          <div class="flex gap-3">
-            <input id="wQty" type="number" inputmode="decimal" min="0" step="any"
-                   placeholder="—"
-                   class="flex-1 text-4xl font-bold text-center border-2 border-gray-200 rounded-2xl py-4 outline-none focus:border-blue-400 transition-colors">
-            <select id="wUnit" class="text-base font-semibold border-2 border-gray-200 rounded-2xl px-4 outline-none focus:border-blue-400 bg-white">
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-            </select>
+        <!-- Cantidad -->
+        <div class="w-full">
+          <p class="text-[10px] text-gray-400 uppercase tracking-widest text-center mb-2">Cantidad (opcional)</p>
+          <input id="wQty" type="number" inputmode="decimal" min="0" step="any"
+                 placeholder="0.000"
+                 class="w-full text-4xl font-bold text-center border-2 border-gray-200 rounded-2xl py-3 outline-none focus:border-blue-400 transition-colors">
+          <!-- Selector kg / g como botones -->
+          <div class="flex gap-3 mt-3">
+            <button id="wUnitKg" onclick="window._wSetUnit('kg')"
+                    class="flex-1 py-3 rounded-2xl text-base font-bold border-2 bg-blue-500 text-white border-blue-500 transition-all">
+              kg
+            </button>
+            <button id="wUnitG" onclick="window._wSetUnit('g')"
+                    class="flex-1 py-3 rounded-2xl text-base font-bold border-2 border-gray-200 text-gray-500 transition-all">
+              g
+            </button>
           </div>
         </div>
       </div>
@@ -5273,11 +5280,23 @@
 
       function $(id) { return document.getElementById(id); }
 
+      let wUnit = 'kg';
+
+      window._wSetUnit = function(u) {
+        wUnit = u;
+        const kgBtn = $('wUnitKg'), gBtn = $('wUnitG');
+        const active  = 'flex-1 py-3 rounded-2xl text-base font-bold border-2 bg-blue-500 text-white border-blue-500 transition-all';
+        const inactive = 'flex-1 py-3 rounded-2xl text-base font-bold border-2 border-gray-200 text-gray-500 transition-all';
+        if (kgBtn) kgBtn.className = u === 'kg' ? active : inactive;
+        if (gBtn)  gBtn.className  = u === 'g'  ? active : inactive;
+      };
+
       function openWizard() {
         wStep = 1; wSelectedProduct = null; wSelectedPayment = '';
         ['wAmount','wQty','wPaymentCustom','wProductSearch','wClient','wNotes'].forEach(id => {
           const el = $(id); if (el) el.value = '';
         });
+        window._wSetUnit('kg');
         updateUI(); renderPayButtons(); renderProdList('');
         $('saleWizard').classList.remove('hidden');
         setTimeout(() => $('wAmount').focus(), 100);
@@ -5372,7 +5391,7 @@
 
         const payType = $('wPaymentCustom').value.trim() || wSelectedPayment || 'Efectivo';
         const qty     = parseFloat($('wQty').value) || 1;
-        const unit    = $('wUnit').value;
+        const unit    = wUnit;
         const client  = $('wClient').value.trim() || 'Cliente no registrado';
         const notes   = $('wNotes').value.trim();
         const now     = new Date();
