@@ -161,7 +161,29 @@
         }
         
         /* Tablas con hover suave */
-        .table-header { 
+        /* Columnas ocultables */
+        .sales-th {
+            padding: 6px 4px 6px 8px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: #f3f4f6;
+            white-space: nowrap;
+            position: relative;
+        }
+        .sales-th .col-label { display: inline-flex; align-items: center; gap: 2px; }
+        .col-menu-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 18px; height: 18px; border-radius: 4px; font-size: 12px;
+            color: #9ca3af; cursor: pointer; background: none; border: none;
+            vertical-align: middle; margin-left: 2px;
+        }
+        .col-menu-btn:hover { background: #e5e7eb; color: #374151; }
+        #salesTable td { padding: 5px 6px; font-size: 11px; }
+
+        .table-header {
             @apply px-6 py-3 text-left text-xs font-medium uppercase tracking-wider;
             background-color: var(--bg-tertiary);
             color: var(--text-secondary);
@@ -1467,22 +1489,36 @@
                 <div style="height: 250px; width: 100%; max-width: 400px; position: relative;"><canvas id="paymentTypeChart"></canvas></div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-0">
-                <table class="min-w-full divide-y divide-gray-200 massive-sale-table">
-                    <thead class="bg-gray-50 sticky top-0">
-                        <tr>
-                            <th class="table-header sortable-header" onclick="sortTable('sales', 'date')">Fecha / Hora <span class="sort-arrow" id="salesSortDate">↕</span></th>
-                            <th class="table-header sortable-header" onclick="sortTable('sales', 'client')">Cliente <span class="sort-arrow" id="salesSortClient">↕</span></th>
-                            <th class="table-header sortable-header" onclick="sortTable('sales', 'product')">Producto Vendido <span class="sort-arrow" id="salesSortProduct">↕</span></th>
-                            <th class="table-header sortable-header" onclick="sortTable('sales', 'quantity')">Cantidad <span class="sort-arrow" id="salesSortQuantity">↕</span></th>
-                            <th class="table-header sortable-header" onclick="sortTable('sales', 'payment')">Pago <span class="sort-arrow" id="salesSortPayment">↕</span></th>
-                            <th class="table-header sortable-header" onclick="sortTable('sales', 'employee')">Encargado / Turno <span class="sort-arrow" id="salesSortEmployee">↕</span></th>
-                            <th class="table-header text-right sortable-header" onclick="sortTable('sales', 'amount')">Monto <span class="sort-arrow" id="salesSortAmount">↕</span></th>
-                            <th class="table-header text-center">Acciones</th>
+            <div class="flex-1 overflow-auto p-0">
+                <table class="w-full divide-y divide-gray-200" id="salesTable">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr id="salesTableHead">
+                            <th data-col="0" class="sales-th sortable-header" onclick="sortTable('sales','date')"><span class="col-label">Fecha<span class="sort-arrow" id="salesSortDate">↕</span></span><button class="col-menu-btn" onclick="event.stopPropagation();toggleColMenu(0)" title="Opciones columna">⋮</button></th>
+                            <th data-col="1" class="sales-th sortable-header" onclick="sortTable('sales','client')"><span class="col-label">Cliente<span class="sort-arrow" id="salesSortClient">↕</span></span><button class="col-menu-btn" onclick="event.stopPropagation();toggleColMenu(1)" title="Opciones columna">⋮</button></th>
+                            <th data-col="2" class="sales-th sortable-header" onclick="sortTable('sales','product')"><span class="col-label">Producto<span class="sort-arrow" id="salesSortProduct">↕</span></span><button class="col-menu-btn" onclick="event.stopPropagation();toggleColMenu(2)" title="Opciones columna">⋮</button></th>
+                            <th data-col="3" class="sales-th sortable-header" onclick="sortTable('sales','quantity')"><span class="col-label">Cant.<span class="sort-arrow" id="salesSortQuantity">↕</span></span><button class="col-menu-btn" onclick="event.stopPropagation();toggleColMenu(3)" title="Opciones columna">⋮</button></th>
+                            <th data-col="4" class="sales-th sortable-header" onclick="sortTable('sales','payment')"><span class="col-label">Pago<span class="sort-arrow" id="salesSortPayment">↕</span></span><button class="col-menu-btn" onclick="event.stopPropagation();toggleColMenu(4)" title="Opciones columna">⋮</button></th>
+                            <th data-col="5" class="sales-th sortable-header" onclick="sortTable('sales','employee')"><span class="col-label">Encargado<span class="sort-arrow" id="salesSortEmployee">↕</span></span><button class="col-menu-btn" onclick="event.stopPropagation();toggleColMenu(5)" title="Opciones columna">⋮</button></th>
+                            <th data-col="6" class="sales-th text-right sortable-header" onclick="sortTable('sales','amount')"><span class="col-label">Monto<span class="sort-arrow" id="salesSortAmount">↕</span></span><button class="col-menu-btn" onclick="event.stopPropagation();toggleColMenu(6)" title="Opciones columna">⋮</button></th>
+                            <th data-col="7" class="sales-th text-center"><span class="col-label">Acc.</span></th>
                         </tr>
                     </thead>
                     <tbody id="salesTableBody" class="bg-white divide-y divide-gray-100"></tbody>
                 </table>
+            </div>
+            <!-- Menú flotante de columna -->
+            <div id="colMenuDropdown" class="hidden fixed z-[200] bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[160px]">
+                <button id="colMenuToggleBtn" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"></button>
+            </div>
+            <!-- Modal de nota -->
+            <div id="noteModal" class="hidden fixed inset-0 z-[300] flex items-end justify-center p-4 bg-black/40">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-sticky-note text-blue-400"></i> Nota</h3>
+                        <button onclick="document.getElementById('noteModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl">×</button>
+                    </div>
+                    <p id="noteModalText" class="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -3768,24 +3804,25 @@
                 total += parseFloat(s.montoCobrado)||0;
                 const product = products.find(p => p.id === s.productId);
                 const hasNote = s.notes && s.notes.trim() !== '';
+                const noteEsc = hasNote ? s.notes.replace(/`/g,"'").replace(/\\/g,'\\\\') : '';
                 tb.innerHTML += `<tr>
-                    <td class="table-cell"><div class="font-bold">${fmtDate(s.date)}</div><div class="text-xs text-gray-500">${s.time||''}</div></td>
-                    <td class="table-cell font-bold">${s.clientName || 'Cliente no registrado'}</td>
-                    <td class="table-cell text-sm">${product ? `${product.name} (${product.prodType || 'Sin tipo'})` : s.productName || '-'}</td>
-                    <td class="table-cell text-center font-bold">${s.quantitySold||1}</td>
-                    <td class="table-cell text-xs">${s.paymentType||'-'}</td>
-                    <td class="table-cell text-xs">${s.employee||'-'}${hasNote ? '<br><span class="text-xs text-blue-600" title="' + s.notes + '"><i class="fas fa-sticky-note"></i></span>' : ''}</td>
-                    <td class="table-cell text-right font-bold text-blue-600">${fmtMoney(s.montoCobrado)}</td>
-                    <td class="table-cell text-center">
-                        <button onclick="editSale(${JSON.stringify(s).replace(/"/g, '&quot;')})" class="text-blue-600 hover:text-blue-800 mx-1" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteSale('${s.id}')" class="text-red-600 hover:text-red-800 mx-1" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <td class="table-cell text-xs" data-col="0"><div class="font-bold">${fmtDate(s.date)}</div><div class="text-gray-500">${s.time||''}</div></td>
+                    <td class="table-cell text-xs font-semibold" data-col="1">${s.clientName || '-'}</td>
+                    <td class="table-cell text-xs" data-col="2">${product ? product.name : s.productName || '-'}</td>
+                    <td class="table-cell text-xs text-center" data-col="3">${s.quantitySold||''} ${s.quantityUnit||''}</td>
+                    <td class="table-cell text-xs" data-col="4">${s.paymentType||'-'}</td>
+                    <td class="table-cell text-xs" data-col="5">
+                        ${s.employee||'-'}
+                        ${hasNote ? `<button onclick="showNote(\`${noteEsc}\`)" class="ml-1 text-blue-500 hover:text-blue-700" title="Ver nota"><i class="fas fa-sticky-note"></i></button>` : ''}
+                    </td>
+                    <td class="table-cell text-right text-xs font-bold text-blue-600" data-col="6">${fmtMoney(s.montoCobrado)}</td>
+                    <td class="table-cell text-center" data-col="7">
+                        <button onclick="editSale(${JSON.stringify(s).replace(/"/g,'&quot;')})" class="text-blue-600 hover:text-blue-800 mx-0.5" title="Editar"><i class="fas fa-edit text-xs"></i></button>
+                        <button onclick="deleteSale('${s.id}')" class="text-red-600 hover:text-red-800 mx-0.5" title="Eliminar"><i class="fas fa-trash text-xs"></i></button>
                     </td>
                 </tr>`;
             });
+            applySalesColVisibility();
             $('salesHistoryTotalLabel').textContent = `Total: ${fmtMoney(total)}`;
 
             if(!$('salesChartWrapper').classList.contains('hidden')) renderSalesChart();
@@ -5131,6 +5168,78 @@
         window.deleteAdjustment = deleteAdjustment;
         window.toggleNotifications = toggleNotifications;
         window.initializeFCM = initializeFCM;
+        // ── COLUMNAS VENTAS: ocultar/mostrar ─────────────────────────────
+        const SALES_COL_KEY = 'sales_hidden_cols_v1';
+        const SALES_COL_NAMES = ['Fecha','Cliente','Producto','Cantidad','Pago','Encargado','Monto','Acciones'];
+        let _activeColMenu = null;
+
+        function getHiddenCols() {
+            try { return new Set(JSON.parse(localStorage.getItem(SALES_COL_KEY))||[]); }
+            catch { return new Set(); }
+        }
+        function saveHiddenCols(s) { localStorage.setItem(SALES_COL_KEY, JSON.stringify([...s])); }
+
+        window.applySalesColVisibility = function() {
+            const hidden = getHiddenCols();
+            const table = $('salesTable');
+            if (!table) return;
+            for (let c = 0; c < SALES_COL_NAMES.length; c++) {
+                const isHidden = hidden.has(c);
+                // Encabezado
+                const th = table.querySelector(`th[data-col="${c}"]`);
+                if (th) {
+                    const lbl = th.querySelector('.col-label');
+                    if (lbl) lbl.style.display = isHidden ? 'none' : '';
+                    th.style.width = isHidden ? '24px' : '';
+                    th.style.minWidth = isHidden ? '24px' : '';
+                    th.style.padding = isHidden ? '4px 2px' : '';
+                }
+                // Celdas
+                table.querySelectorAll(`td[data-col="${c}"]`).forEach(td => {
+                    td.style.display = isHidden ? 'none' : '';
+                });
+            }
+        };
+
+        window.toggleColMenu = function(colIndex) {
+            const menu = $('colMenuDropdown');
+            if (_activeColMenu === colIndex && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden'); _activeColMenu = null; return;
+            }
+            _activeColMenu = colIndex;
+            const hidden = getHiddenCols();
+            const isHidden = hidden.has(colIndex);
+            const btn = $('colMenuToggleBtn');
+            btn.innerHTML = isHidden
+                ? `<i class="fas fa-eye text-green-500"></i> Mostrar "${SALES_COL_NAMES[colIndex]}"`
+                : `<i class="fas fa-eye-slash text-gray-400"></i> Ocultar "${SALES_COL_NAMES[colIndex]}"`;
+            btn.onclick = () => {
+                const h = getHiddenCols();
+                if (h.has(colIndex)) h.delete(colIndex); else h.add(colIndex);
+                saveHiddenCols(h);
+                applySalesColVisibility();
+                menu.classList.add('hidden'); _activeColMenu = null;
+            };
+            // Posicionar menú junto al th
+            const th = $('salesTable') && $('salesTable').querySelector(`th[data-col="${colIndex}"]`);
+            if (th) {
+                const rect = th.getBoundingClientRect();
+                menu.style.top  = (rect.bottom + 4) + 'px';
+                menu.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
+            }
+            menu.classList.remove('hidden');
+        };
+        // Cerrar menú al hacer click fuera
+        document.addEventListener('click', () => {
+            $('colMenuDropdown') && $('colMenuDropdown').classList.add('hidden');
+            _activeColMenu = null;
+        });
+
+        window.showNote = function(note) {
+            $('noteModalText').textContent = note;
+            $('noteModal').classList.remove('hidden');
+        };
+
         window.unsubscribeFromFCM = unsubscribeFromFCM;
         window.checkAndSetupFCM = checkAndSetupFCM;
         window.toggleNetProfitVisibility = toggleNetProfitVisibility;
