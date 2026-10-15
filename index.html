@@ -1124,7 +1124,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
                 <button id="openInventarioBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
                     <div class="w-10 h-10 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-box"></i></div>
                     <div class="font-semibold text-sm text-gray-700">Inventario</div>
@@ -1144,6 +1144,11 @@
                     <div class="w-10 h-10 mx-auto bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-receipt"></i></div>
                     <div class="font-semibold text-sm text-gray-700">Ver Gastos</div>
                     <div class="text-xs text-gray-400 mt-1">Hoy: <span id="dashGastosHoy">$0</span></div>
+                </button>
+                <button id="openMediaResBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
+                    <div class="w-10 h-10 mx-auto bg-red-100 text-red-700 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-cow"></i></div>
+                    <div class="font-semibold text-sm text-gray-700">Media Res</div>
+                    <div class="text-xs text-gray-400 mt-1">Stock y ventas</div>
                 </button>
                 <button id="openClientesBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
                     <div class="w-10 h-10 mx-auto bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-users"></i></div>
@@ -5255,7 +5260,7 @@
         window.detectShift = detectShift;
         window.showToast   = showToast;
         window.sendNotificationToAll = sendNotificationToAll;
-        window._firestoreRef = { addDoc, collection, updateDoc, doc, setDoc };
+        window._firestoreRef = { addDoc, collection, updateDoc, doc, setDoc, getDoc };
 
         // Sincronizar userId cuando cambia auth
         onAuthStateChanged(auth, u => {
@@ -5682,6 +5687,515 @@
         input.onblur   = save;
         input.onkeydown = e => { if (e.key==='Enter') input.blur(); if (e.key==='Escape') { input.value = current; input.blur(); } };
       };
+    })();
+    </script>
+    <!-- ══════════════════════════════════════════════════════════════
+         MEDIA RES — Cortes argentinos: STOCK y VENTAS
+    ══════════════════════════════════════════════════════════════ -->
+    <style>
+      .mr-rg{fill:#9b9b9b;stroke:#fff;stroke-width:3;stroke-linejoin:round;cursor:pointer;transition:fill .15s}
+      .mr-rg.on{fill:#C8102E}
+      .mr-rg.nx{cursor:default}
+      .mr-lb{fill:#fff;font-size:16px;font-weight:600;pointer-events:none;font-family:Inter,system-ui,sans-serif}
+      .mr-lb.s{font-size:14px}
+      .mr-row.on{background:#fee2e2}
+      .mr-row.on td:first-child{color:#C8102E;font-weight:700}
+      [data-theme="dark"] .mr-row.on{background:#4c1d24}
+      .mr-num{width:100%;max-width:90px;text-align:right;padding:4px 6px;border:1px solid #e5e7eb;border-radius:8px;background:transparent}
+      [data-theme="dark"] .mr-num{border-color:#334155}
+    </style>
+    <div id="mediaResModule" class="fixed inset-0 z-[70] hidden bg-white flex flex-col" style="height:100dvh">
+      <div class="flex items-center justify-between px-5 py-3 border-b flex-shrink-0">
+        <button id="mrBack" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl invisible"><i class="fas fa-chevron-left"></i></button>
+        <p id="mrTitle" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Media Res</p>
+        <button id="mrClose" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Elección -->
+      <div id="mrHome" class="flex-1 flex flex-col justify-center items-center px-6 gap-5">
+        <h2 class="text-xl font-bold text-gray-500 text-center">¿Qué querés hacer?</h2>
+        <button id="mrGoStock" class="w-full max-w-sm py-8 rounded-2xl bg-gray-900 text-white text-2xl font-bold shadow-lg active:scale-95 transition flex items-center justify-center gap-3"><i class="fas fa-boxes"></i> STOCK</button>
+        <button id="mrGoVentas" class="w-full max-w-sm py-8 rounded-2xl text-white text-2xl font-bold shadow-lg active:scale-95 transition flex items-center justify-center gap-3" style="background:#C8102E"><i class="fas fa-cash-register"></i> VENTAS</button>
+      </div>
+
+      <!-- STOCK -->
+      <div id="mrStock" class="hidden flex-1 overflow-y-auto">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+          <div id="mrCowStock"></div>
+          <div class="flex flex-wrap items-center gap-3 my-3 text-sm text-gray-600">
+            <label for="mrResWeight" class="font-semibold">Peso de la res (kg)</label>
+            <input type="number" id="mrResWeight" min="1" step="1" class="mr-num" style="max-width:100px">
+            <button id="mrLoadRes" class="ml-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar res al stock</button>
+          </div>
+          <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm" style="min-width:560px">
+              <thead><tr class="text-gray-500 border-b">
+                <th class="text-left py-2 px-2 font-semibold">Corte</th>
+                <th class="text-right py-2 px-2 font-semibold">% de la res</th>
+                <th class="text-right py-2 px-2 font-semibold">Peso estimado</th>
+                <th class="text-right py-2 px-2 font-semibold">Precio por kg</th>
+                <th class="text-right py-2 px-2 font-semibold">Stock (kg)</th>
+              </tr></thead>
+              <tbody id="mrStockBody"></tbody>
+              <tfoot class="font-semibold text-gray-700">
+                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td id="mrTotStock" class="text-right px-2"></td></tr>
+                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la res</td><td id="mrTotVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="4" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td></tr>
+              </tfoot>
+            </table>
+          </div>
+          <p class="text-xs text-gray-400 mt-3">Los porcentajes y precios se pueden editar y se guardan solos. El stock baja automáticamente con cada venta.</p>
+        </div>
+      </div>
+
+      <!-- VENTAS -->
+      <div id="mrVentas" class="hidden flex-1 overflow-y-auto">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+          <div id="mrCowVentas"></div>
+          <div id="mrSelPanel" class="hidden mt-3 p-4 rounded-2xl border-2" style="border-color:#C8102E">
+            <div class="flex justify-between items-start gap-2">
+              <div>
+                <p id="mrSelName" class="text-lg font-bold" style="color:#C8102E"></p>
+                <p id="mrSelInfo" class="text-xs text-gray-500"></p>
+              </div>
+              <button id="mrSelClear" class="text-gray-400 text-xl px-2" aria-label="Quitar selección"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div><label class="block text-xs text-gray-500 mb-1">Kilos</label><input type="number" id="mrSelKg" min="0" step="0.05" inputmode="decimal" class="input-std text-lg font-bold" placeholder="0,000"></div>
+              <div><label class="block text-xs text-gray-500 mb-1">Importe ($)</label><input type="number" id="mrSelAmt" min="0" step="1" inputmode="decimal" class="input-std text-lg font-bold" placeholder="0"></div>
+            </div>
+            <div class="flex gap-2 mt-2">
+              <button class="mr-quick flex-1 py-2 rounded-xl border text-sm font-semibold text-gray-600" data-kg="0.25">¼ kg</button>
+              <button class="mr-quick flex-1 py-2 rounded-xl border text-sm font-semibold text-gray-600" data-kg="0.5">½ kg</button>
+              <button class="mr-quick flex-1 py-2 rounded-xl border text-sm font-semibold text-gray-600" data-kg="1">1 kg</button>
+              <button class="mr-quick flex-1 py-2 rounded-xl border text-sm font-semibold text-gray-600" data-kg="2">2 kg</button>
+            </div>
+            <button id="mrAddItem" class="w-full mt-3 text-white py-3 rounded-xl font-bold active:scale-95 transition" style="background:#C8102E"><i class="fas fa-cart-plus mr-1"></i> Agregar</button>
+          </div>
+          <p id="mrVentasHint" class="text-sm text-gray-500 my-3">Tocá un corte en la vaca o en la lista</p>
+          <div id="mrCutChips" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+          <div class="mt-5 border-t pt-4">
+            <h3 class="font-bold text-gray-700 mb-2"><i class="fas fa-shopping-basket mr-1"></i> Pedido</h3>
+            <div id="mrCart" class="space-y-2"></div>
+            <div class="flex justify-between items-center mt-3 text-lg font-bold text-gray-800"><span>Total</span><span id="mrCartTotal">$0,00</span></div>
+            <p class="text-xs text-gray-500 mt-3 mb-1">Método de pago</p>
+            <div id="mrPayBtns" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+            <input type="text" id="mrClient" class="input-std mt-3" placeholder="Cliente (opcional)">
+            <button id="mrCheckout" class="w-full mt-3 mb-6 bg-gray-900 hover:bg-gray-800 text-white py-4 rounded-2xl text-lg font-bold active:scale-95 transition"><i class="fas fa-check mr-1"></i> Cobrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      function $(id) { return document.getElementById(id); }
+      const NS = 'http://www.w3.org/2000/svg';
+      const fmt = (n, d) => (n || 0).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+      const money = n => '$' + fmt(n, 2);
+
+      // Contorno de la vaca (coordenadas 860 x 550)
+      const OUTLINE = 'M130,98 C160,90 190,86 212,88 C260,92 320,104 362,106 C400,108 430,106 452,106 C510,104 570,98 615,92 C630,80 645,64 660,54 L676,18 L688,22 L682,56 C700,60 725,64 748,70 C765,62 785,50 806,40 C802,56 790,72 772,88 C790,90 800,96 802,104 C790,110 772,110 758,108 C756,140 755,180 752,208 C740,222 715,232 690,242 C680,246 674,248 668,250 C658,262 650,282 642,300 C640,340 632,366 604,392 C596,398 588,402 578,405 L572,450 L566,525 L562,536 L512,536 L510,520 L505,450 L500,402 C470,382 420,376 380,373 C320,372 270,360 230,345 C200,362 172,400 162,440 L160,525 L156,536 L82,536 L82,500 L78,440 C74,380 78,330 82,280 C85,220 88,170 100,135 C108,115 118,103 130,98 Z';
+      const TAIL = 'M92,132 C64,180 36,240 26,300 C20,340 16,375 14,410 L38,412 C40,376 44,340 50,302 C60,248 84,192 106,148 Z';
+      const REGIONS = {
+        cuadril:'60,50 212,50 212,88 230,130 262,205 140,205 150,183 60,140',
+        tapacuad:'60,140 150,183 145,202 60,200',
+        peceto:'40,200 108,200 105,322 40,320',
+        cuadrada:'108,200 145,202 175,225 180,330 105,322',
+        bola:'175,215 190,203 262,205 256,255 178,240',
+        colita:'178,240 256,255 240,345 210,342 180,330',
+        tapanalga:'40,320 105,322 180,330 230,345 175,410 40,405',
+        tortuguita:'40,405 175,410 220,560 40,560',
+        lomo:'205,40 372,40 362,110 300,120 230,130',
+        bifeang:'230,130 300,120 362,110 345,205 262,205',
+        bifeanc:'362,110 372,40 450,40 452,106 470,208 345,205',
+        vacio:'262,205 400,208 385,300 390,380 230,380 240,345 256,255',
+        asado:'400,208 470,208 475,300 455,300 440,380 390,380 385,300',
+        falda:'455,300 478,300 478,385 440,385',
+        cogote:'450,40 645,40 612,118 470,145 452,106',
+        aguja:'452,106 470,145 612,118 575,207 470,208',
+        pescuezo:'612,118 645,40 652,105 668,250 582,268 575,207',
+        marucha:'470,208 542,208 545,300 478,315',
+        chingolo:'542,208 575,207 582,268 545,300',
+        brazuelo:'478,315 545,300 548,398 478,398',
+        pecho:'545,300 582,268 668,250 720,300 720,402 548,398',
+        osobuco:'470,398 548,398 720,402 720,560 470,560',
+        cabeza:'652,105 645,0 860,0 860,330 668,250'
+      };
+      const CIRCLES = { nalga:[165,205,25], paleta:[510,275,28] };
+      const LABELS = [
+        ['cuadril',182,140,['Cuadril']],['tapacuad',114,170,['Tapa de','cuadril'],1],['nalga',165,210,['Nalga'],1],
+        ['peceto',90,262,['Peceto'],0,-90],['cuadrada',142,278,['Cuadrada'],1],['bola',218,232,['Bola de','lomo'],1],
+        ['colita',212,282,['Colita de','cuadril'],1],['tapanalga',140,362,['Tapa de','nalga']],['tortuguita',118,470,['Tortuguita'],1],
+        ['lomo',292,113,['Lomo']],['bifeang',300,168,['Bife angosto']],['bifeanc',408,168,['Bife ancho']],
+        ['vacio',318,288,['Vacío']],['asado',425,288,['Asado']],['falda',460,345,['Falda'],1,-90],
+        ['cogote',545,124,['Cogote']],['aguja',530,174,['Aguja']],['pescuezo',622,205,['Pescuezo']],
+        ['marucha',507,230,['Marucha'],1],['paleta',510,281,['Paleta'],1],['chingolo',563,255,['Chingolo'],1,-90],
+        ['brazuelo',512,352,['Brazuelo'],1],['pecho',602,335,['Pecho']],['osobuco',536,470,['Osobuco'],1],
+        ['cabeza',700,170,['Cabeza']],['rabo',40,300,['Rabo'],1,-80]
+      ];
+      const ZONES = { t:'Cuarto trasero', m:'Parte media', d:'Cuarto delantero' };
+      // k, nombre, zona, % de la res, precio de ejemplo, zonas del dibujo, nota
+      const CUTS = [
+        ['cuadril','Cuadril','t',2.5,15000,['cuadril']],
+        ['tapacuad','Tapa de cuadril (picaña)','t',1.0,17000,['tapacuad']],
+        ['nalga','Nalga','t',4.5,15000,['nalga']],
+        ['peceto','Peceto','t',1.6,16000,['peceto']],
+        ['cuadrada','Cuadrada','t',3.0,14000,['cuadrada']],
+        ['bola','Bola de lomo','t',3.5,13500,['bola']],
+        ['colita','Colita de cuadril','t',0.8,16000,['colita']],
+        ['tapanalga','Tapa de nalga','t',2.0,14000,['tapanalga']],
+        ['tortuguita','Tortuguita','t',1.2,8000,['tortuguita']],
+        ['rabo','Rabo','t',0.6,7000,['rabo']],
+        ['lomo','Lomo','m',1.8,20000,['lomo']],
+        ['bifeang','Bife angosto','m',4.0,16000,['bifeang']],
+        ['bifeanc','Bife ancho','m',3.0,13000,['bifeanc']],
+        ['vacio','Vacío','m',3.5,15000,['vacio']],
+        ['matambre','Matambre','m',1.5,14000,['vacio','asado'],'sale de abajo del cuero'],
+        ['asado','Asado','m',8.0,13000,['asado']],
+        ['tapaasado','Tapa de asado','m',1.5,12500,['asado'],'cubre el asado'],
+        ['entrana','Entraña','m',0.6,17000,['asado'],'interna, del diafragma'],
+        ['falda','Falda','m',4.0,7000,['falda']],
+        ['cogote','Cogote','d',2.5,8000,['cogote']],
+        ['aguja','Aguja','d',6.0,9000,['aguja']],
+        ['pescuezo','Pescuezo','d',1.5,7500,['pescuezo']],
+        ['marucha','Marucha','d',1.0,11500,['marucha']],
+        ['paleta','Paleta','d',4.5,11000,['paleta']],
+        ['chingolo','Chingolo','d',0.8,12000,['chingolo']],
+        ['brazuelo','Brazuelo','d',1.5,8000,['brazuelo']],
+        ['pecho','Pecho','d',4.0,9500,['pecho']],
+        ['osobuco','Osobuco','d',2.5,7000,['osobuco']]
+      ].map(c => ({ k:c[0], name:c[1], z:c[2], pct:c[3], price:c[4], regs:c[5], note:c[6] || '' }));
+      const CUT = Object.fromEntries(CUTS.map(c => [c.k, c]));
+      // Corte que se elige al tocar cada zona del dibujo
+      const REGION_CUT = {};
+      CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
+
+      // Estado guardado en Firestore: settings/mediaRes
+      let state = { resWeight: 230, pct: {}, prices: {}, stock: {} };
+      const pctOf   = k => state.pct[k] != null ? +state.pct[k] : CUT[k].pct;
+      const priceOf = k => state.prices[k] != null ? +state.prices[k] : CUT[k].price;
+      const stockOf = k => +state.stock[k] || 0;
+
+      function stateRef() {
+        const f = window._firestoreRef, uid = window.userId;
+        if (!f || !uid || !window.db || !window.appId) return null;
+        return f.doc(window.db, 'artifacts', window.appId, 'users', uid, 'settings', 'mediaRes');
+      }
+      async function loadState() {
+        const ref = stateRef();
+        if (!ref) return;
+        try {
+          const snap = await window._firestoreRef.getDoc(ref);
+          if (snap.exists()) {
+            const d = snap.data();
+            state = { resWeight: d.resWeight || 230, pct: d.pct || {}, prices: d.prices || {}, stock: d.stock || {} };
+          }
+        } catch (e) { console.error('Media res: error al cargar', e); }
+      }
+      let saveTimer = null;
+      function saveState(now) {
+        clearTimeout(saveTimer);
+        const run = async () => {
+          const ref = stateRef();
+          if (!ref) return;
+          try { await window._firestoreRef.setDoc(ref, state); }
+          catch (e) { window.showToast && window.showToast('Error al guardar: ' + e.message, 'error'); }
+        };
+        if (now) return run();
+        saveTimer = setTimeout(run, 600);
+      }
+
+      // Dibujo de la vaca: devuelve { set(regs) } para pintar zonas
+      function buildCow(container, clipId, onRegion) {
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('viewBox', '0 0 860 550');
+        svg.setAttribute('width', '100%');
+        svg.style.maxHeight = '45vh';
+        svg.setAttribute('role', 'img');
+        svg.setAttribute('aria-label', 'Vaca con los cortes argentinos');
+        svg.innerHTML = '<defs><clipPath id="' + clipId + '"><path d="' + OUTLINE + '"/></clipPath></defs>';
+        const els = {};
+        const tail = document.createElementNS(NS, 'path');
+        tail.setAttribute('d', TAIL); tail.setAttribute('class', 'mr-rg');
+        svg.appendChild(tail); els.rabo = tail;
+        const g = document.createElementNS(NS, 'g');
+        g.setAttribute('clip-path', 'url(#' + clipId + ')');
+        svg.appendChild(g);
+        Object.entries(REGIONS).forEach(([k, pts]) => {
+          const p = document.createElementNS(NS, 'polygon');
+          p.setAttribute('points', pts);
+          p.setAttribute('class', 'mr-rg' + (k === 'cabeza' ? ' nx' : ''));
+          g.appendChild(p); els[k] = p;
+        });
+        Object.entries(CIRCLES).forEach(([k, c]) => {
+          const e = document.createElementNS(NS, 'circle');
+          e.setAttribute('cx', c[0]); e.setAttribute('cy', c[1]); e.setAttribute('r', c[2]);
+          e.setAttribute('class', 'mr-rg');
+          g.appendChild(e); els[k] = e;
+        });
+        LABELS.forEach(l => {
+          const t = document.createElementNS(NS, 'text');
+          t.setAttribute('class', 'mr-lb' + (l[4] ? ' s' : ''));
+          t.setAttribute('text-anchor', 'middle');
+          t.setAttribute('dominant-baseline', 'central');
+          if (l[5]) t.setAttribute('transform', 'rotate(' + l[5] + ' ' + l[1] + ' ' + l[2] + ')');
+          const n = l[3].length;
+          l[3].forEach((s, i) => {
+            const ts = document.createElementNS(NS, 'tspan');
+            ts.setAttribute('x', l[1]); ts.setAttribute('y', l[2] + (i - (n - 1) / 2) * 17);
+            ts.textContent = s; t.appendChild(ts);
+          });
+          svg.appendChild(t);
+        });
+        Object.entries(els).forEach(([k, e]) => {
+          if (!REGION_CUT[k]) return;
+          e.addEventListener('mouseenter', () => onRegion(REGION_CUT[k], false));
+          e.addEventListener('click', () => onRegion(REGION_CUT[k], true));
+        });
+        svg.addEventListener('mouseleave', () => onRegion(null, false));
+        container.innerHTML = '';
+        container.appendChild(svg);
+        return { set(regs) { Object.entries(els).forEach(([k, e]) => e.classList.toggle('on', !!regs && regs.includes(k))); } };
+      }
+
+      // ── STOCK ──
+      let cowStock = null;
+      const stockRows = {};
+      function highlightStock(k) {
+        cowStock.set(k ? CUT[k].regs : null);
+        Object.entries(stockRows).forEach(([key, tr]) => tr.classList.toggle('on', key === k));
+        $('mrStockInfo').innerHTML = k
+          ? '<b style="color:#C8102E">' + CUT[k].name + '</b> · ' + ZONES[CUT[k].z] + (CUT[k].note ? ' · ' + CUT[k].note : '')
+          : 'Pasá el mouse o tocá un corte para verlo en la vaca';
+      }
+      function renderStock() {
+        cowStock = buildCow($('mrCowStock'), 'mrClipStock', k => highlightStock(k));
+        $('mrResWeight').value = state.resWeight;
+        const tb = $('mrStockBody');
+        tb.innerHTML = '';
+        ['t', 'm', 'd'].forEach(z => {
+          const zr = document.createElement('tr');
+          zr.className = 'bg-gray-50 text-gray-500 font-semibold';
+          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td>';
+          tb.appendChild(zr);
+          CUTS.filter(c => c.z === z).forEach(c => {
+            const tr = document.createElement('tr');
+            tr.className = 'mr-row border-b border-gray-100';
+            tr.innerHTML =
+              '<td class="py-1 px-2 cursor-pointer">' + c.name + (c.note ? ' <span class="text-[11px] text-gray-400">' + c.note + '</span>' : '') + '</td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="pct" min="0" step="0.1" value="' + pctOf(c.k) + '" aria-label="Porcentaje de ' + c.name + '"></td>' +
+              '<td class="text-right px-2 text-gray-600" data-kg></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio por kg de ' + c.name + '"></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>';
+            tr.addEventListener('mouseenter', () => highlightStock(c.k));
+            tr.addEventListener('mouseleave', () => highlightStock(null));
+            tr.firstChild.addEventListener('click', () => highlightStock(c.k));
+            tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+              const v = parseFloat(inp.value);
+              state[inp.dataset.f][c.k] = isNaN(v) ? 0 : v;
+              calcStock(); saveState();
+            }));
+            tb.appendChild(tr);
+            stockRows[c.k] = tr;
+          });
+        });
+        const hr = document.createElement('tr');
+        hr.className = 'text-gray-500';
+        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y recortes</td><td class="text-right px-2" id="mrBonePct"></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td>';
+        tb.appendChild(hr);
+        calcStock();
+      }
+      function calcStock() {
+        const w = Math.max(0, +state.resWeight || 0);
+        let pct = 0, kg = 0, val = 0, st = 0, stVal = 0;
+        const zs = { t:[0,0,0], m:[0,0,0], d:[0,0,0] };
+        CUTS.forEach(c => {
+          const p = pctOf(c.k), k = w * p / 100, s = stockOf(c.k);
+          stockRows[c.k].querySelector('[data-kg]').textContent = fmt(k, 1) + ' kg';
+          pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
+          zs[c.z][0] += p; zs[c.z][1] += k; zs[c.z][2] += s;
+        });
+        Object.entries(zs).forEach(([z, v]) => {
+          document.querySelector('[data-zpct="' + z + '"]').textContent = fmt(v[0], 1) + '%';
+          document.querySelector('[data-zkg="' + z + '"]').textContent = fmt(v[1], 1) + ' kg';
+          document.querySelector('[data-zst="' + z + '"]').textContent = fmt(v[2], 1) + ' kg';
+        });
+        $('mrBonePct').textContent = fmt(Math.max(0, 100 - pct), 1) + '%';
+        $('mrBoneKg').textContent = fmt(Math.max(0, w - kg), 1) + ' kg';
+        $('mrTotPct').textContent = fmt(pct, 1) + '%';
+        $('mrTotKg').textContent = fmt(kg, 1) + ' kg';
+        $('mrTotStock').textContent = fmt(st, 1) + ' kg';
+        $('mrTotVal').textContent = money(val);
+        $('mrStockVal').textContent = money(stVal);
+      }
+      $('mrResWeight').addEventListener('input', () => {
+        state.resWeight = Math.max(0, parseFloat($('mrResWeight').value) || 0);
+        calcStock(); saveState();
+      });
+      $('mrLoadRes').onclick = async () => {
+        const w = +state.resWeight || 0;
+        if (w <= 0) { window.showToast && window.showToast('Ingresá el peso de la res', 'error'); return; }
+        if (!confirm('¿Sumar al stock los cortes de una res de ' + fmt(w, 0) + ' kg?')) return;
+        CUTS.forEach(c => { state.stock[c.k] = +(stockOf(c.k) + w * pctOf(c.k) / 100).toFixed(3); });
+        await saveState(true);
+        renderStock();
+        window.showToast && window.showToast('Res cargada al stock ✓', 'success');
+      };
+
+      // ── VENTAS ──
+      let cowVentas = null, selKey = null, payMethod = '';
+      let cart = [];
+      function getPayMethods() {
+        try {
+          const s = JSON.parse(localStorage.getItem('wizard_pay_methods'));
+          if (Array.isArray(s) && s.length) return s;
+        } catch (e) {}
+        return ['Efectivo', 'Transferencia', 'QR', 'Tarjeta débito', 'Tarjeta crédito', 'Cuenta DNI'];
+      }
+      function previewVentas(k) {
+        cowVentas.set(k ? CUT[k].regs : (selKey ? CUT[selKey].regs : null));
+      }
+      function selectCut(k) {
+        selKey = k;
+        previewVentas(null);
+        document.querySelectorAll('#mrCutChips button').forEach(b => {
+          const on = b.dataset.k === k;
+          b.style.borderColor = on ? '#C8102E' : '';
+          b.style.color = on ? '#C8102E' : '';
+        });
+        if (!k) { $('mrSelPanel').classList.add('hidden'); return; }
+        const c = CUT[k];
+        $('mrSelName').textContent = c.name;
+        $('mrSelInfo').textContent = money(priceOf(k)) + ' por kg · Stock: ' + fmt(stockOf(k), 2) + ' kg';
+        $('mrSelKg').value = ''; $('mrSelAmt').value = '';
+        $('mrSelPanel').classList.remove('hidden');
+        $('mrSelKg').focus();
+      }
+      function renderVentas() {
+        cowVentas = buildCow($('mrCowVentas'), 'mrClipVentas', (k, click) => { if (click) selectCut(k); else previewVentas(k); });
+        $('mrCutChips').innerHTML = '';
+        CUTS.forEach(c => {
+          const b = document.createElement('button');
+          b.dataset.k = c.k;
+          b.className = 'text-left px-3 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 active:scale-95 transition';
+          b.innerHTML = c.name + '<span class="block text-xs font-normal text-gray-400">' + money(priceOf(c.k)) + '/kg · ' + fmt(stockOf(c.k), 1) + ' kg</span>';
+          b.addEventListener('mouseenter', () => previewVentas(c.k));
+          b.addEventListener('mouseleave', () => previewVentas(null));
+          b.addEventListener('click', () => selectCut(c.k));
+          $('mrCutChips').appendChild(b);
+        });
+        renderPay(); renderCart(); selectCut(null);
+      }
+      function renderPay() {
+        $('mrPayBtns').innerHTML = '';
+        getPayMethods().forEach(m => {
+          const b = document.createElement('button');
+          const on = m === payMethod;
+          b.className = 'py-3 rounded-xl border-2 text-sm font-semibold transition ' + (on ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600');
+          b.textContent = m;
+          b.onclick = () => { payMethod = m; renderPay(); };
+          $('mrPayBtns').appendChild(b);
+        });
+      }
+      function renderCart() {
+        const box = $('mrCart');
+        if (!cart.length) { box.innerHTML = '<p class="text-sm text-gray-400">Todavía no agregaste cortes.</p>'; }
+        else {
+          box.innerHTML = '';
+          cart.forEach((it, i) => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-gray-50';
+            row.innerHTML = '<div><p class="font-semibold text-gray-800">' + CUT[it.k].name + '</p><p class="text-xs text-gray-500">' + fmt(it.kg, 3) + ' kg × ' + money(it.price) + '</p></div>' +
+              '<div class="flex items-center gap-2"><span class="font-bold text-gray-800">' + money(it.amount) + '</span><button class="text-gray-400 hover:text-red-600 px-2 text-lg" aria-label="Quitar"><i class="fas fa-times"></i></button></div>';
+            row.querySelector('button').onclick = () => { cart.splice(i, 1); renderCart(); };
+            box.appendChild(row);
+          });
+        }
+        $('mrCartTotal').textContent = money(cart.reduce((a, it) => a + it.amount, 0));
+      }
+      $('mrSelKg').addEventListener('input', () => {
+        const kg = parseFloat($('mrSelKg').value);
+        $('mrSelAmt').value = selKey && kg > 0 ? Math.round(kg * priceOf(selKey)) : '';
+      });
+      $('mrSelAmt').addEventListener('input', () => {
+        const a = parseFloat($('mrSelAmt').value), p = selKey ? priceOf(selKey) : 0;
+        $('mrSelKg').value = a > 0 && p > 0 ? +(a / p).toFixed(3) : '';
+      });
+      document.querySelectorAll('.mr-quick').forEach(b => b.addEventListener('click', () => {
+        $('mrSelKg').value = b.dataset.kg;
+        $('mrSelKg').dispatchEvent(new Event('input'));
+      }));
+      $('mrSelClear').onclick = () => selectCut(null);
+      $('mrAddItem').onclick = () => {
+        const kg = parseFloat($('mrSelKg').value), amount = parseFloat($('mrSelAmt').value);
+        if (!selKey || !(kg > 0) || !(amount > 0)) { window.showToast && window.showToast('Ingresá los kilos o el importe', 'error'); return; }
+        cart.push({ k: selKey, kg: +kg.toFixed(3), price: priceOf(selKey), amount });
+        renderCart(); selectCut(null);
+      };
+      $('mrCheckout').onclick = async () => {
+        const uid = window.userId, f = window._firestoreRef;
+        if (!uid || !f) { window.showToast && window.showToast('Iniciá sesión primero', 'error'); return; }
+        if (!cart.length) { window.showToast && window.showToast('Agregá al menos un corte', 'error'); return; }
+        if (!payMethod) { window.showToast && window.showToast('Elegí el método de pago', 'error'); return; }
+        const btn = $('mrCheckout');
+        btn.disabled = true;
+        const now = new Date();
+        const today = window.getToday ? window.getToday() : now.toISOString().slice(0, 10);
+        const timeStr = now.toLocaleTimeString('es-ES', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        const shift = window.detectShift ? window.detectShift(timeStr) : '';
+        const client = $('mrClient').value.trim() || 'Cliente no registrado';
+        const employee = (window.settings && window.settings.employees && window.settings.employees[0]) || 'Sin encargado';
+        try {
+          for (const it of cart) {
+            await f.addDoc(f.collection(window.db, 'artifacts', window.appId, 'users', uid, 'sales'), {
+              date: today, time: timeStr, shift,
+              montoCobrado: it.amount, clientName: client, paymentType: payMethod,
+              salesChannel: 'Mostrador', productName: CUT[it.k].name, productId: 'mediares:' + it.k,
+              quantitySold: it.kg, quantityUnit: 'kg', employee,
+              notes: 'Media res · ' + fmt(it.kg, 3) + ' kg a ' + money(it.price) + '/kg',
+              createdAt: now.toISOString(), updatedAt: now.toISOString(),
+              commissionRate: '0.0000', commissionAmount: '0.00'
+            });
+            state.stock[it.k] = Math.max(0, +(stockOf(it.k) - it.kg).toFixed(3));
+          }
+          await saveState(true);
+          const total = cart.reduce((a, it) => a + it.amount, 0);
+          window.showToast && window.showToast('Venta guardada ✓ ' + money(total), 'success');
+          window.sendNotificationToAll && window.sendNotificationToAll('Nueva Venta', 'Venta de ' + money(total));
+          cart = []; payMethod = ''; $('mrClient').value = '';
+          renderVentas();
+        } catch (e) {
+          window.showToast && window.showToast('Error: ' + e.message, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      // ── Navegación ──
+      let screen = 'home';
+      function show(s) {
+        screen = s;
+        $('mrHome').classList.toggle('hidden', s !== 'home');
+        $('mrStock').classList.toggle('hidden', s !== 'stock');
+        $('mrVentas').classList.toggle('hidden', s !== 'ventas');
+        $('mrBack').style.visibility = s === 'home' ? 'hidden' : 'visible';
+        $('mrTitle').textContent = s === 'stock' ? 'Media Res · Stock' : s === 'ventas' ? 'Media Res · Ventas' : 'Media Res';
+        if (s === 'stock') renderStock();
+        if (s === 'ventas') renderVentas();
+      }
+      window.openMediaRes = async function() {
+        $('mediaResModule').classList.remove('hidden');
+        show('home');
+        await loadState();
+      };
+      $('mrGoStock').onclick = () => show('stock');
+      $('mrGoVentas').onclick = () => show('ventas');
+      $('mrBack').onclick = () => show('home');
+      $('mrClose').onclick = () => $('mediaResModule').classList.add('hidden');
+      const openBtn = $('openMediaResBtn');
+      if (openBtn) openBtn.addEventListener('click', () => window.openMediaRes());
     })();
     </script>
 </body>
