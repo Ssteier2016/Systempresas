@@ -5723,9 +5723,9 @@
         <div class="max-w-4xl mx-auto px-4 py-4">
           <div id="mrCowStock"></div>
           <div class="flex flex-wrap items-center gap-3 my-3 text-sm text-gray-600">
-            <label for="mrResWeight" class="font-semibold">Peso de la res (kg)</label>
+            <label for="mrResWeight" class="font-semibold">Peso de la media res (kg)</label>
             <input type="number" id="mrResWeight" min="1" step="1" class="mr-num" style="max-width:100px">
-            <button id="mrLoadRes" class="ml-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar res al stock</button>
+            <button id="mrLoadRes" class="ml-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
           </div>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
@@ -5740,7 +5740,7 @@
               <tbody id="mrStockBody"></tbody>
               <tfoot class="font-semibold text-gray-700">
                 <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td id="mrTotStock" class="text-right px-2"></td></tr>
-                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la res</td><td id="mrTotVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res</td><td id="mrTotVal" class="text-right px-2"></td><td></td></tr>
                 <tr><td colspan="4" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td></tr>
               </tfoot>
             </table>
@@ -5873,7 +5873,7 @@
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
 
       // Estado guardado en Firestore: settings/mediaRes
-      let state = { resWeight: 230, pct: {}, prices: {}, stock: {} };
+      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, stock: {} };
       const pctOf   = k => state.pct[k] != null ? +state.pct[k] : CUT[k].pct;
       const priceOf = k => state.prices[k] != null ? +state.prices[k] : CUT[k].price;
       const stockOf = k => +state.stock[k] || 0;
@@ -5890,7 +5890,9 @@
           const snap = await window._firestoreRef.getDoc(ref);
           if (snap.exists()) {
             const d = snap.data();
-            state = { resWeight: d.resWeight || 230, pct: d.pct || {}, prices: d.prices || {}, stock: d.stock || {} };
+            // v2: el peso pasó a ser de media res (antes 230 kg de res completa por defecto)
+            const w = !d.v && (!d.resWeight || d.resWeight === 230) ? 119 : (d.resWeight || 119);
+            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, stock: d.stock || {} };
           }
         } catch (e) { console.error('Media res: error al cargar', e); }
       }
@@ -6037,11 +6039,11 @@
       $('mrLoadRes').onclick = async () => {
         const w = +state.resWeight || 0;
         if (w <= 0) { window.showToast && window.showToast('Ingresá el peso de la res', 'error'); return; }
-        if (!confirm('¿Sumar al stock los cortes de una res de ' + fmt(w, 0) + ' kg?')) return;
+        if (!confirm('¿Sumar al stock los cortes de una media res de ' + fmt(w, 0) + ' kg?')) return;
         CUTS.forEach(c => { state.stock[c.k] = +(stockOf(c.k) + w * pctOf(c.k) / 100).toFixed(3); });
         await saveState(true);
         renderStock();
-        window.showToast && window.showToast('Res cargada al stock ✓', 'success');
+        window.showToast && window.showToast('Media res cargada al stock ✓', 'success');
       };
 
       // ── VENTAS ──
