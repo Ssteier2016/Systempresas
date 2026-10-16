@@ -5884,9 +5884,18 @@
 
       // Estado guardado en Firestore: settings/mediaRes
       let state = { v: 2, resWeight: 119, pct: {}, prices: {}, stock: {} };
+      // Lo que se puede vender en VENTAS: los cortes más hueso y grasa
+      const SELL = Object.assign({}, CUT);
+      WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
       const pctOf   = k => state.pct[k] != null ? +state.pct[k] : CUT[k].pct;
       const priceOf = k => state.prices[k] != null ? +state.prices[k] : (CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0);
       const stockOf = k => +state.stock[k] || 0;
+      // % de la res de hueso/grasa/merma: reparte lo que no es corte vendible
+      function wastePctOf(k) {
+        const rest = Math.max(0, 100 - CUTS.reduce((a, c) => a + pctOf(c.k), 0));
+        const tot = WASTE.reduce((a, x) => a + x.share, 0);
+        return rest * WASTE.find(x => x.k === k).share / tot;
+      }
 
       function stateRef() {
         const f = window._firestoreRef, uid = window.userId;
@@ -6022,13 +6031,13 @@
           const tr = document.createElement('tr');
           tr.className = 'border-b border-gray-100 text-gray-600';
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
-            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '">' : '') + '</td><td></td>';
-          const inp = tr.querySelector('input');
-          if (inp) inp.addEventListener('input', () => {
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>';
+          tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
             const v = parseFloat(inp.value);
-            state.prices[x.k] = isNaN(v) ? 0 : v;
+            state[inp.dataset.f][x.k] = isNaN(v) ? 0 : v;
             calcStock(); saveState();
-          });
+          }));
           tb.appendChild(tr);
         });
         calcStock();
@@ -6051,12 +6060,14 @@
         const restPct = Math.max(0, 100 - pct);
         $('mrBonePct').textContent = fmt(restPct, 1) + '%';
         $('mrBoneKg').textContent = fmt(w * restPct / 100, 1) + ' kg';
-        const wTot = WASTE.reduce((a, x) => a + x.share, 0);
         WASTE.forEach(x => {
-          const p = restPct * x.share / wTot;
+          const p = wastePctOf(x.k);
           document.querySelector('[data-wpct="' + x.k + '"]').textContent = fmt(p, 1) + '%';
           document.querySelector('[data-wkg="' + x.k + '"]').textContent = fmt(w * p / 100, 1) + ' kg';
-          if (x.price != null) val += w * p / 100 * priceOf(x.k);
+          if (x.price != null) {
+            val += w * p / 100 * priceOf(x.k);
+            st += stockOf(x.k); stVal += stockOf(x.k) * priceOf(x.k);
+          }
         });
         $('mrTotPct').textContent = fmt(pct, 1) + '%';
         $('mrTotKg').textContent = fmt(kg, 1) + ' kg';
@@ -6073,6 +6084,7 @@
         if (w <= 0) { window.showToast && window.showToast('Ingresá el peso de la res', 'error'); return; }
         if (!confirm('¿Sumar al stock los cortes de una media res de ' + fmt(w, 0) + ' kg?')) return;
         CUTS.forEach(c => { state.stock[c.k] = +(stockOf(c.k) + w * pctOf(c.k) / 100).toFixed(3); });
+        WASTE.filter(x => x.price != null).forEach(x => { state.stock[x.k] = +(stockOf(x.k) + w * wastePctOf(x.k) / 100).toFixed(3); });
         await saveState(true);
         renderStock();
         window.showToast && window.showToast('Media res cargada al stock ✓', 'success');
@@ -6089,7 +6101,7 @@
         return ['Efectivo', 'Transferencia', 'QR', 'Tarjeta débito', 'Tarjeta crédito', 'Cuenta DNI'];
       }
       function previewVentas(k) {
-        cowVentas.set(k ? CUT[k].regs : (selKey ? CUT[selKey].regs : null));
+        cowVentas.set(k ? SELL[k].regs : (selKey ? SELL[selKey].regs : null));
       }
       function selectCut(k) {
         selKey = k;
@@ -6100,7 +6112,7 @@
           b.style.color = on ? '#C8102E' : '';
         });
         if (!k) { $('mrSelPanel').classList.add('hidden'); return; }
-        const c = CUT[k];
+        const c = SELL[k];
         $('mrSelName').textContent = c.name;
         $('mrSelInfo').textContent = money(priceOf(k)) + ' por kg · Stock: ' + fmt(stockOf(k), 2) + ' kg';
         $('mrSelKg').value = ''; $('mrSelAmt').value = '';
@@ -6110,7 +6122,7 @@
       function renderVentas() {
         cowVentas = buildCow($('mrCowVentas'), 'mrClipVentas', (k, click) => { if (click) selectCut(k); else previewVentas(k); });
         $('mrCutChips').innerHTML = '';
-        CUTS.forEach(c => {
+        Object.values(SELL).forEach(c => {
           const b = document.createElement('button');
           b.dataset.k = c.k;
           b.className = 'text-left px-3 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 active:scale-95 transition';
@@ -6141,7 +6153,7 @@
           cart.forEach((it, i) => {
             const row = document.createElement('div');
             row.className = 'flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-gray-50';
-            row.innerHTML = '<div><p class="font-semibold text-gray-800">' + CUT[it.k].name + '</p><p class="text-xs text-gray-500">' + fmt(it.kg, 3) + ' kg × ' + money(it.price) + '</p></div>' +
+            row.innerHTML = '<div><p class="font-semibold text-gray-800">' + SELL[it.k].name + '</p><p class="text-xs text-gray-500">' + fmt(it.kg, 3) + ' kg × ' + money(it.price) + '</p></div>' +
               '<div class="flex items-center gap-2"><span class="font-bold text-gray-800">' + money(it.amount) + '</span><button class="text-gray-400 hover:text-red-600 px-2 text-lg" aria-label="Quitar"><i class="fas fa-times"></i></button></div>';
             row.querySelector('button').onclick = () => { cart.splice(i, 1); renderCart(); };
             box.appendChild(row);
@@ -6186,7 +6198,7 @@
             await f.addDoc(f.collection(window.db, 'artifacts', window.appId, 'users', uid, 'sales'), {
               date: today, time: timeStr, shift,
               montoCobrado: it.amount, clientName: client, paymentType: payMethod,
-              salesChannel: 'Mostrador', productName: CUT[it.k].name, productId: 'mediares:' + it.k,
+              salesChannel: 'Mostrador', productName: SELL[it.k].name, productId: 'mediares:' + it.k,
               quantitySold: it.kg, quantityUnit: 'kg', employee,
               notes: 'Media res · ' + fmt(it.kg, 3) + ' kg a ' + money(it.price) + '/kg',
               createdAt: now.toISOString(), updatedAt: now.toISOString(),
