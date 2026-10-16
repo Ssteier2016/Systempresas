@@ -116,6 +116,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Precios INDEC de la sección Media Res: siempre desde la red
+  if (url.includes('precios-indec.json')) return;
+
   // ESTRATEGIA PARA HTML: Network First (Priorizar servidor para detectar cambios)
   if (event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(

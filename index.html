@@ -5727,6 +5727,7 @@
             <input type="number" id="mrResWeight" min="1" step="1" class="mr-num" style="max-width:100px">
             <button id="mrLoadRes" class="ml-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
           </div>
+          <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
             <table class="w-full text-sm" style="min-width:560px">
@@ -5888,7 +5889,45 @@
       const SELL = Object.assign({}, CUT);
       WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
       const pctOf   = k => state.pct[k] != null ? +state.pct[k] : CUT[k].pct;
-      const priceOf = k => state.prices[k] != null ? +state.prices[k] : (CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0);
+      // Precios INDEC GBA (precios-indec.json, lo actualiza una GitHub Action cada mes)
+      let indec = null;
+      const indecPrice = k => indec && indec.precios && indec.precios[k] > 0 ? +indec.precios[k] : null;
+      const priceSrc = k => state.prices[k] != null ? 'propio' : indecPrice(k) != null ? 'indec' : 'ejemplo';
+      const priceOf = k => {
+        if (state.prices[k] != null) return +state.prices[k];
+        if (indecPrice(k) != null) return indecPrice(k);
+        return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
+      };
+      async function loadIndec() {
+        try {
+          const r = await fetch('precios-indec.json?t=' + Date.now(), { cache: 'no-store' });
+          if (r.ok) indec = await r.json();
+        } catch (e) { console.warn('Media res: sin precios INDEC', e); }
+      }
+      const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      const indecPeriodo = () => {
+        if (!indec || !indec.periodo) return '';
+        const [y, m] = indec.periodo.split('-');
+        return MESES[+m - 1] + ' ' + y;
+      };
+      // Inputs de precio y stock: si se borra el precio, vuelve al del INDEC (o al de ejemplo)
+      function bindInput(inp, k) {
+        inp.addEventListener('input', () => {
+          const v = parseFloat(inp.value);
+          if (inp.dataset.f === 'prices' && inp.value.trim() === '') delete state.prices[k];
+          else state[inp.dataset.f][k] = isNaN(v) ? 0 : v;
+          calcStock(); saveState();
+        });
+        if (inp.dataset.f === 'prices') inp.addEventListener('change', () => {
+          if (inp.value.trim() === '') { inp.value = priceOf(k); calcStock(); }
+        });
+      }
+      function srcTag(k) {
+        const src = priceSrc(k);
+        if (src === 'indec') return '<span class="block text-[10px] text-blue-500" data-src>INDEC GBA</span>';
+        if (src === 'ejemplo') return '<span class="block text-[10px] text-gray-400" data-src>ejemplo</span>';
+        return '<span class="block text-[10px] text-gray-400" data-src></span>';
+      }
       const stockOf = k => +state.stock[k] || 0;
       // % de la res de hueso/grasa/merma: reparte lo que no es corte vendible
       function wastePctOf(k) {
@@ -5995,6 +6034,9 @@
       function renderStock() {
         cowStock = buildCow($('mrCowStock'), 'mrClipStock', k => highlightStock(k));
         $('mrResWeight').value = state.resWeight;
+        $('mrIndecInfo').textContent = indec
+          ? 'Precios de referencia: INDEC, promedio GBA de ' + indecPeriodo() + ' (asado, nalga, cuadril y paleta). Si borrás tu precio, vuelve al del INDEC.'
+          : '';
         const tb = $('mrStockBody');
         tb.innerHTML = '';
         ['t', 'm', 'd'].forEach(z => {
@@ -6009,16 +6051,12 @@
               '<td class="py-1 px-2 cursor-pointer">' + c.name + (c.note ? ' <span class="text-[11px] text-gray-400">' + c.note + '</span>' : '') + '</td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="pct" min="0" step="0.1" value="' + pctOf(c.k) + '" aria-label="Porcentaje de ' + c.name + '"></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio por kg de ' + c.name + '"></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio por kg de ' + c.name + '">' + srcTag(c.k) + '</td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>';
             tr.addEventListener('mouseenter', () => highlightStock(c.k));
             tr.addEventListener('mouseleave', () => highlightStock(null));
             tr.firstChild.addEventListener('click', () => highlightStock(c.k));
-            tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
-              const v = parseFloat(inp.value);
-              state[inp.dataset.f][c.k] = isNaN(v) ? 0 : v;
-              calcStock(); saveState();
-            }));
+            tr.querySelectorAll('input').forEach(inp => bindInput(inp, c.k));
             tb.appendChild(tr);
             stockRows[c.k] = tr;
           });
@@ -6033,11 +6071,7 @@
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>';
-          tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
-            const v = parseFloat(inp.value);
-            state[inp.dataset.f][x.k] = isNaN(v) ? 0 : v;
-            calcStock(); saveState();
-          }));
+          tr.querySelectorAll('input').forEach(inp => bindInput(inp, x.k));
           tb.appendChild(tr);
         });
         calcStock();
@@ -6049,6 +6083,8 @@
         CUTS.forEach(c => {
           const p = pctOf(c.k), k = w * p / 100, s = stockOf(c.k);
           stockRows[c.k].querySelector('[data-kg]').textContent = fmt(k, 1) + ' kg';
+          const tag = stockRows[c.k].querySelector('[data-src]');
+          if (tag) tag.outerHTML = srcTag(c.k);
           pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
           zs[c.z][0] += p; zs[c.z][1] += k; zs[c.z][2] += s;
         });
@@ -6234,7 +6270,7 @@
       window.openMediaRes = async function() {
         $('mediaResModule').classList.remove('hidden');
         show('home');
-        await loadState();
+        await Promise.all([loadState(), loadIndec()]);
       };
       $('mrGoStock').onclick = () => show('stock');
       $('mrGoVentas').onclick = () => show('ventas');

@@ -1,0 +1,13 @@
+{
+  "fuente": "INDEC - Precios promedio al consumidor",
+  "region": "GBA",
+  "periodo": "2026-09",
+  "precios": {
+    "asado": 16836.34,
+    "picada": 10713.74,
+    "paleta": 17278.8,
+    "cuadril": 21304.73,
+    "nalga": 21914.04
+  },
+  "actualizado": "2026-10-16"
+}
