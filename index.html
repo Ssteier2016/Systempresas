@@ -5892,10 +5892,13 @@
       // Precios INDEC GBA (precios-indec.json, lo actualiza una GitHub Action cada mes)
       let indec = null;
       const indecPrice = k => indec && indec.precios && indec.precios[k] > 0 ? +indec.precios[k] : null;
-      const priceSrc = k => state.prices[k] != null ? 'propio' : indecPrice(k) != null ? 'indec' : 'ejemplo';
+      const ipcvaPrice = k => indec && indec.ipcva && indec.ipcva.precios && indec.ipcva.precios[k] > 0 ? +indec.ipcva.precios[k] : null;
+      // Prioridad: precio propio > INDEC GBA > IPCVA AMBA > ejemplo
+      const priceSrc = k => state.prices[k] != null ? 'propio' : indecPrice(k) != null ? 'indec' : ipcvaPrice(k) != null ? 'ipcva' : 'ejemplo';
       const priceOf = k => {
         if (state.prices[k] != null) return +state.prices[k];
         if (indecPrice(k) != null) return indecPrice(k);
+        if (ipcvaPrice(k) != null) return ipcvaPrice(k);
         return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
       };
       async function loadIndec() {
@@ -5905,9 +5908,9 @@
         } catch (e) { console.warn('Media res: sin precios INDEC', e); }
       }
       const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-      const indecPeriodo = () => {
-        if (!indec || !indec.periodo) return '';
-        const [y, m] = indec.periodo.split('-');
+      const fmtPeriodo = per => {
+        if (!per) return '';
+        const [y, m] = per.split('-');
         return MESES[+m - 1] + ' ' + y;
       };
       // Inputs de precio y stock: si se borra el precio, vuelve al del INDEC (o al de ejemplo)
@@ -5925,6 +5928,7 @@
       function srcTag(k) {
         const src = priceSrc(k);
         if (src === 'indec') return '<span class="block text-[10px] text-blue-500" data-src>INDEC GBA</span>';
+        if (src === 'ipcva') return '<span class="block text-[10px] text-green-600" data-src>IPCVA AMBA</span>';
         if (src === 'ejemplo') return '<span class="block text-[10px] text-gray-400" data-src>ejemplo</span>';
         return '<span class="block text-[10px] text-gray-400" data-src></span>';
       }
@@ -6035,7 +6039,9 @@
         cowStock = buildCow($('mrCowStock'), 'mrClipStock', k => highlightStock(k));
         $('mrResWeight').value = state.resWeight;
         $('mrIndecInfo').textContent = indec
-          ? 'Precios de referencia: INDEC, promedio GBA de ' + indecPeriodo() + ' (asado, nalga, cuadril y paleta). Si borrás tu precio, vuelve al del INDEC.'
+          ? 'Precios de referencia: INDEC, promedio GBA de ' + fmtPeriodo(indec.periodo) + ' (asado, nalga, cuadril y paleta)' +
+            (indec.ipcva ? ' e IPCVA, promedio AMBA de ' + fmtPeriodo(indec.ipcva.periodo) + ' (resto de los cortes)' : '') +
+            '. Si borrás tu precio, vuelve el de referencia.'
           : '';
         const tb = $('mrStockBody');
         tb.innerHTML = '';

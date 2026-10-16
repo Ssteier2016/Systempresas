@@ -9,5 +9,34 @@
     "cuadril": 21304.73,
     "nalga": 21914.04
   },
+  "ipcva": {
+    "fuente": "IPCVA - Precios al consumidor",
+    "region": "AMBA",
+    "periodo": "2026-09",
+    "precios": {
+      "asado": 17869.0,
+      "paleta": 17484.0,
+      "nalga": 21784.0,
+      "cuadril": 21601.0,
+      "bifeang": 18617.0,
+      "bifeanc": 17803.0,
+      "bola": 19332.0,
+      "carnaza": 12145.0,
+      "cuadrada": 19536.0,
+      "falda": 11344.0,
+      "lomo": 28017.0,
+      "osobuco": 11720.0,
+      "peceto": 23737.0,
+      "picada": 10839.0,
+      "picadaesp": 15036.0,
+      "roastbeef": 16779.0,
+      "tapanalga": 18357.0,
+      "vacio": 21331.0,
+      "colita": 23939.0,
+      "matambre": 17905.0,
+      "tapaasado": 17257.0,
+      "tortuguita": 17235.0
+    }
+  },
   "actualizado": "2026-10-16"
 }

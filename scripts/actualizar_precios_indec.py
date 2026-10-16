@@ -1,15 +1,22 @@
-"""Descarga los precios promedio al consumidor del INDEC (región GBA) y
-guarda los de carne vacuna en precios-indec.json, para la sección Media Res.
+"""Descarga precios de referencia de carne vacuna y los guarda en
+precios-indec.json, para la sección Media Res:
 
-Fuente: https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_precios_promedio.xls
+- INDEC, precios promedio al consumidor, región GBA (asado, nalga, cuadril, paleta):
+  https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_precios_promedio.xls
+- IPCVA, precios al consumidor AMBA (resto de los cortes):
+  https://ipcva.agrositio.com/estadisticas/vista_precios_consumidor2.php
+
 Uso: python scripts/actualizar_precios_indec.py
 """
+import html
 import json
 import os
+import re
 import sys
 import unicodedata
+import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import xlrd
 
@@ -31,6 +38,64 @@ MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
 def normalizar(texto):
     texto = unicodedata.normalize('NFKD', str(texto)).encode('ascii', 'ignore').decode()
     return ' '.join(texto.lower().split())
+
+
+IPCVA_URL = 'https://ipcva.agrositio.com/estadisticas/vista_precios_consumidor2.php'
+# Producto del IPCVA -> clave del corte en la app
+IPCVA_CORTES = {
+    'asado': 'asado', 'paleta': 'paleta', 'nalga': 'nalga', 'cuadril': 'cuadril',
+    'bife angosto': 'bifeang', 'bife ancho': 'bifeanc', 'bola de lomo': 'bola',
+    'cuadrada': 'cuadrada', 'falda': 'falda', 'lomo': 'lomo', 'osobuco': 'osobuco',
+    'peceto': 'peceto', 'tapa de nalga': 'tapanalga', 'vacio': 'vacio',
+    'colita de cuadril': 'colita', 'matambre': 'matambre', 'tapa de asado': 'tapaasado',
+    'tortuguita': 'tortuguita', 'carnaza comun': 'carnaza', 'roast beef': 'roastbeef',
+    'picada comun': 'picada', 'picada especial': 'picadaesp',
+}
+MESES_EN = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+
+
+def leer_ipcva():
+    """Último mes con datos de la consulta de precios al consumidor del IPCVA (AMBA)."""
+    pagina = urllib.request.urlopen(urllib.request.Request(
+        IPCVA_URL, headers={'User-Agent': 'Mozilla/5.0'}), timeout=60).read().decode('utf-8', 'replace')
+    ids = re.findall(r'name="productos\[\]" value="(\d+)"', pagina)
+    hoy = date.today()
+    desde = date(hoy.year - 1 if hoy.month <= 4 else hoy.year, (hoy.month - 5) % 12 + 1, 1)
+    form = [('mes_desde', '%02d-01' % desde.month), ('ano_desde', str(desde.year)),
+            ('mes_hasta', '%02d-01' % hoy.month), ('ano_hasta', str(hoy.year))]
+    form += [('productos[]', i) for i in ids]
+    req = urllib.request.Request(IPCVA_URL, data=urllib.parse.urlencode(form).encode(),
+                                 headers={'User-Agent': 'Mozilla/5.0'})
+    s = urllib.request.urlopen(req, timeout=60).read().decode('utf-8', 'replace')
+    s = s[s.find('Moneda Corriente'):]
+    celdas = [html.unescape(re.sub(r'<[^>]+>', '', c)).strip()
+              for c in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', s, re.S)]
+    celdas = [c for c in celdas if c]
+    i = celdas.index('Período')
+    # Encabezados hasta la primera fila de período (ej. "Sep-26")
+    j = i + 1
+    while j < len(celdas) and not re.match(r'^[A-Za-z]{3}-\d{2}$', celdas[j]):
+        j += 1
+    cols = celdas[i + 1:j]
+    filas = []
+    while j + len(cols) < len(celdas) and re.match(r'^[A-Za-z]{3}-\d{2}$', celdas[j]):
+        filas.append((celdas[j], celdas[j + 1:j + 1 + len(cols)]))
+        j += 1 + len(cols)
+    for periodo, valores in reversed(filas):
+        precios = {}
+        for nombre, v in zip(cols, valores):
+            clave = IPCVA_CORTES.get(normalizar(nombre))
+            try:
+                if clave:
+                    precios[clave] = round(float(v), 2)
+            except ValueError:
+                pass
+        if precios:
+            mes, anio = periodo.split('-')
+            return {'fuente': 'IPCVA - Precios al consumidor', 'region': 'AMBA',
+                    'periodo': '20%s-%02d' % (anio, MESES_EN.index(mes.lower()) + 1),
+                    'precios': precios}
+    sys.exit('No se encontraron precios en la consulta del IPCVA')
 
 
 def main():
@@ -85,6 +150,7 @@ def main():
         'region': 'GBA',
         'periodo': periodo,
         'precios': precios,
+        'ipcva': leer_ipcva(),
     }
 
     anterior = None
@@ -100,6 +166,7 @@ def main():
         json.dump(nuevo, f, ensure_ascii=False, indent=2)
         f.write('\n')
     print('Precios INDEC %s: %s' % (periodo, precios))
+    print('Precios IPCVA %s: %s' % (nuevo['ipcva']['periodo'], nuevo['ipcva']['precios']))
 
 
 if __name__ == '__main__':
