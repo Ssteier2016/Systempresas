@@ -5745,7 +5745,7 @@
               </tfoot>
             </table>
           </div>
-          <p class="text-xs text-gray-400 mt-3">Porcentajes aproximados de un novillo (cortes vendibles, con hueso donde se vende con hueso), estimados con datos de Kohn 2021, CCDH, FADA/IPCVA 2018 y UNNE 2010. Cada res es distinta: ajustalos con tus propios despostes. Los porcentajes y precios se guardan solos y el stock baja con cada venta.</p>
+          <p class="text-xs text-gray-400 mt-3">Porcentajes aproximados de un novillo (cortes vendibles, con hueso donde se vende con hueso), estimados con datos de Kohn 2021, CCDH, FADA/IPCVA 2018 y UNNE 2010. Hueso, grasa y merma: oreo según Valor Carne (2,5–3 %) y proporción hueso/grasa según un estudio de desposte publicado en SciELO (2008). Cada res es distinta: ajustalos con tus propios despostes. Los porcentajes y precios se guardan solos y el stock baja con cada venta.</p>
         </div>
       </div>
 
@@ -5868,6 +5868,13 @@
         ['osobuco','Osobuco','d',2.3,7000,['osobuco']]
       ].map(c => ({ k:c[0], name:c[1], z:c[2], pct:c[3], price:c[4], regs:c[5], note:c[6] || '' }));
       const CUT = Object.fromEntries(CUTS.map(c => [c.k, c]));
+      // Reparto de lo no vendible (28 % con los valores por defecto): oreo 2,5 % (Valor Carne);
+      // hueso y grasa en la proporción 12,5 : 9,5 medida en desposte de media res fría (Rev. Científica FCV-LUZ 2008)
+      const WASTE = [
+        { k:'hueso', name:'Hueso', share:14.5, note:'limpio, de los cortes sin hueso' },
+        { k:'grasa', name:'Grasa', share:11.0, note:'recortada en el emprolijado' },
+        { k:'merma', name:'Merma', share:2.5, note:'oreo (pérdida de agua al enfriar) y recortes' }
+      ];
       // Corte que se elige al tocar cada zona del dibujo
       const REGION_CUT = {};
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
@@ -6004,9 +6011,15 @@
           });
         });
         const hr = document.createElement('tr');
-        hr.className = 'text-gray-500';
-        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y recortes</td><td class="text-right px-2" id="mrBonePct"></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td>';
+        hr.className = 'bg-gray-50 text-gray-500 font-semibold';
+        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td>';
         tb.appendChild(hr);
+        WASTE.forEach(x => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b border-gray-100 text-gray-600';
+          tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td class="text-right px-2" data-wkg="' + x.k + '"></td><td></td><td></td>';
+          tb.appendChild(tr);
+        });
         calcStock();
       }
       function calcStock() {
@@ -6024,8 +6037,15 @@
           document.querySelector('[data-zkg="' + z + '"]').textContent = fmt(v[1], 1) + ' kg';
           document.querySelector('[data-zst="' + z + '"]').textContent = fmt(v[2], 1) + ' kg';
         });
-        $('mrBonePct').textContent = fmt(Math.max(0, 100 - pct), 1) + '%';
-        $('mrBoneKg').textContent = fmt(Math.max(0, w - kg), 1) + ' kg';
+        const restPct = Math.max(0, 100 - pct);
+        $('mrBonePct').textContent = fmt(restPct, 1) + '%';
+        $('mrBoneKg').textContent = fmt(w * restPct / 100, 1) + ' kg';
+        const wTot = WASTE.reduce((a, x) => a + x.share, 0);
+        WASTE.forEach(x => {
+          const p = restPct * x.share / wTot;
+          document.querySelector('[data-wpct="' + x.k + '"]').textContent = fmt(p, 1) + '%';
+          document.querySelector('[data-wkg="' + x.k + '"]').textContent = fmt(w * p / 100, 1) + ' kg';
+        });
         $('mrTotPct').textContent = fmt(pct, 1) + '%';
         $('mrTotKg').textContent = fmt(kg, 1) + ' kg';
         $('mrTotStock').textContent = fmt(st, 1) + ' kg';
