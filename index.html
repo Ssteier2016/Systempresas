@@ -5740,7 +5740,7 @@
               <tbody id="mrStockBody"></tbody>
               <tfoot class="font-semibold text-gray-700">
                 <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td id="mrTotStock" class="text-right px-2"></td></tr>
-                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res</td><td id="mrTotVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td></tr>
                 <tr><td colspan="4" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td></tr>
               </tfoot>
             </table>
@@ -5798,42 +5798,46 @@
       // Contorno de la vaca (coordenadas 860 x 550)
       const OUTLINE = 'M130,98 C160,90 190,86 212,88 C260,92 320,104 362,106 C400,108 430,106 452,106 C510,104 570,98 615,92 C630,80 645,64 660,54 L676,18 L688,22 L682,56 C700,60 725,64 748,70 C765,62 785,50 806,40 C802,56 790,72 772,88 C790,90 800,96 802,104 C790,110 772,110 758,108 C756,140 755,180 752,208 C740,222 715,232 690,242 C680,246 674,248 668,250 C658,262 650,282 642,300 C640,340 632,366 604,392 C596,398 588,402 578,405 L572,450 L566,525 L562,536 L512,536 L510,520 L505,450 L500,402 C470,382 420,376 380,373 C320,372 270,360 230,345 C200,362 172,400 162,440 L160,525 L156,536 L82,536 L82,500 L78,440 C74,380 78,330 82,280 C85,220 88,170 100,135 C108,115 118,103 130,98 Z';
       const TAIL = 'M92,132 C64,180 36,240 26,300 C20,340 16,375 14,410 L38,412 C40,376 44,340 50,302 C60,248 84,192 106,148 Z';
+      // Despiece argentino (nomenclador IPCVA) dentro del contorno
       const REGIONS = {
-        cuadril:'60,50 212,50 212,88 230,130 262,205 140,205 150,183 60,140',
-        tapacuad:'60,140 150,183 145,202 60,200',
-        peceto:'40,200 108,200 105,322 40,320',
-        cuadrada:'108,200 145,202 175,225 180,330 105,322',
-        bola:'175,215 190,203 262,205 256,255 178,240',
-        colita:'178,240 256,255 240,345 210,342 180,330',
-        tapanalga:'40,320 105,322 180,330 230,345 175,410 40,405',
-        tortuguita:'40,405 175,410 220,560 40,560',
-        lomo:'205,40 372,40 362,110 300,120 230,130',
-        bifeang:'230,130 300,120 362,110 345,205 262,205',
-        bifeanc:'362,110 372,40 450,40 452,106 470,208 345,205',
-        vacio:'262,205 400,208 385,300 390,380 230,380 240,345 256,255',
-        asado:'400,208 470,208 475,300 455,300 440,380 390,380 385,300',
-        falda:'455,300 478,300 478,385 440,385',
-        cogote:'450,40 645,40 612,118 470,145 452,106',
-        aguja:'452,106 470,145 612,118 575,207 470,208',
-        pescuezo:'612,118 645,40 652,105 668,250 582,268 575,207',
-        marucha:'470,208 542,208 545,300 478,315',
-        chingolo:'542,208 575,207 582,268 545,300',
-        brazuelo:'478,315 545,300 548,398 478,398',
-        pecho:'545,300 582,268 668,250 720,300 720,402 548,398',
-        osobuco:'470,398 548,398 720,402 720,560 470,560',
-        cabeza:'652,105 645,0 860,0 860,330 668,250'
+        tapacuad:'60,40 170,40 160,125 90,150 60,150',
+        cuadril:'170,40 240,40 240,170 160,175 160,125',
+        colita:'160,175 240,170 250,215 175,225',
+        peceto:'40,150 90,150 100,330 40,330',
+        nalga:'90,150 160,125 160,175 175,225 170,300 98,300',
+        bola:'175,225 250,215 262,300 230,345 190,380 170,300',
+        cuadrada:'98,300 170,300 190,380 175,425 40,425 40,330 100,330',
+        tortuguita:'40,425 175,425 230,560 40,560',
+        bifeang:'240,40 365,40 365,150 240,155',
+        lomo:'240,155 365,150 365,185 240,190',
+        vacio:'240,190 365,185 370,300 370,345 245,338 262,300 250,215',
+        bifeanc:'365,40 470,40 470,145 365,150',
+        tapaasado:'365,150 470,145 470,190 365,185',
+        asado:'365,185 470,190 480,290 370,300',
+        falda:'370,300 480,290 495,335 480,352 370,345',
+        matambre:'245,338 370,345 480,352 480,430 245,430',
+        aguja:'470,40 600,40 615,120 475,145 470,145',
+        marucha:'470,145 475,145 615,120 600,200 560,205 470,190',
+        paleta:'470,190 560,205 575,300 480,290',
+        chingolo:'480,290 575,300 565,335 495,335',
+        brazuelo:'495,335 565,335 600,400 480,405 480,352',
+        pecho:'560,205 600,200 640,265 668,250 720,300 720,402 600,400 575,300',
+        cogote:'600,40 650,40 652,105 668,250 640,265 600,200 615,120',
+        osobuco:'470,400 720,402 720,560 470,560',
+        cabeza:'652,105 650,0 860,0 860,330 668,250'
       };
-      const CIRCLES = { nalga:[165,205,25], paleta:[510,275,28] };
+      const ELLIPSES = { entrana:[368,245,13,40] };
       const LABELS = [
-        ['cuadril',182,140,['Cuadril']],['tapacuad',114,170,['Tapa de','cuadril'],1],['nalga',165,210,['Nalga'],1],
-        ['peceto',90,262,['Peceto'],0,-90],['cuadrada',142,278,['Cuadrada'],1],['bola',218,232,['Bola de','lomo'],1],
-        ['colita',212,282,['Colita de','cuadril'],1],['tapanalga',140,362,['Tapa de','nalga']],['tortuguita',118,470,['Tortuguita'],1],
-        ['lomo',292,113,['Lomo']],['bifeang',300,168,['Bife angosto']],['bifeanc',408,168,['Bife ancho']],
-        ['vacio',318,288,['Vacío']],['asado',425,288,['Asado']],['falda',460,345,['Falda'],1,-90],
-        ['cogote',545,124,['Cogote']],['aguja',530,174,['Aguja']],['pescuezo',622,205,['Pescuezo']],
-        ['marucha',507,230,['Marucha'],1],['paleta',510,281,['Paleta'],1],['chingolo',563,255,['Chingolo'],1,-90],
-        ['brazuelo',512,352,['Brazuelo'],1],['pecho',602,335,['Pecho']],['osobuco',536,470,['Osobuco'],1],
-        ['cabeza',700,170,['Cabeza']],['rabo',40,300,['Rabo'],1,-80]
+        ['tapacuad',124,121,['Tapa de','cuadril'],1],['cuadril',200,120,['Cuadril']],['colita',205,198,['Colita de','cuadril'],1],
+        ['peceto',68,240,['Peceto'],0,-90],['nalga',132,225,['Nalga']],['bola',213,285,['Bola de','lomo'],1],
+        ['cuadrada',118,370,['Cuadrada']],['tortuguita',118,480,['Tortuguita'],1],
+        ['bifeang',302,124,['Bife','angosto']],['lomo',302,170,['Lomo'],1],['vacio',305,262,['Vacío']],
+        ['bifeanc',417,126,['Bife','ancho']],['tapaasado',417,168,['Tapa de asado'],1],['asado',425,245,['Asado']],
+        ['entrana',368,245,['Entraña'],1,-90],['falda',425,322,['Falda'],1],['matambre',380,359,['Matambre'],1],
+        ['aguja',540,118,['Aguja']],['marucha',540,172,['Marucha'],1],['paleta',522,245,['Paleta']],
+        ['chingolo',530,317,['Chingolo'],1],['brazuelo',535,368,['Brazuelo'],1],['pecho',612,320,['Pecho']],
+        ['cogote',630,175,['Cogote'],1,-90],['osobuco',536,480,['Osobuco'],1],
+        ['cabeza',705,170,['Cabeza']],['rabo',40,300,['Rabo'],1,-80]
       ];
       const ZONES = { t:'Cuarto trasero', m:'Parte media', d:'Cuarto delantero' };
       // k, nombre, zona, % de la res, precio de ejemplo, zonas del dibujo, nota
@@ -5852,14 +5856,13 @@
         ['bifeang','Bife angosto','m',4.6,16000,['bifeang']],
         ['bifeanc','Bife ancho','m',2.7,13000,['bifeanc']],
         ['vacio','Vacío','m',2.7,15000,['vacio']],
-        ['matambre','Matambre','m',1.3,14000,['vacio','asado'],'sale de abajo del cuero'],
+        ['matambre','Matambre','m',1.3,14000,['matambre'],'sale de abajo del cuero'],
         ['asado','Asado','m',8.0,13000,['asado']],
-        ['tapaasado','Tapa de asado','m',0.6,12500,['asado'],'cubre el asado'],
-        ['entrana','Entraña','m',0.6,17000,['asado'],'interna, del diafragma'],
+        ['tapaasado','Tapa de asado','m',0.6,12500,['tapaasado'],'cubre el asado'],
+        ['entrana','Entraña','m',0.6,17000,['entrana'],'interna, del diafragma'],
         ['falda','Falda','m',2.9,7000,['falda']],
-        ['cogote','Cogote','d',2.3,8000,['cogote']],
+        ['cogote','Cogote','d',3.7,8000,['cogote']],
         ['aguja','Aguja','d',5.4,9000,['aguja']],
-        ['pescuezo','Pescuezo','d',1.4,7500,['pescuezo']],
         ['marucha','Marucha','d',0.9,11500,['marucha']],
         ['paleta','Paleta','d',4.3,11000,['paleta']],
         ['chingolo','Chingolo','d',0.7,12000,['chingolo']],
@@ -5871,8 +5874,8 @@
       // Reparto de lo no vendible (28 % con los valores por defecto): oreo 2,5 % (Valor Carne);
       // hueso y grasa en la proporción 12,5 : 9,5 medida en desposte de media res fría (Rev. Científica FCV-LUZ 2008)
       const WASTE = [
-        { k:'hueso', name:'Hueso', share:14.5, note:'limpio, de los cortes sin hueso' },
-        { k:'grasa', name:'Grasa', share:11.0, note:'recortada en el emprolijado' },
+        { k:'hueso', name:'Hueso', share:14.5, price:2000, note:'limpio, de los cortes sin hueso' },
+        { k:'grasa', name:'Grasa', share:11.0, price:1500, note:'recortada en el emprolijado' },
         { k:'merma', name:'Merma', share:2.5, note:'oreo (pérdida de agua al enfriar) y recortes' }
       ];
       // Corte que se elige al tocar cada zona del dibujo
@@ -5882,7 +5885,7 @@
       // Estado guardado en Firestore: settings/mediaRes
       let state = { v: 2, resWeight: 119, pct: {}, prices: {}, stock: {} };
       const pctOf   = k => state.pct[k] != null ? +state.pct[k] : CUT[k].pct;
-      const priceOf = k => state.prices[k] != null ? +state.prices[k] : CUT[k].price;
+      const priceOf = k => state.prices[k] != null ? +state.prices[k] : (CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0);
       const stockOf = k => +state.stock[k] || 0;
 
       function stateRef() {
@@ -5938,10 +5941,11 @@
           p.setAttribute('class', 'mr-rg' + (k === 'cabeza' ? ' nx' : ''));
           g.appendChild(p); els[k] = p;
         });
-        Object.entries(CIRCLES).forEach(([k, c]) => {
-          const e = document.createElementNS(NS, 'circle');
-          e.setAttribute('cx', c[0]); e.setAttribute('cy', c[1]); e.setAttribute('r', c[2]);
+        Object.entries(ELLIPSES).forEach(([k, c]) => {
+          const e = document.createElementNS(NS, 'ellipse');
+          e.setAttribute('cx', c[0]); e.setAttribute('cy', c[1]); e.setAttribute('rx', c[2]); e.setAttribute('ry', c[3]);
           e.setAttribute('class', 'mr-rg');
+          e.style.strokeDasharray = '6 4';
           g.appendChild(e); els[k] = e;
         });
         LABELS.forEach(l => {
@@ -6017,7 +6021,14 @@
         WASTE.forEach(x => {
           const tr = document.createElement('tr');
           tr.className = 'border-b border-gray-100 text-gray-600';
-          tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td class="text-right px-2" data-wkg="' + x.k + '"></td><td></td><td></td>';
+          tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '">' : '') + '</td><td></td>';
+          const inp = tr.querySelector('input');
+          if (inp) inp.addEventListener('input', () => {
+            const v = parseFloat(inp.value);
+            state.prices[x.k] = isNaN(v) ? 0 : v;
+            calcStock(); saveState();
+          });
           tb.appendChild(tr);
         });
         calcStock();
@@ -6045,6 +6056,7 @@
           const p = restPct * x.share / wTot;
           document.querySelector('[data-wpct="' + x.k + '"]').textContent = fmt(p, 1) + '%';
           document.querySelector('[data-wkg="' + x.k + '"]').textContent = fmt(w * p / 100, 1) + ' kg';
+          if (x.price != null) val += w * p / 100 * priceOf(x.k);
         });
         $('mrTotPct').textContent = fmt(pct, 1) + '%';
         $('mrTotKg').textContent = fmt(kg, 1) + ' kg';
