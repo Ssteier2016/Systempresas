@@ -1,0 +1,32 @@
+name: Precios INDEC (carne GBA)
+
+on:
+  schedule:
+    # El INDEC publica el IPC a mediados de mes: revisar los días 15, 20 y 25
+    - cron: '0 12 15,20,25 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install xlrd==2.0.1
+      - run: python scripts/actualizar_precios_indec.py
+      - name: Guardar cambios
+        run: |
+          if git diff --quiet -- precios-indec.json && git ls-files --error-unmatch precios-indec.json >/dev/null 2>&1; then
+            echo "Sin cambios"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add precios-indec.json
+          git commit -m "chore: precios INDEC carne GBA $(python -c "import json;print(json.load(open('precios-indec.json'))['periodo'])")"
+          git push
