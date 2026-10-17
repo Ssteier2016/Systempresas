@@ -5732,20 +5732,22 @@
           <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" style="min-width:660px">
+            <table class="w-full text-sm" style="min-width:820px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Corte</th>
                 <th class="text-right py-2 px-2 font-semibold">% de la res</th>
                 <th class="text-right py-2 px-2 font-semibold">Peso estimado</th>
                 <th class="text-right py-2 px-2 font-semibold">Precio por kg</th>
+                <th class="text-right py-2 px-2 font-semibold">Costo por kg</th>
+                <th class="text-right py-2 px-2 font-semibold" title="(Precio de venta − costo) / costo">Ganancia %</th>
                 <th class="text-right py-2 px-2 font-semibold">Stock (kg)</th>
                 <th class="text-right py-2 px-2 font-semibold">Antigüedad</th>
               </tr></thead>
               <tbody id="mrStockBody"></tbody>
               <tfoot class="font-semibold text-gray-700">
-                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
-                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td></tr>
-                <tr><td colspan="4" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td colspan="6" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
               </tfoot>
             </table>
           </div>
@@ -5887,7 +5889,7 @@
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
 
       // Estado guardado en Firestore: settings/mediaRes
-      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, stock: {}, lots: {} };
+      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {} };
       // Lo que se puede vender en VENTAS: los cortes más hueso y grasa
       const SELL = Object.assign({}, CUT);
       WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
@@ -5920,7 +5922,7 @@
       function bindInput(inp, k) {
         inp.addEventListener('input', () => {
           const v = parseFloat(inp.value);
-          if (inp.dataset.f === 'prices' && inp.value.trim() === '') delete state.prices[k];
+          if ((inp.dataset.f === 'prices' || inp.dataset.f === 'costs') && inp.value.trim() === '') delete state[inp.dataset.f][k];
           else state[inp.dataset.f][k] = isNaN(v) ? 0 : v;
           if (inp.dataset.f === 'stock') syncLots(k, todayISO());
           calcStock(); saveState();
@@ -5937,6 +5939,14 @@
         return '<span class="block text-[10px] text-gray-400" data-src></span>';
       }
       const stockOf = k => +state.stock[k] || 0;
+      const costOf = k => state.costs[k] != null ? +state.costs[k] : 0;
+      // Ganancia sobre el costo: (venta - costo) / costo, en vivo; sin costo no se calcula
+      function marginTag(k) {
+        const c = costOf(k);
+        if (!(c > 0)) return '<span class="text-gray-300">—</span>';
+        const m = (priceOf(k) - c) / c * 100;
+        return '<span style="color:' + (m >= 0 ? '#16a34a' : '#C8102E') + ';font-weight:600">' + fmt(m, 1) + '%</span>';
+      }
       // Lotes por fecha de res de cada corte (state.lots[k] = [{ d: 'AAAA-MM-DD' | null, kg }]), el más viejo primero
       const todayISO = () => { const t = new Date(); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); };
       const lotsOf = k => state.lots[k] || (state.lots[k] = []);
@@ -5991,7 +6001,7 @@
             const d = snap.data();
             // v2: el peso pasó a ser de media res (antes 230 kg de res completa por defecto)
             const w = !d.v && (!d.resWeight || d.resWeight === 230) ? 119 : (d.resWeight || 119);
-            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, stock: d.stock || {}, lots: d.lots || {} };
+            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {} };
             // Stock cargado antes de registrar fechas: queda "sin fecha"
             Object.keys(state.stock).forEach(k => syncLots(k, null));
           }
@@ -6088,7 +6098,7 @@
         ['t', 'm', 'd'].forEach(z => {
           const zr = document.createElement('tr');
           zr.className = 'bg-gray-50 text-gray-500 font-semibold';
-          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
+          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
           tb.appendChild(zr);
           CUTS.filter(c => c.z === z).forEach(c => {
             const tr = document.createElement('tr');
@@ -6098,6 +6108,8 @@
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="pct" min="0" step="0.1" value="' + pctOf(c.k) + '" aria-label="Porcentaje de ' + c.name + '"></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio por kg de ' + c.name + '">' + srcTag(c.k) + '</td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"></td>' +
+              '<td class="text-right px-2 text-xs" data-margin></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>' +
               '<td class="text-right px-2 text-xs" data-age></td>';
             tr.addEventListener('mouseenter', () => highlightStock(c.k));
@@ -6110,13 +6122,15 @@
         });
         const hr = document.createElement('tr');
         hr.className = 'bg-gray-50 text-gray-500 font-semibold';
-        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td>';
+        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td>';
         tb.appendChild(hr);
         WASTE.forEach(x => {
           const tr = document.createElement('tr');
           tr.className = 'border-b border-gray-100 text-gray-600';
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
+            '<td class="text-right px-2 text-xs" data-margin="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-age="' + x.k + '"></td>';
           tr.querySelectorAll('input').forEach(inp => bindInput(inp, x.k));
@@ -6132,6 +6146,7 @@
           const p = pctOf(c.k), k = w * p / 100, s = stockOf(c.k);
           stockRows[c.k].querySelector('[data-kg]').textContent = fmt(k, 1) + ' kg';
           stockRows[c.k].querySelector('[data-age]').innerHTML = ageTag(c.k);
+          stockRows[c.k].querySelector('[data-margin]').innerHTML = marginTag(c.k);
           const tag = stockRows[c.k].querySelector('[data-src]');
           if (tag) tag.outerHTML = srcTag(c.k);
           pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
@@ -6151,6 +6166,7 @@
           document.querySelector('[data-wkg="' + x.k + '"]').textContent = fmt(w * p / 100, 1) + ' kg';
           if (x.price != null) {
             document.querySelector('[data-age="' + x.k + '"]').innerHTML = ageTag(x.k);
+            document.querySelector('[data-margin="' + x.k + '"]').innerHTML = marginTag(x.k);
             val += w * p / 100 * priceOf(x.k);
             st += stockOf(x.k); stVal += stockOf(x.k) * priceOf(x.k);
           }
