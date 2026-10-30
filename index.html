@@ -5749,7 +5749,7 @@
           <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" style="min-width:1000px">
+            <table class="w-full text-sm" style="min-width:1120px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Corte</th>
                 <th class="text-right py-2 px-2 font-semibold">% de la res</th>
@@ -5757,6 +5757,7 @@
                 <th class="text-right py-2 px-2 font-semibold">Peso estimado</th>
                 <th class="text-right py-2 px-2 font-semibold" title="INDEC / IPCVA / aproximado. Sirve para repartir el costo de la res">Precio de referencia</th>
                 <th class="text-right py-2 px-2 font-semibold" title="Tu precio de venta. Si no lo cargás, se usa el de referencia">Precio de venta por kg</th>
+                <th class="text-right py-2 px-2 font-semibold" title="El precio al que vos vendés al público. Si lo cargás, se usa en Ventas y en la ganancia">Precio al que vendo</th>
                 <th class="text-right py-2 px-2 font-semibold">Costo por kg</th>
                 <th class="text-right py-2 px-2 font-semibold" title="Precio de venta − costo, sobre el costo">Ganancia (% y $ por kg)</th>
                 <th class="text-right py-2 px-2 font-semibold">Stock (kg)</th>
@@ -5764,9 +5765,9 @@
               </tr></thead>
               <tbody id="mrStockBody"></tbody>
               <tfoot class="font-semibold text-gray-700">
-                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotVend" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
-                <tr><td colspan="5" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td colspan="8" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotVend" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="5" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td colspan="9" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
               </tfoot>
             </table>
           </div>
@@ -5930,7 +5931,7 @@
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
 
       // Estado guardado en Firestore: settings/mediaRes
-      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5, history: [] };
+      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5, history: [], myPrices: {} };
       // Lo que se puede vender en VENTAS: los cortes más hueso y grasa
       const SELL = Object.assign({}, CUT);
       WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
@@ -5948,7 +5949,11 @@
         if (ipcvaPrice(k) != null) return ipcvaPrice(k);
         return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
       };
+      // Precio de la columna "Precio de venta por kg": el propio de lista o, si no hay, el de referencia
+      const listPriceOf = k => state.prices[k] != null ? +state.prices[k] : refPriceOf(k);
+      // Precio al que el usuario vende de verdad ("Precio al que vendo"): si lo cargó, manda en Ventas, en la ganancia y en los valores
       const priceOf = k => {
+        if (state.myPrices[k] != null) return +state.myPrices[k];
         if (state.prices[k] != null) return +state.prices[k];
         if (indecPrice(k) != null) return indecPrice(k);
         if (ipcvaPrice(k) != null) return ipcvaPrice(k);
@@ -5970,14 +5975,14 @@
       function bindInput(inp, k) {
         inp.addEventListener('input', () => {
           const v = parseFloat(inp.value);
-          if ((inp.dataset.f === 'prices' || inp.dataset.f === 'costs') && inp.value.trim() === '') delete state[inp.dataset.f][k];
+          if ((inp.dataset.f === 'prices' || inp.dataset.f === 'costs' || inp.dataset.f === 'myPrices') && inp.value.trim() === '') delete state[inp.dataset.f][k];
           else state[inp.dataset.f][k] = isNaN(v) ? 0 : v;
           if (inp.dataset.f === 'stock') syncLots(k, todayISO());
           calcStock(); saveState();
         });
         if (inp.dataset.f === 'costs') inp.addEventListener('blur', calcStock);
         if (inp.dataset.f === 'prices') inp.addEventListener('change', () => {
-          if (inp.value.trim() === '') { inp.value = priceOf(k); calcStock(); }
+          if (inp.value.trim() === '') { inp.value = listPriceOf(k); calcStock(); }
         });
       }
       function srcTag(k) {
@@ -6054,7 +6059,7 @@
             const d = snap.data();
             // v2: el peso pasó a ser de media res (antes 230 kg de res completa por defecto)
             const w = !d.v && (!d.resWeight || d.resWeight === 230) ? 119 : (d.resWeight || 119);
-            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5, history: Array.isArray(d.history) ? d.history : [] };
+            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5, history: Array.isArray(d.history) ? d.history : [], myPrices: d.myPrices || {} };
             // Stock cargado antes de registrar fechas: queda "sin fecha"
             Object.keys(state.stock).forEach(k => syncLots(k, null));
           }
@@ -6161,7 +6166,7 @@
         ['t', 'm', 'd'].forEach(z => {
           const zr = document.createElement('tr');
           zr.className = 'bg-gray-50 text-gray-500 font-semibold';
-          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zvend="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
+          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zvend="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
           tb.appendChild(zr);
           CUTS.filter(c => c.z === z).forEach(c => {
             const tr = document.createElement('tr');
@@ -6172,7 +6177,8 @@
               '<td class="text-right px-2 text-gray-600" data-vend></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
               '<td class="text-right px-2 text-gray-600" data-ref></td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio de venta por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-psrc></span></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="prices" min="0" step="100" value="' + listPriceOf(c.k) + '" aria-label="Precio de venta por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-psrc></span></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="myPrices" min="0" step="100" value="' + (state.myPrices[c.k] != null ? state.myPrices[c.k] : '') + '" placeholder="mi precio" aria-label="Precio al que vendo ' + c.name + ' por kg"></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-costsrc></span></td>' +
               '<td class="text-right px-2 text-xs" data-margin></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>' +
@@ -6187,14 +6193,15 @@
         });
         const hr = document.createElement('tr');
         hr.className = 'bg-gray-50 text-gray-500 font-semibold';
-        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td><td></td>';
+        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
         tb.appendChild(hr);
         WASTE.forEach(x => {
           const tr = document.createElement('tr');
           tr.className = 'border-b border-gray-100 text-gray-600';
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
             '<td class="text-right px-2 text-gray-600">' + (x.price != null ? money(refPriceOf(x.k)) : '') + '</td>' +
-            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio de venta por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + listPriceOf(x.k) + '" aria-label="Precio de venta por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + (state.myPrices[x.k] != null ? state.myPrices[x.k] : '') + '" placeholder="mi precio" aria-label="Precio al que vendo ' + x.name + ' por kg" data-f="myPrices">' : '') + '</td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-margin="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>' +
@@ -6236,7 +6243,7 @@
           const rc = stockRows[c.k].querySelector('[data-ref]');
           rc.innerHTML = money(refPriceOf(c.k)) + srcTag(c.k);
           const pi = stockRows[c.k].querySelector('[data-f="prices"]');
-          if (document.activeElement !== pi) { pi.value = priceOf(c.k); pi.style.color = isOwnPrice(c.k) ? '' : '#9ca3af'; }
+          if (document.activeElement !== pi) { pi.value = listPriceOf(c.k); pi.style.color = isOwnPrice(c.k) ? '' : '#9ca3af'; }
           stockRows[c.k].querySelector('[data-psrc]').textContent = isOwnPrice(c.k) ? 'propio' : 'referencia';
           pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
           zs[c.z][0] += p; zs[c.z][1] += k; zs[c.z][2] += s;
