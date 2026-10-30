@@ -5735,6 +5735,10 @@
             <label for="mrPaidTotal" class="font-semibold">o total de la media res ($)</label>
             <input type="number" id="mrPaidTotal" min="0" step="1000" inputmode="decimal" class="mr-num" style="max-width:150px" placeholder="0">
           </div>
+          <div class="flex flex-wrap items-center gap-3 mb-3 text-sm text-gray-600">
+            <label for="mrDiscard" class="font-semibold">Descarte por golpes, carne oscura, manchones, granos, etc. (% de la res)</label>
+            <input type="number" id="mrDiscard" min="0" max="100" step="0.1" inputmode="decimal" class="mr-num" style="max-width:90px">
+          </div>
           <p id="mrCostInfo" class="text-sm text-gray-700 mb-3 min-h-[20px]"></p>
           <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
@@ -5896,7 +5900,7 @@
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
 
       // Estado guardado en Firestore: settings/mediaRes
-      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0 };
+      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5 };
       // Lo que se puede vender en VENTAS: los cortes más hueso y grasa
       const SELL = Object.assign({}, CUT);
       WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
@@ -6008,7 +6012,7 @@
             const d = snap.data();
             // v2: el peso pasó a ser de media res (antes 230 kg de res completa por defecto)
             const w = !d.v && (!d.resWeight || d.resWeight === 230) ? 119 : (d.resWeight || 119);
-            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0 };
+            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5 };
             // Stock cargado antes de registrar fechas: queda "sin fecha"
             Object.keys(state.stock).forEach(k => syncLots(k, null));
           }
@@ -6095,6 +6099,7 @@
         cowStock = buildCow($('mrCowStock'), 'mrClipStock', k => highlightStock(k));
         $('mrResWeight').value = state.resWeight;
         $('mrPaidKg').value = state.paidKg || '';
+        $('mrDiscard').value = state.discardPct;
         if (!$('mrResDate').value) $('mrResDate').value = todayISO();
         $('mrIndecInfo').textContent = indec
           ? 'Precios de referencia: INDEC, promedio GBA de ' + fmtPeriodo(indec.periodo) + ' (asado, nalga, cuadril y paleta)' +
@@ -6186,9 +6191,10 @@
         $('mrStockVal').textContent = money(stVal);
         // Costo de la carne aprovechada: lo que se pagó por la res / kilos de cortes vendibles (hueso, grasa y merma valen $0)
         const paid = (+state.paidKg || 0) * w;
+        const disc = Math.min(kg, w * (+state.discardPct || 0) / 100), usable = kg - disc;
         if (document.activeElement !== $('mrPaidTotal')) $('mrPaidTotal').value = paid > 0 ? +paid.toFixed(2) : '';
-        $('mrCostInfo').innerHTML = paid > 0 && kg > 0
-          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(kg, 1) + ' kg</b> (sin hueso, grasa ni merma) · costo por kg aprovechado: <b style="color:#C8102E">' + money(paid / kg) + '</b>'
+        $('mrCostInfo').innerHTML = paid > 0 && usable > 0
+          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · costo por kg aprovechado: <b style="color:#C8102E">' + money(paid / usable) + '</b>'
           : 'Cargá lo que pagaste por kg (o el total) y vas a ver cuánto te sale el kg de carne aprovechada.';
       }
       $('mrResWeight').addEventListener('input', () => {
@@ -6197,6 +6203,10 @@
       });
       $('mrPaidKg').addEventListener('input', () => {
         state.paidKg = Math.max(0, parseFloat($('mrPaidKg').value) || 0);
+        calcStock(); saveState();
+      });
+      $('mrDiscard').addEventListener('input', () => {
+        state.discardPct = Math.min(100, Math.max(0, parseFloat($('mrDiscard').value) || 0));
         calcStock(); saveState();
       });
       $('mrPaidTotal').addEventListener('input', () => {
