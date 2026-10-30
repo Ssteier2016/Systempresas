@@ -5715,6 +5715,7 @@
       <div id="mrHome" class="flex-1 flex flex-col justify-center items-center px-6 gap-5">
         <h2 class="text-xl font-bold text-gray-500 text-center">¿Qué querés hacer?</h2>
         <button id="mrGoStock" class="w-full max-w-sm py-8 rounded-2xl bg-gray-900 text-white text-2xl font-bold shadow-lg active:scale-95 transition flex items-center justify-center gap-3"><i class="fas fa-boxes"></i> STOCK</button>
+        <button id="mrGoHist" class="w-full max-w-sm py-6 rounded-2xl bg-white border-2 border-gray-900 text-gray-900 text-xl font-bold shadow active:scale-95 transition flex items-center justify-center gap-3"><i class="fas fa-history"></i> Historial</button>
         <button id="mrGoVentas" class="w-full max-w-sm py-8 rounded-2xl text-white text-2xl font-bold shadow-lg active:scale-95 transition flex items-center justify-center gap-3" style="background:#C8102E"><i class="fas fa-cash-register"></i> VENTAS</button>
       </div>
 
@@ -5769,6 +5770,28 @@
             </table>
           </div>
           <p class="text-xs text-gray-400 mt-3">Porcentajes aproximados de un novillo (cortes vendibles, con hueso donde se vende con hueso), estimados con datos de Kohn 2021, CCDH, FADA/IPCVA 2018 y UNNE 2010. Hueso, grasa y merma: oreo según Valor Carne (2,5–3 %) y proporción hueso/grasa según un estudio de desposte publicado en SciELO (2008). Cada res es distinta: ajustalos con tus propios despostes. Los porcentajes y precios se guardan solos y el stock baja con cada venta.</p>
+        </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div id="mrHistorial" class="hidden flex-1 overflow-y-auto">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+          <p class="text-sm text-gray-500 mb-3">Cada vez que cargás una media res al stock queda registrada acá con su fecha, lo que pagaste y el costo base por kg de carne aprovechada.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm" style="min-width:640px">
+              <thead><tr class="text-gray-500 border-b">
+                <th class="text-left py-2 px-2 font-semibold">Fecha de la res</th>
+                <th class="text-right py-2 px-2 font-semibold">Peso</th>
+                <th class="text-right py-2 px-2 font-semibold">Pagaste por kg</th>
+                <th class="text-right py-2 px-2 font-semibold">Total pagado</th>
+                <th class="text-right py-2 px-2 font-semibold">Kg aprovechados</th>
+                <th class="text-right py-2 px-2 font-semibold">Costo base por kg</th>
+                <th></th>
+              </tr></thead>
+              <tbody id="mrHistBody"></tbody>
+            </table>
+          </div>
+          <p id="mrHistEmpty" class="text-sm text-gray-400 mt-4 hidden">Todavía no cargaste ninguna media res.</p>
         </div>
       </div>
 
@@ -5906,7 +5929,7 @@
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
 
       // Estado guardado en Firestore: settings/mediaRes
-      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5 };
+      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5, history: [] };
       // Lo que se puede vender en VENTAS: los cortes más hueso y grasa
       const SELL = Object.assign({}, CUT);
       WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
@@ -6030,7 +6053,7 @@
             const d = snap.data();
             // v2: el peso pasó a ser de media res (antes 230 kg de res completa por defecto)
             const w = !d.v && (!d.resWeight || d.resWeight === 230) ? 119 : (d.resWeight || 119);
-            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5 };
+            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5, history: Array.isArray(d.history) ? d.history : [] };
             // Stock cargado antes de registrar fechas: queda "sin fecha"
             Object.keys(state.stock).forEach(k => syncLots(k, null));
           }
@@ -6278,6 +6301,10 @@
         if (!confirm('¿Sumar al stock los cortes de una media res de ' + fmt(w, 0) + ' kg del ' + dd + '/' + m + '/' + y + '?')) return;
         CUTS.forEach(c => { state.stock[c.k] = +(stockOf(c.k) + w * pctOf(c.k) / 100).toFixed(3); syncLots(c.k, d); });
         WASTE.filter(x => x.price != null).forEach(x => { state.stock[x.k] = +(stockOf(x.k) + w * wastePctOf(x.k) / 100).toFixed(3); syncLots(x.k, d); });
+        // Historial: queda registrada la carga con lo pagado y el costo base de esa res
+        const gross = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100, 0);
+        const usable = gross - Math.min(gross, w * (+state.discardPct || 0) / 100), paid = (+state.paidKg || 0) * w;
+        state.history.push({ d, ts: new Date().toISOString(), w, paidKg: +state.paidKg || 0, paid, usable: +usable.toFixed(2), base: paid > 0 && usable > 0 ? +(paid / usable).toFixed(2) : 0 });
         await saveState(true);
         renderStock();
         window.showToast && window.showToast('Media res cargada al stock ✓', 'success');
@@ -6417,14 +6444,41 @@
 
       // ── Navegación ──
       let screen = 'home';
+      // ── HISTORIAL ──
+      function renderHist() {
+        const tb = $('mrHistBody');
+        tb.innerHTML = '';
+        const rows = state.history.map((h, i) => ({ h, i })).sort((a, b) => (b.h.d + b.h.ts) < (a.h.d + a.h.ts) ? -1 : 1);
+        $('mrHistEmpty').classList.toggle('hidden', rows.length > 0);
+        rows.forEach(({ h, i }) => {
+          const [y, m, dd] = h.d.split('-');
+          const tr = document.createElement('tr');
+          tr.className = 'border-b border-gray-100';
+          tr.innerHTML = '<td class="py-2 px-2 font-semibold">' + dd + '/' + m + '/' + y + '</td>' +
+            '<td class="text-right px-2">' + fmt(h.w, 1) + ' kg</td>' +
+            '<td class="text-right px-2">' + (h.paidKg ? money(h.paidKg) : '—') + '</td>' +
+            '<td class="text-right px-2">' + (h.paid ? money(h.paid) : '—') + '</td>' +
+            '<td class="text-right px-2">' + fmt(h.usable, 1) + ' kg</td>' +
+            '<td class="text-right px-2 font-semibold" style="color:#C8102E">' + (h.base ? money(h.base) : '—') + '</td>' +
+            '<td class="text-right px-2"><button class="text-gray-400 hover:text-red-600 px-2" aria-label="Borrar del historial" title="Borrar del historial (no cambia el stock)"><i class="fas fa-trash"></i></button></td>';
+          tr.querySelector('button').onclick = () => {
+            if (!confirm('¿Borrar esta carga del historial? El stock no cambia.')) return;
+            state.history.splice(i, 1);
+            saveState(true); renderHist();
+          };
+          tb.appendChild(tr);
+        });
+      }
       function show(s) {
         screen = s;
         $('mrHome').classList.toggle('hidden', s !== 'home');
         $('mrStock').classList.toggle('hidden', s !== 'stock');
+        $('mrHistorial').classList.toggle('hidden', s !== 'hist');
         $('mrVentas').classList.toggle('hidden', s !== 'ventas');
         $('mrBack').style.visibility = s === 'home' ? 'hidden' : 'visible';
-        $('mrTitle').textContent = s === 'stock' ? 'Media Res · Stock' : s === 'ventas' ? 'Media Res · Ventas' : 'Media Res';
-        if (s === 'stock') renderStock();
+        $('mrTitle').textContent = s === 'stock' ? 'Media Res · Stock' : s === 'ventas' ? 'Media Res · Ventas' : s === 'hist' ? 'Media Res · Historial' : 'Media Res';
+        if (s === 'stock') { $('mrResDate').value = todayISO(); renderStock(); }
+        if (s === 'hist') renderHist();
         if (s === 'ventas') renderVentas();
       }
       window.openMediaRes = async function() {
@@ -6433,6 +6487,7 @@
         await Promise.all([loadState(), loadIndec()]);
       };
       $('mrGoStock').onclick = () => show('stock');
+      $('mrGoHist').onclick = () => show('hist');
       $('mrGoVentas').onclick = () => show('ventas');
       $('mrBack').onclick = () => show('home');
       $('mrClose').onclick = () => $('mediaResModule').classList.add('hidden');
