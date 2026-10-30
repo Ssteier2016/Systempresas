@@ -5715,13 +5715,18 @@
       <div id="mrHome" class="flex-1 flex flex-col justify-center items-center px-6 gap-5">
         <h2 class="text-xl font-bold text-gray-500 text-center">¿Qué querés hacer?</h2>
         <button id="mrGoStock" class="w-full max-w-sm py-8 rounded-2xl bg-gray-900 text-white text-2xl font-bold shadow-lg active:scale-95 transition flex items-center justify-center gap-3"><i class="fas fa-boxes"></i> STOCK</button>
+        <button id="mrGoHist" class="w-full max-w-sm py-6 rounded-2xl bg-white border-2 border-gray-900 text-gray-900 text-xl font-bold shadow active:scale-95 transition flex items-center justify-center gap-3"><i class="fas fa-history"></i> Historial</button>
         <button id="mrGoVentas" class="w-full max-w-sm py-8 rounded-2xl text-white text-2xl font-bold shadow-lg active:scale-95 transition flex items-center justify-center gap-3" style="background:#C8102E"><i class="fas fa-cash-register"></i> VENTAS</button>
       </div>
 
       <!-- STOCK -->
       <div id="mrStock" class="hidden flex-1 overflow-y-auto">
         <div class="max-w-4xl mx-auto px-4 py-4">
-          <button id="mrLoadRes" class="w-full sm:w-auto mb-3 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
+          <div class="flex flex-wrap items-center gap-3 mb-3">
+            <button id="mrLoadRes" class="w-full sm:w-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
+            <button id="mrSave" class="w-full sm:w-auto text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition" style="background:#C8102E"><i class="fas fa-save mr-1"></i> Guardar</button>
+            <span id="mrSaveInfo" class="text-xs text-gray-500"></span>
+          </div>
           <div id="mrCowStock"></div>
           <div class="flex flex-wrap items-center gap-3 my-3 text-sm text-gray-600">
             <label for="mrResWeight" class="font-semibold">Peso de la media res (kg)</label>
@@ -5743,13 +5748,14 @@
           <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" style="min-width:920px">
+            <table class="w-full text-sm" style="min-width:1000px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Corte</th>
                 <th class="text-right py-2 px-2 font-semibold">% de la res</th>
                 <th class="text-right py-2 px-2 font-semibold" title="Sobre la carne aprovechada (sin hueso, grasa, merma ni descarte), que es el 100 %">% de la carne vendible</th>
                 <th class="text-right py-2 px-2 font-semibold">Peso estimado</th>
-                <th class="text-right py-2 px-2 font-semibold">Precio de venta por kg</th>
+                <th class="text-right py-2 px-2 font-semibold" title="INDEC / IPCVA / aproximado. Sirve para repartir el costo de la res">Precio de referencia</th>
+                <th class="text-right py-2 px-2 font-semibold" title="Tu precio de venta. Si no lo cargás, se usa el de referencia">Precio de venta por kg</th>
                 <th class="text-right py-2 px-2 font-semibold">Costo por kg</th>
                 <th class="text-right py-2 px-2 font-semibold" title="Precio de venta − costo, sobre el costo">Ganancia (% y $ por kg)</th>
                 <th class="text-right py-2 px-2 font-semibold">Stock (kg)</th>
@@ -5757,13 +5763,35 @@
               </tr></thead>
               <tbody id="mrStockBody"></tbody>
               <tfoot class="font-semibold text-gray-700">
-                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotVend" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
-                <tr><td colspan="4" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td colspan="7" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotVend" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="5" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td colspan="8" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
               </tfoot>
             </table>
           </div>
           <p class="text-xs text-gray-400 mt-3">Porcentajes aproximados de un novillo (cortes vendibles, con hueso donde se vende con hueso), estimados con datos de Kohn 2021, CCDH, FADA/IPCVA 2018 y UNNE 2010. Hueso, grasa y merma: oreo según Valor Carne (2,5–3 %) y proporción hueso/grasa según un estudio de desposte publicado en SciELO (2008). Cada res es distinta: ajustalos con tus propios despostes. Los porcentajes y precios se guardan solos y el stock baja con cada venta.</p>
+        </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div id="mrHistorial" class="hidden flex-1 overflow-y-auto">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+          <p class="text-sm text-gray-500 mb-3">Cada vez que cargás una media res al stock queda registrada acá con su fecha, lo que pagaste y el costo base por kg de carne aprovechada.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm" style="min-width:640px">
+              <thead><tr class="text-gray-500 border-b">
+                <th class="text-left py-2 px-2 font-semibold">Fecha de la res</th>
+                <th class="text-right py-2 px-2 font-semibold">Peso</th>
+                <th class="text-right py-2 px-2 font-semibold">Pagaste por kg</th>
+                <th class="text-right py-2 px-2 font-semibold">Total pagado</th>
+                <th class="text-right py-2 px-2 font-semibold">Kg aprovechados</th>
+                <th class="text-right py-2 px-2 font-semibold">Costo base por kg</th>
+                <th></th>
+              </tr></thead>
+              <tbody id="mrHistBody"></tbody>
+            </table>
+          </div>
+          <p id="mrHistEmpty" class="text-sm text-gray-400 mt-4 hidden">Todavía no cargaste ninguna media res.</p>
         </div>
       </div>
 
@@ -5901,7 +5929,7 @@
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
 
       // Estado guardado en Firestore: settings/mediaRes
-      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5 };
+      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5, history: [] };
       // Lo que se puede vender en VENTAS: los cortes más hueso y grasa
       const SELL = Object.assign({}, CUT);
       WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
@@ -5911,7 +5939,14 @@
       const indecPrice = k => indec && indec.precios && indec.precios[k] > 0 ? +indec.precios[k] : null;
       const ipcvaPrice = k => indec && indec.ipcva && indec.ipcva.precios && indec.ipcva.precios[k] > 0 ? +indec.ipcva.precios[k] : null;
       // Prioridad: precio propio > INDEC GBA > IPCVA AMBA > ejemplo
-      const priceSrc = k => state.prices[k] != null ? 'propio' : indecPrice(k) != null ? 'indec' : ipcvaPrice(k) != null ? 'ipcva' : 'ejemplo';
+      const priceSrc = k => indecPrice(k) != null ? 'indec' : ipcvaPrice(k) != null ? 'ipcva' : 'ejemplo';
+      const isOwnPrice = k => state.prices[k] != null;
+      // Precio de referencia (INDEC > IPCVA > ejemplo): sirve para repartir el costo de la res; el de venta es el propio o, si no hay, este
+      const refPriceOf = k => {
+        if (indecPrice(k) != null) return indecPrice(k);
+        if (ipcvaPrice(k) != null) return ipcvaPrice(k);
+        return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
+      };
       const priceOf = k => {
         if (state.prices[k] != null) return +state.prices[k];
         if (indecPrice(k) != null) return indecPrice(k);
@@ -6018,7 +6053,7 @@
             const d = snap.data();
             // v2: el peso pasó a ser de media res (antes 230 kg de res completa por defecto)
             const w = !d.v && (!d.resWeight || d.resWeight === 230) ? 119 : (d.resWeight || 119);
-            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5 };
+            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: d.prices || {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5, history: Array.isArray(d.history) ? d.history : [] };
             // Stock cargado antes de registrar fechas: queda "sin fecha"
             Object.keys(state.stock).forEach(k => syncLots(k, null));
           }
@@ -6029,8 +6064,16 @@
         clearTimeout(saveTimer);
         const run = async () => {
           const ref = stateRef();
-          if (!ref) return;
-          try { await window._firestoreRef.setDoc(ref, state); }
+          if (!ref) {
+            if (now) window.showToast && window.showToast('No se pudo guardar: no hay sesión iniciada o conexión', 'error');
+            return;
+          }
+          try {
+            await window._firestoreRef.setDoc(ref, state);
+            const t = new Date();
+            if ($('mrSaveInfo')) $('mrSaveInfo').textContent = 'Guardado ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+            if (now) window.showToast && window.showToast('Guardado ✓', 'success');
+          }
           catch (e) { window.showToast && window.showToast('Error al guardar: ' + e.message, 'error'); }
         };
         if (now) return run();
@@ -6117,7 +6160,7 @@
         ['t', 'm', 'd'].forEach(z => {
           const zr = document.createElement('tr');
           zr.className = 'bg-gray-50 text-gray-500 font-semibold';
-          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zvend="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
+          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zvend="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
           tb.appendChild(zr);
           CUTS.filter(c => c.z === z).forEach(c => {
             const tr = document.createElement('tr');
@@ -6127,7 +6170,8 @@
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="pct" min="0" step="0.1" value="' + pctOf(c.k) + '" aria-label="Porcentaje de ' + c.name + '"></td>' +
               '<td class="text-right px-2 text-gray-600" data-vend></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio por kg de ' + c.name + '">' + srcTag(c.k) + '</td>' +
+              '<td class="text-right px-2 text-gray-600" data-ref></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio de venta por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-psrc></span></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-costsrc></span></td>' +
               '<td class="text-right px-2 text-xs" data-margin></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>' +
@@ -6142,13 +6186,14 @@
         });
         const hr = document.createElement('tr');
         hr.className = 'bg-gray-50 text-gray-500 font-semibold';
-        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td>';
+        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td><td></td>';
         tb.appendChild(hr);
         WASTE.forEach(x => {
           const tr = document.createElement('tr');
           tr.className = 'border-b border-gray-100 text-gray-600';
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
-            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
+            '<td class="text-right px-2 text-gray-600">' + (x.price != null ? money(refPriceOf(x.k)) : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio de venta por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-margin="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>' +
@@ -6169,8 +6214,8 @@
         const grossKg = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100, 0);
         const disc = Math.min(grossKg, w * (+state.discardPct || 0) / 100), usable = grossKg - disc;
         const keep = grossKg > 0 ? usable / grossKg : 0;
-        const totVal = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100 * keep * priceOf(c.k), 0);
-        CUTS.forEach(c => { autoCost[c.k] = paid > 0 && totVal > 0 ? paid * priceOf(c.k) / totVal : 0; });
+        const totVal = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100 * keep * refPriceOf(c.k), 0);
+        CUTS.forEach(c => { autoCost[c.k] = paid > 0 && totVal > 0 ? paid * refPriceOf(c.k) / totVal : 0; });
         CUTS.forEach(c => {
           const p = pctOf(c.k), k = w * p / 100, s = stockOf(c.k);
           stockRows[c.k].querySelector('[data-kg]').textContent = fmt(k, 1) + ' kg';
@@ -6187,8 +6232,11 @@
             manualDiff += dt;
             dsrc.innerHTML = 'manual · <span style="color:' + (d > 0 ? '#C8102E' : '#16a34a') + ';font-weight:600">' + (d >= 0 ? '+' : '−') + money(Math.abs(d)) + '/kg</span><span class="block" style="color:' + (d > 0 ? '#C8102E' : '#16a34a') + '">' + (dt >= 0 ? '+' : '−') + money(Math.abs(dt)) + ' en el corte</span>';
           } else dsrc.textContent = isManualCost(c.k) ? 'manual' : (autoCost[c.k] > 0 ? 'auto' : '');
-          const tag = stockRows[c.k].querySelector('[data-src]');
-          if (tag) tag.outerHTML = srcTag(c.k);
+          const rc = stockRows[c.k].querySelector('[data-ref]');
+          rc.innerHTML = money(refPriceOf(c.k)) + srcTag(c.k);
+          const pi = stockRows[c.k].querySelector('[data-f="prices"]');
+          if (document.activeElement !== pi) { pi.value = priceOf(c.k); pi.style.color = isOwnPrice(c.k) ? '' : '#9ca3af'; }
+          stockRows[c.k].querySelector('[data-psrc]').textContent = isOwnPrice(c.k) ? 'propio' : 'referencia';
           pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
           zs[c.z][0] += p; zs[c.z][1] += k; zs[c.z][2] += s;
         });
@@ -6221,7 +6269,7 @@
         // Costo base: lo que se pagó por la res / kilos aprovechados (hueso, grasa, merma y descarte valen $0)
         if (document.activeElement !== $('mrPaidTotal')) $('mrPaidTotal').value = paid > 0 ? +paid.toFixed(2) : '';
         $('mrCostInfo').innerHTML = paid > 0 && usable > 0
-          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su valor de venta (editable a mano en "Costo por kg").' +
+          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su precio de referencia (editable a mano en "Costo por kg").' +
             (manualDiff ? ' Costos manuales: <b style="color:' + (manualDiff > 0 ? '#C8102E' : '#16a34a') + '">' + (manualDiff > 0 ? '+' : '−') + money(Math.abs(manualDiff)) + '</b> sobre lo que pagaste por la res.' : '')
           : 'Cargá lo que pagaste por kg (o el total) y vas a ver cuánto te sale el kg de carne aprovechada.';
       }
@@ -6243,6 +6291,7 @@
         $('mrPaidKg').value = state.paidKg || '';
         calcStock(); saveState();
       });
+      $('mrSave').onclick = () => saveState(true);
       $('mrLoadRes').onclick = async () => {
         const w = +state.resWeight || 0;
         if (w <= 0) { window.showToast && window.showToast('Ingresá el peso de la res', 'error'); return; }
@@ -6252,6 +6301,10 @@
         if (!confirm('¿Sumar al stock los cortes de una media res de ' + fmt(w, 0) + ' kg del ' + dd + '/' + m + '/' + y + '?')) return;
         CUTS.forEach(c => { state.stock[c.k] = +(stockOf(c.k) + w * pctOf(c.k) / 100).toFixed(3); syncLots(c.k, d); });
         WASTE.filter(x => x.price != null).forEach(x => { state.stock[x.k] = +(stockOf(x.k) + w * wastePctOf(x.k) / 100).toFixed(3); syncLots(x.k, d); });
+        // Historial: queda registrada la carga con lo pagado y el costo base de esa res
+        const gross = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100, 0);
+        const usable = gross - Math.min(gross, w * (+state.discardPct || 0) / 100), paid = (+state.paidKg || 0) * w;
+        state.history.push({ d, ts: new Date().toISOString(), w, paidKg: +state.paidKg || 0, paid, usable: +usable.toFixed(2), base: paid > 0 && usable > 0 ? +(paid / usable).toFixed(2) : 0 });
         await saveState(true);
         renderStock();
         window.showToast && window.showToast('Media res cargada al stock ✓', 'success');
@@ -6391,14 +6444,41 @@
 
       // ── Navegación ──
       let screen = 'home';
+      // ── HISTORIAL ──
+      function renderHist() {
+        const tb = $('mrHistBody');
+        tb.innerHTML = '';
+        const rows = state.history.map((h, i) => ({ h, i })).sort((a, b) => (b.h.d + b.h.ts) < (a.h.d + a.h.ts) ? -1 : 1);
+        $('mrHistEmpty').classList.toggle('hidden', rows.length > 0);
+        rows.forEach(({ h, i }) => {
+          const [y, m, dd] = h.d.split('-');
+          const tr = document.createElement('tr');
+          tr.className = 'border-b border-gray-100';
+          tr.innerHTML = '<td class="py-2 px-2 font-semibold">' + dd + '/' + m + '/' + y + '</td>' +
+            '<td class="text-right px-2">' + fmt(h.w, 1) + ' kg</td>' +
+            '<td class="text-right px-2">' + (h.paidKg ? money(h.paidKg) : '—') + '</td>' +
+            '<td class="text-right px-2">' + (h.paid ? money(h.paid) : '—') + '</td>' +
+            '<td class="text-right px-2">' + fmt(h.usable, 1) + ' kg</td>' +
+            '<td class="text-right px-2 font-semibold" style="color:#C8102E">' + (h.base ? money(h.base) : '—') + '</td>' +
+            '<td class="text-right px-2"><button class="text-gray-400 hover:text-red-600 px-2" aria-label="Borrar del historial" title="Borrar del historial (no cambia el stock)"><i class="fas fa-trash"></i></button></td>';
+          tr.querySelector('button').onclick = () => {
+            if (!confirm('¿Borrar esta carga del historial? El stock no cambia.')) return;
+            state.history.splice(i, 1);
+            saveState(true); renderHist();
+          };
+          tb.appendChild(tr);
+        });
+      }
       function show(s) {
         screen = s;
         $('mrHome').classList.toggle('hidden', s !== 'home');
         $('mrStock').classList.toggle('hidden', s !== 'stock');
+        $('mrHistorial').classList.toggle('hidden', s !== 'hist');
         $('mrVentas').classList.toggle('hidden', s !== 'ventas');
         $('mrBack').style.visibility = s === 'home' ? 'hidden' : 'visible';
-        $('mrTitle').textContent = s === 'stock' ? 'Media Res · Stock' : s === 'ventas' ? 'Media Res · Ventas' : 'Media Res';
-        if (s === 'stock') renderStock();
+        $('mrTitle').textContent = s === 'stock' ? 'Media Res · Stock' : s === 'ventas' ? 'Media Res · Ventas' : s === 'hist' ? 'Media Res · Historial' : 'Media Res';
+        if (s === 'stock') { $('mrResDate').value = todayISO(); renderStock(); }
+        if (s === 'hist') renderHist();
         if (s === 'ventas') renderVentas();
       }
       window.openMediaRes = async function() {
@@ -6407,6 +6487,7 @@
         await Promise.all([loadState(), loadIndec()]);
       };
       $('mrGoStock').onclick = () => show('stock');
+      $('mrGoHist').onclick = () => show('hist');
       $('mrGoVentas').onclick = () => show('ventas');
       $('mrBack').onclick = () => show('home');
       $('mrClose').onclick = () => $('mediaResModule').classList.add('hidden');
