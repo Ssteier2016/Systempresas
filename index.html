@@ -5701,6 +5701,7 @@
       .mr-row.on{background:#fee2e2}
       .mr-row.on td:first-child{color:#C8102E;font-weight:700}
       [data-theme="dark"] .mr-row.on{background:#4c1d24}
+      .mr-w{min-width:96px}
       .mr-num{width:100%;max-width:90px;text-align:right;padding:4px 6px;border:1px solid #e5e7eb;border-radius:8px;background:transparent}
       [data-theme="dark"] .mr-num{border-color:#334155}
     </style>
@@ -6171,8 +6172,8 @@
               '<td class="text-right px-2 text-gray-600" data-vend></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
               '<td class="text-right px-2 text-gray-600" data-ref></td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio de venta por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-psrc></span></td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-costsrc></span></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio de venta por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-psrc></span></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-costsrc></span></td>' +
               '<td class="text-right px-2 text-xs" data-margin></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>' +
               '<td class="text-right px-2 text-xs" data-age></td>';
@@ -6193,8 +6194,8 @@
           tr.className = 'border-b border-gray-100 text-gray-600';
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
             '<td class="text-right px-2 text-gray-600">' + (x.price != null ? money(refPriceOf(x.k)) : '') + '</td>' +
-            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio de venta por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
-            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio de venta por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-margin="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-age="' + x.k + '"></td>';
