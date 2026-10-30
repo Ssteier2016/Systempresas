@@ -5721,7 +5721,11 @@
       <!-- STOCK -->
       <div id="mrStock" class="hidden flex-1 overflow-y-auto">
         <div class="max-w-4xl mx-auto px-4 py-4">
-          <button id="mrLoadRes" class="w-full sm:w-auto mb-3 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
+          <div class="flex flex-wrap items-center gap-3 mb-3">
+            <button id="mrLoadRes" class="w-full sm:w-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
+            <button id="mrSave" class="w-full sm:w-auto text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition" style="background:#C8102E"><i class="fas fa-save mr-1"></i> Guardar</button>
+            <span id="mrSaveInfo" class="text-xs text-gray-500"></span>
+          </div>
           <div id="mrCowStock"></div>
           <div class="flex flex-wrap items-center gap-3 my-3 text-sm text-gray-600">
             <label for="mrResWeight" class="font-semibold">Peso de la media res (kg)</label>
@@ -6029,8 +6033,16 @@
         clearTimeout(saveTimer);
         const run = async () => {
           const ref = stateRef();
-          if (!ref) return;
-          try { await window._firestoreRef.setDoc(ref, state); }
+          if (!ref) {
+            if (now) window.showToast && window.showToast('No se pudo guardar: no hay sesión iniciada o conexión', 'error');
+            return;
+          }
+          try {
+            await window._firestoreRef.setDoc(ref, state);
+            const t = new Date();
+            if ($('mrSaveInfo')) $('mrSaveInfo').textContent = 'Guardado ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+            if (now) window.showToast && window.showToast('Guardado ✓', 'success');
+          }
           catch (e) { window.showToast && window.showToast('Error al guardar: ' + e.message, 'error'); }
         };
         if (now) return run();
@@ -6243,6 +6255,7 @@
         $('mrPaidKg').value = state.paidKg || '';
         calcStock(); saveState();
       });
+      $('mrSave').onclick = () => saveState(true);
       $('mrLoadRes').onclick = async () => {
         const w = +state.resWeight || 0;
         if (w <= 0) { window.showToast && window.showToast('Ingresá el peso de la res', 'error'); return; }
