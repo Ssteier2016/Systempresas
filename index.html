@@ -6161,6 +6161,7 @@
         const w = Math.max(0, +state.resWeight || 0);
         let pct = 0, kg = 0, val = 0, st = 0, stVal = 0;
         const pctSum = CUTS.reduce((a, c) => a + pctOf(c.k), 0);
+        let manualDiff = 0;
         const zs = { t:[0,0,0], m:[0,0,0], d:[0,0,0], v:{ t:0, m:0, d:0 } };
         // Costo de la res repartido según el valor de cada corte: kg aprovechados (sin el descarte) x precio de venta
         const paid = (+state.paidKg || 0) * w;
@@ -6178,7 +6179,13 @@
           zs.v[c.z] += pctSum > 0 ? p / pctSum * 100 : 0;
           const ci = stockRows[c.k].querySelector('[data-f="costs"]');
           if (document.activeElement !== ci) { ci.value = isManualCost(c.k) ? state.costs[c.k] : (autoCost[c.k] > 0 ? Math.round(autoCost[c.k]) : ''); ci.style.color = isManualCost(c.k) ? '' : '#9ca3af'; }
-          stockRows[c.k].querySelector('[data-costsrc]').textContent = isManualCost(c.k) ? 'manual' : (autoCost[c.k] > 0 ? 'auto' : '');
+          // Diferencia del costo manual contra el automático, en $ por kg y en $ sobre los kg aprovechados del corte
+          const dsrc = stockRows[c.k].querySelector('[data-costsrc]');
+          if (isManualCost(c.k) && autoCost[c.k] > 0) {
+            const d = costOf(c.k) - autoCost[c.k], dt = d * p / 100 * w * keep;
+            manualDiff += dt;
+            dsrc.innerHTML = 'manual · <span style="color:' + (d > 0 ? '#C8102E' : '#16a34a') + ';font-weight:600">' + (d >= 0 ? '+' : '−') + money(Math.abs(d)) + '/kg</span><span class="block" style="color:' + (d > 0 ? '#C8102E' : '#16a34a') + '">' + (dt >= 0 ? '+' : '−') + money(Math.abs(dt)) + ' en el corte</span>';
+          } else dsrc.textContent = isManualCost(c.k) ? 'manual' : (autoCost[c.k] > 0 ? 'auto' : '');
           const tag = stockRows[c.k].querySelector('[data-src]');
           if (tag) tag.outerHTML = srcTag(c.k);
           pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
@@ -6213,7 +6220,8 @@
         // Costo base: lo que se pagó por la res / kilos aprovechados (hueso, grasa, merma y descarte valen $0)
         if (document.activeElement !== $('mrPaidTotal')) $('mrPaidTotal').value = paid > 0 ? +paid.toFixed(2) : '';
         $('mrCostInfo').innerHTML = paid > 0 && usable > 0
-          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su valor de venta (editable a mano en "Costo por kg").'
+          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su valor de venta (editable a mano en "Costo por kg").' +
+            (manualDiff ? ' Costos manuales: <b style="color:' + (manualDiff > 0 ? '#C8102E' : '#16a34a') + '">' + (manualDiff > 0 ? '+' : '−') + money(Math.abs(manualDiff)) + '</b> sobre lo que pagaste por la res.' : '')
           : 'Cargá lo que pagaste por kg (o el total) y vas a ver cuánto te sale el kg de carne aprovechada.';
       }
       $('mrResWeight').addEventListener('input', () => {
