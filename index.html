@@ -5721,13 +5721,13 @@
       <!-- STOCK -->
       <div id="mrStock" class="hidden flex-1 overflow-y-auto">
         <div class="max-w-4xl mx-auto px-4 py-4">
+          <button id="mrLoadRes" class="w-full sm:w-auto mb-3 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
           <div id="mrCowStock"></div>
           <div class="flex flex-wrap items-center gap-3 my-3 text-sm text-gray-600">
             <label for="mrResWeight" class="font-semibold">Peso de la media res (kg)</label>
             <input type="number" id="mrResWeight" min="1" step="1" class="mr-num" style="max-width:100px">
             <label for="mrResDate" class="font-semibold">Fecha de la res</label>
             <input type="date" id="mrResDate" class="mr-num" style="max-width:150px">
-            <button id="mrLoadRes" class="ml-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
           </div>
           <div class="flex flex-wrap items-center gap-3 mb-3 text-sm text-gray-600">
             <label for="mrPaidKg" class="font-semibold">Precio que pagaste por kg ($)</label>
@@ -5743,10 +5743,11 @@
           <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" style="min-width:820px">
+            <table class="w-full text-sm" style="min-width:920px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Corte</th>
                 <th class="text-right py-2 px-2 font-semibold">% de la res</th>
+                <th class="text-right py-2 px-2 font-semibold" title="Sobre la carne aprovechada (sin hueso, grasa, merma ni descarte), que es el 100 %">% de la carne vendible</th>
                 <th class="text-right py-2 px-2 font-semibold">Peso estimado</th>
                 <th class="text-right py-2 px-2 font-semibold">Precio por kg</th>
                 <th class="text-right py-2 px-2 font-semibold">Costo por kg</th>
@@ -5756,9 +5757,9 @@
               </tr></thead>
               <tbody id="mrStockBody"></tbody>
               <tfoot class="font-semibold text-gray-700">
-                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
-                <tr><td colspan="3" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td colspan="6" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotVend" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="4" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td colspan="7" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
               </tfoot>
             </table>
           </div>
@@ -5938,6 +5939,7 @@
           if (inp.dataset.f === 'stock') syncLots(k, todayISO());
           calcStock(); saveState();
         });
+        if (inp.dataset.f === 'costs') inp.addEventListener('blur', calcStock);
         if (inp.dataset.f === 'prices') inp.addEventListener('change', () => {
           if (inp.value.trim() === '') { inp.value = priceOf(k); calcStock(); }
         });
@@ -5950,7 +5952,10 @@
         return '<span class="block text-[10px] text-gray-400" data-src></span>';
       }
       const stockOf = k => +state.stock[k] || 0;
-      const costOf = k => state.costs[k] != null ? +state.costs[k] : 0;
+      // Costo por kg: el que cargó el usuario o, si no, el automático (la res se reparte según el valor de cada corte)
+      const autoCost = {};
+      const isManualCost = k => state.costs[k] != null;
+      const costOf = k => isManualCost(k) ? +state.costs[k] : (autoCost[k] || 0);
       // Ganancia sobre el costo: (venta - costo) / costo, en vivo; sin costo no se calcula
       function marginTag(k) {
         const c = costOf(k);
@@ -6111,7 +6116,7 @@
         ['t', 'm', 'd'].forEach(z => {
           const zr = document.createElement('tr');
           zr.className = 'bg-gray-50 text-gray-500 font-semibold';
-          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
+          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zvend="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
           tb.appendChild(zr);
           CUTS.filter(c => c.z === z).forEach(c => {
             const tr = document.createElement('tr');
@@ -6119,9 +6124,10 @@
             tr.innerHTML =
               '<td class="py-1 px-2 cursor-pointer">' + c.name + (c.note ? ' <span class="text-[11px] text-gray-400">' + c.note + '</span>' : '') + '</td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="pct" min="0" step="0.1" value="' + pctOf(c.k) + '" aria-label="Porcentaje de ' + c.name + '"></td>' +
+              '<td class="text-right px-2 text-gray-600" data-vend></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio por kg de ' + c.name + '">' + srcTag(c.k) + '</td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-costsrc></span></td>' +
               '<td class="text-right px-2 text-xs" data-margin></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>' +
               '<td class="text-right px-2 text-xs" data-age></td>';
@@ -6135,12 +6141,12 @@
         });
         const hr = document.createElement('tr');
         hr.className = 'bg-gray-50 text-gray-500 font-semibold';
-        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td>';
+        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td>';
         tb.appendChild(hr);
         WASTE.forEach(x => {
           const tr = document.createElement('tr');
           tr.className = 'border-b border-gray-100 text-gray-600';
-          tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
+          tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-margin="' + x.k + '"></td>' +
@@ -6154,19 +6160,33 @@
       function calcStock() {
         const w = Math.max(0, +state.resWeight || 0);
         let pct = 0, kg = 0, val = 0, st = 0, stVal = 0;
-        const zs = { t:[0,0,0], m:[0,0,0], d:[0,0,0] };
+        const pctSum = CUTS.reduce((a, c) => a + pctOf(c.k), 0);
+        const zs = { t:[0,0,0], m:[0,0,0], d:[0,0,0], v:{ t:0, m:0, d:0 } };
+        // Costo de la res repartido según el valor de cada corte: kg aprovechados (sin el descarte) x precio de venta
+        const paid = (+state.paidKg || 0) * w;
+        const grossKg = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100, 0);
+        const disc = Math.min(grossKg, w * (+state.discardPct || 0) / 100), usable = grossKg - disc;
+        const keep = grossKg > 0 ? usable / grossKg : 0;
+        const totVal = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100 * keep * priceOf(c.k), 0);
+        CUTS.forEach(c => { autoCost[c.k] = paid > 0 && totVal > 0 ? paid * priceOf(c.k) / totVal : 0; });
         CUTS.forEach(c => {
           const p = pctOf(c.k), k = w * p / 100, s = stockOf(c.k);
           stockRows[c.k].querySelector('[data-kg]').textContent = fmt(k, 1) + ' kg';
           stockRows[c.k].querySelector('[data-age]').innerHTML = ageTag(c.k);
           stockRows[c.k].querySelector('[data-margin]').innerHTML = marginTag(c.k);
+          stockRows[c.k].querySelector('[data-vend]').textContent = grossKg > 0 ? fmt(p / pctSum * 100, 1) + '%' : '';
+          zs.v[c.z] += pctSum > 0 ? p / pctSum * 100 : 0;
+          const ci = stockRows[c.k].querySelector('[data-f="costs"]');
+          if (document.activeElement !== ci) { ci.value = isManualCost(c.k) ? state.costs[c.k] : (autoCost[c.k] > 0 ? Math.round(autoCost[c.k]) : ''); ci.style.color = isManualCost(c.k) ? '' : '#9ca3af'; }
+          stockRows[c.k].querySelector('[data-costsrc]').textContent = isManualCost(c.k) ? 'manual' : (autoCost[c.k] > 0 ? 'auto' : '');
           const tag = stockRows[c.k].querySelector('[data-src]');
           if (tag) tag.outerHTML = srcTag(c.k);
           pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
           zs[c.z][0] += p; zs[c.z][1] += k; zs[c.z][2] += s;
         });
-        Object.entries(zs).forEach(([z, v]) => {
+        Object.entries({ t: zs.t, m: zs.m, d: zs.d }).forEach(([z, v]) => {
           document.querySelector('[data-zpct="' + z + '"]').textContent = fmt(v[0], 1) + '%';
+          document.querySelector('[data-zvend="' + z + '"]').textContent = fmt(zs.v[z], 1) + '%';
           document.querySelector('[data-zkg="' + z + '"]').textContent = fmt(v[1], 1) + ' kg';
           document.querySelector('[data-zst="' + z + '"]').textContent = fmt(v[2], 1) + ' kg';
         });
@@ -6185,16 +6205,15 @@
           }
         });
         $('mrTotPct').textContent = fmt(pct, 1) + '%';
+        $('mrTotVend').textContent = pctSum > 0 ? '100%' : '';
         $('mrTotKg').textContent = fmt(kg, 1) + ' kg';
         $('mrTotStock').textContent = fmt(st, 1) + ' kg';
         $('mrTotVal').textContent = money(val);
         $('mrStockVal').textContent = money(stVal);
-        // Costo de la carne aprovechada: lo que se pagó por la res / kilos de cortes vendibles (hueso, grasa y merma valen $0)
-        const paid = (+state.paidKg || 0) * w;
-        const disc = Math.min(kg, w * (+state.discardPct || 0) / 100), usable = kg - disc;
+        // Costo base: lo que se pagó por la res / kilos aprovechados (hueso, grasa, merma y descarte valen $0)
         if (document.activeElement !== $('mrPaidTotal')) $('mrPaidTotal').value = paid > 0 ? +paid.toFixed(2) : '';
         $('mrCostInfo').innerHTML = paid > 0 && usable > 0
-          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · costo por kg aprovechado: <b style="color:#C8102E">' + money(paid / usable) + '</b>'
+          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su valor de venta (editable a mano en "Costo por kg").'
           : 'Cargá lo que pagaste por kg (o el total) y vas a ver cuánto te sale el kg de carne aprovechada.';
       }
       $('mrResWeight').addEventListener('input', () => {
