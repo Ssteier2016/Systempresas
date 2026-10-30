@@ -5743,13 +5743,14 @@
           <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
           <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" style="min-width:920px">
+            <table class="w-full text-sm" style="min-width:1000px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Corte</th>
                 <th class="text-right py-2 px-2 font-semibold">% de la res</th>
                 <th class="text-right py-2 px-2 font-semibold" title="Sobre la carne aprovechada (sin hueso, grasa, merma ni descarte), que es el 100 %">% de la carne vendible</th>
                 <th class="text-right py-2 px-2 font-semibold">Peso estimado</th>
-                <th class="text-right py-2 px-2 font-semibold">Precio de venta por kg</th>
+                <th class="text-right py-2 px-2 font-semibold" title="INDEC / IPCVA / aproximado. Sirve para repartir el costo de la res">Precio de referencia</th>
+                <th class="text-right py-2 px-2 font-semibold" title="Tu precio de venta. Si no lo cargás, se usa el de referencia">Precio de venta por kg</th>
                 <th class="text-right py-2 px-2 font-semibold">Costo por kg</th>
                 <th class="text-right py-2 px-2 font-semibold" title="Precio de venta − costo, sobre el costo">Ganancia (% y $ por kg)</th>
                 <th class="text-right py-2 px-2 font-semibold">Stock (kg)</th>
@@ -5757,9 +5758,9 @@
               </tr></thead>
               <tbody id="mrStockBody"></tbody>
               <tfoot class="font-semibold text-gray-700">
-                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotVend" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
-                <tr><td colspan="4" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td colspan="7" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
+                <tr><td class="py-2 px-2">Carne vendible</td><td id="mrTotPct" class="text-right px-2"></td><td id="mrTotVend" class="text-right px-2"></td><td id="mrTotKg" class="text-right px-2"></td><td></td><td></td><td></td><td></td><td id="mrTotStock" class="text-right px-2"></td><td></td></tr>
+                <tr><td colspan="5" class="py-1 px-2 text-gray-500 font-normal">Valor de venta estimado de la media res (con hueso y grasa)</td><td id="mrTotVal" class="text-right px-2"></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td colspan="8" class="py-1 px-2 text-gray-500 font-normal">Valor del stock actual</td><td id="mrStockVal" class="text-right px-2"></td><td></td></tr>
               </tfoot>
             </table>
           </div>
@@ -5911,7 +5912,14 @@
       const indecPrice = k => indec && indec.precios && indec.precios[k] > 0 ? +indec.precios[k] : null;
       const ipcvaPrice = k => indec && indec.ipcva && indec.ipcva.precios && indec.ipcva.precios[k] > 0 ? +indec.ipcva.precios[k] : null;
       // Prioridad: precio propio > INDEC GBA > IPCVA AMBA > ejemplo
-      const priceSrc = k => state.prices[k] != null ? 'propio' : indecPrice(k) != null ? 'indec' : ipcvaPrice(k) != null ? 'ipcva' : 'ejemplo';
+      const priceSrc = k => indecPrice(k) != null ? 'indec' : ipcvaPrice(k) != null ? 'ipcva' : 'ejemplo';
+      const isOwnPrice = k => state.prices[k] != null;
+      // Precio de referencia (INDEC > IPCVA > ejemplo): sirve para repartir el costo de la res; el de venta es el propio o, si no hay, este
+      const refPriceOf = k => {
+        if (indecPrice(k) != null) return indecPrice(k);
+        if (ipcvaPrice(k) != null) return ipcvaPrice(k);
+        return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
+      };
       const priceOf = k => {
         if (state.prices[k] != null) return +state.prices[k];
         if (indecPrice(k) != null) return indecPrice(k);
@@ -6117,7 +6125,7 @@
         ['t', 'm', 'd'].forEach(z => {
           const zr = document.createElement('tr');
           zr.className = 'bg-gray-50 text-gray-500 font-semibold';
-          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zvend="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
+          zr.innerHTML = '<td class="py-1 px-2">' + ZONES[z] + '</td><td class="text-right px-2" data-zpct="' + z + '"></td><td class="text-right px-2" data-zvend="' + z + '"></td><td class="text-right px-2" data-zkg="' + z + '"></td><td></td><td></td><td></td><td></td><td class="text-right px-2" data-zst="' + z + '"></td><td></td>';
           tb.appendChild(zr);
           CUTS.filter(c => c.z === z).forEach(c => {
             const tr = document.createElement('tr');
@@ -6127,7 +6135,8 @@
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="pct" min="0" step="0.1" value="' + pctOf(c.k) + '" aria-label="Porcentaje de ' + c.name + '"></td>' +
               '<td class="text-right px-2 text-gray-600" data-vend></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio por kg de ' + c.name + '">' + srcTag(c.k) + '</td>' +
+              '<td class="text-right px-2 text-gray-600" data-ref></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num" data-f="prices" min="0" step="100" value="' + priceOf(c.k) + '" aria-label="Precio de venta por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-psrc></span></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-costsrc></span></td>' +
               '<td class="text-right px-2 text-xs" data-margin></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>' +
@@ -6142,13 +6151,14 @@
         });
         const hr = document.createElement('tr');
         hr.className = 'bg-gray-50 text-gray-500 font-semibold';
-        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td>';
+        hr.innerHTML = '<td class="py-1 px-2">Hueso, grasa y merma</td><td class="text-right px-2" id="mrBonePct"></td><td></td><td class="text-right px-2" id="mrBoneKg"></td><td></td><td></td><td></td><td></td><td></td><td></td>';
         tb.appendChild(hr);
         WASTE.forEach(x => {
           const tr = document.createElement('tr');
           tr.className = 'border-b border-gray-100 text-gray-600';
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
-            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
+            '<td class="text-right px-2 text-gray-600">' + (x.price != null ? money(refPriceOf(x.k)) : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + priceOf(x.k) + '" aria-label="Precio de venta por kg de ' + x.name + '" data-f="prices">' : '') + '</td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-margin="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>' +
@@ -6169,8 +6179,8 @@
         const grossKg = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100, 0);
         const disc = Math.min(grossKg, w * (+state.discardPct || 0) / 100), usable = grossKg - disc;
         const keep = grossKg > 0 ? usable / grossKg : 0;
-        const totVal = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100 * keep * priceOf(c.k), 0);
-        CUTS.forEach(c => { autoCost[c.k] = paid > 0 && totVal > 0 ? paid * priceOf(c.k) / totVal : 0; });
+        const totVal = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100 * keep * refPriceOf(c.k), 0);
+        CUTS.forEach(c => { autoCost[c.k] = paid > 0 && totVal > 0 ? paid * refPriceOf(c.k) / totVal : 0; });
         CUTS.forEach(c => {
           const p = pctOf(c.k), k = w * p / 100, s = stockOf(c.k);
           stockRows[c.k].querySelector('[data-kg]').textContent = fmt(k, 1) + ' kg';
@@ -6187,8 +6197,11 @@
             manualDiff += dt;
             dsrc.innerHTML = 'manual · <span style="color:' + (d > 0 ? '#C8102E' : '#16a34a') + ';font-weight:600">' + (d >= 0 ? '+' : '−') + money(Math.abs(d)) + '/kg</span><span class="block" style="color:' + (d > 0 ? '#C8102E' : '#16a34a') + '">' + (dt >= 0 ? '+' : '−') + money(Math.abs(dt)) + ' en el corte</span>';
           } else dsrc.textContent = isManualCost(c.k) ? 'manual' : (autoCost[c.k] > 0 ? 'auto' : '');
-          const tag = stockRows[c.k].querySelector('[data-src]');
-          if (tag) tag.outerHTML = srcTag(c.k);
+          const rc = stockRows[c.k].querySelector('[data-ref]');
+          rc.innerHTML = money(refPriceOf(c.k)) + srcTag(c.k);
+          const pi = stockRows[c.k].querySelector('[data-f="prices"]');
+          if (document.activeElement !== pi) { pi.value = priceOf(c.k); pi.style.color = isOwnPrice(c.k) ? '' : '#9ca3af'; }
+          stockRows[c.k].querySelector('[data-psrc]').textContent = isOwnPrice(c.k) ? 'propio' : 'referencia';
           pct += p; kg += k; val += k * priceOf(c.k); st += s; stVal += s * priceOf(c.k);
           zs[c.z][0] += p; zs[c.z][1] += k; zs[c.z][2] += s;
         });
@@ -6221,7 +6234,7 @@
         // Costo base: lo que se pagó por la res / kilos aprovechados (hueso, grasa, merma y descarte valen $0)
         if (document.activeElement !== $('mrPaidTotal')) $('mrPaidTotal').value = paid > 0 ? +paid.toFixed(2) : '';
         $('mrCostInfo').innerHTML = paid > 0 && usable > 0
-          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su valor de venta (editable a mano en "Costo por kg").' +
+          ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su precio de referencia (editable a mano en "Costo por kg").' +
             (manualDiff ? ' Costos manuales: <b style="color:' + (manualDiff > 0 ? '#C8102E' : '#16a34a') + '">' + (manualDiff > 0 ? '+' : '−') + money(Math.abs(manualDiff)) + '</b> sobre lo que pagaste por la res.' : '')
           : 'Cargá lo que pagaste por kg (o el total) y vas a ver cuánto te sale el kg de carne aprovechada.';
       }
