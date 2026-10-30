@@ -5693,10 +5693,10 @@
          MEDIA RES — Cortes argentinos: STOCK y VENTAS
     ══════════════════════════════════════════════════════════════ -->
     <style>
-      .mr-rg{fill:#9b9b9b;stroke:#fff;stroke-width:3;stroke-linejoin:round;cursor:pointer;transition:fill .15s}
+      .mr-rg{fill:#d1d5db;stroke:#fff;stroke-width:3;stroke-linejoin:round;cursor:pointer;transition:fill .15s}
       .mr-rg.on{fill:#C8102E}
-      .mr-rg.nx{cursor:default}
-      .mr-lb{fill:#fff;font-size:16px;font-weight:600;pointer-events:none;font-family:Inter,system-ui,sans-serif}
+      .mr-rg.nx{cursor:default;fill:#eceef1}
+      .mr-lb{fill:#111827;stroke:#fff;stroke-width:4px;paint-order:stroke;stroke-linejoin:round;font-size:16px;font-weight:700;pointer-events:none;font-family:Inter,system-ui,sans-serif}
       .mr-lb.s{font-size:14px}
       .mr-row.on{background:#fee2e2}
       .mr-row.on td:first-child{color:#C8102E;font-weight:700}
@@ -5806,14 +5806,16 @@
       const TAIL = 'M92,132 C64,180 36,240 26,300 C20,340 16,375 14,410 L38,412 C40,376 44,340 50,302 C60,248 84,192 106,148 Z';
       // Despiece argentino (nomenclador IPCVA) dentro del contorno
       const REGIONS = {
-        tapacuad:'60,40 170,40 160,125 90,150 60,150',
+        tapanalga:'60,40 170,40 160,125 90,150 60,150',
         cuadril:'170,40 240,40 240,170 160,175 160,125',
         colita:'160,175 240,170 250,215 175,225',
         peceto:'40,150 90,150 100,330 40,330',
-        nalga:'90,150 160,125 160,175 175,225 170,300 98,300',
+        aranita:'90,150 160,125 160,175 175,225 140,200 100,205',
+        nalga:'100,205 140,200 175,225 170,300 98,300',
         bola:'175,225 250,215 262,300 230,345 190,380 170,300',
         cuadrada:'98,300 170,300 190,380 175,425 40,425 40,330 100,330',
-        tortuguita:'40,425 175,425 230,560 40,560',
+        tortuguita:'40,425 175,425 230,478 40,478',
+        osobucot:'40,478 230,478 230,560 40,560',
         bifeang:'240,40 365,40 365,150 240,155',
         lomo:'240,155 365,150 365,185 240,190',
         vacio:'240,190 365,185 370,300 370,345 245,338 262,300 250,215',
@@ -5822,42 +5824,41 @@
         asado:'365,185 470,190 480,290 370,300',
         falda:'370,300 480,290 495,335 480,352 370,345',
         matambre:'245,338 370,345 480,352 480,430 245,430',
-        aguja:'470,40 600,40 615,120 475,145 470,145',
-        marucha:'470,145 475,145 615,120 600,200 560,205 470,190',
+        roastbeef:'470,40 600,40 615,120 475,145 470,145',
+        espinazo:'470,145 475,145 615,120 600,200 560,205 470,190',
         paleta:'470,190 560,205 575,300 480,290',
-        chingolo:'480,290 575,300 565,335 495,335',
-        brazuelo:'495,335 565,335 600,400 480,405 480,352',
-        pecho:'560,205 600,200 640,265 668,250 720,300 720,402 600,400 575,300',
+        palomita:'480,290 575,300 565,335 495,335',
+        carnaza:'560,205 600,200 640,265 668,250 720,300 720,402 600,400 575,300',
         cogote:'600,40 650,40 652,105 668,250 640,265 600,200 615,120',
-        osobuco:'470,400 720,402 720,560 470,560',
+        osobuco:'495,335 565,335 600,400 720,402 720,560 470,560 470,405 480,405 480,352',
         cabeza:'652,105 650,0 860,0 860,330 668,250'
       };
       const ELLIPSES = { entrana:[368,245,13,40] };
       const LABELS = [
-        ['tapacuad',124,121,['Tapa de','cuadril'],1],['cuadril',200,120,['Cuadril']],['colita',205,198,['Colita de','cuadril'],1],
-        ['peceto',68,240,['Peceto'],0,-90],['nalga',132,225,['Nalga']],['bola',213,285,['Bola de','lomo'],1],
-        ['cuadrada',118,370,['Cuadrada']],['tortuguita',118,480,['Tortuguita'],1],
+        ['tapanalga',118,100,['Tapa de','nalga'],1],['cuadril',200,120,['Cuadril']],['colita',205,198,['Colita de','cuadril'],1],
+        ['peceto',68,240,['Peceto'],0,-90],['aranita',128,172,['Arañita'],1],['nalga',134,255,['Nalga']],['bola',213,285,['Bola de','lomo'],1],
+        ['cuadrada',118,370,['Cuadrada']],['tortuguita',118,452,['Tortuguita'],1],['osobucot',118,520,['Osobuco'],1],
         ['bifeang',302,124,['Bife','angosto']],['lomo',302,170,['Lomo'],1],['vacio',305,262,['Vacío']],
         ['bifeanc',417,126,['Bife','ancho']],['tapaasado',417,168,['Tapa de asado'],1],['asado',425,245,['Asado']],
         ['entrana',368,245,['Entraña'],1,-90],['falda',425,322,['Falda'],1],['matambre',380,359,['Matambre'],1],
-        ['aguja',540,118,['Aguja']],['marucha',540,172,['Marucha'],1],['paleta',522,245,['Paleta']],
-        ['chingolo',530,317,['Chingolo'],1],['brazuelo',535,368,['Brazuelo'],1],['pecho',612,320,['Pecho']],
-        ['cogote',630,175,['Cogote'],1,-90],['osobuco',536,480,['Osobuco'],1],
-        ['cabeza',705,170,['Cabeza']],['rabo',40,300,['Rabo'],1,-80]
+        ['roastbeef',540,95,['Roast beef']],['espinazo',535,165,['Espinazo']],['paleta',522,245,['Paleta']],
+        ['palomita',530,317,['Palomita'],1],['carnaza',640,330,['Carnaza','común']],
+        ['cogote',632,175,['Cogotera / recorte'],1,-90],['osobuco',560,480,['Osobuco','(brazuelo)']],
+        ['cabeza',705,170,['Cabeza']]
       ];
       const ZONES = { t:'Cuarto trasero', m:'Parte media', d:'Cuarto delantero' };
       // k, nombre, zona, % de la res, precio de ejemplo, zonas del dibujo, nota
       const CUTS = [
         ['cuadril','Cuadril','t',2.9,15000,['cuadril']],
-        ['tapacuad','Tapa de cuadril (picaña)','t',1.1,20100,['tapacuad']],
+        ['tapanalga','Tapa de nalga','t',2.5,14000,['tapanalga']],
         ['nalga','Nalga','t',5.6,15000,['nalga']],
         ['peceto','Peceto','t',2.0,16000,['peceto']],
         ['cuadrada','Cuadrada','t',2.7,14000,['cuadrada']],
         ['bola','Bola de lomo','t',4.4,13500,['bola']],
         ['colita','Colita de cuadril','t',0.9,16000,['colita']],
-        ['tapanalga','Tapa de nalga','t',2.5,14000,['tapanalga']],
         ['tortuguita','Tortuguita','t',1.5,8000,['tortuguita']],
-        ['rabo','Rabo','t',0.6,9800,['rabo']],
+        ['aranita','Arañita','t',0.4,15000,['aranita']],
+        ['osobucot','Osobuco','t',1.5,8000,['osobucot'],'pata trasera'],
         ['lomo','Lomo','m',2.1,20000,['lomo']],
         ['bifeang','Bife angosto','m',4.6,16000,['bifeang']],
         ['bifeanc','Bife ancho','m',2.7,13000,['bifeanc']],
@@ -5867,14 +5868,13 @@
         ['tapaasado','Tapa de asado','m',0.6,12500,['tapaasado'],'cubre el asado'],
         ['entrana','Entraña','m',0.6,26000,['entrana'],'interna, del diafragma'],
         ['falda','Falda','m',2.9,7000,['falda']],
-        ['cogote','Cogote','d',3.7,10000,['cogote']],
-        ['aguja','Aguja','d',5.4,12000,['aguja']],
-        ['marucha','Marucha','d',0.9,15900,['marucha']],
         ['paleta','Paleta','d',4.3,11000,['paleta']],
-        ['chingolo','Chingolo','d',0.7,16000,['chingolo']],
-        ['brazuelo','Brazuelo','d',1.4,11000,['brazuelo']],
-        ['pecho','Pecho','d',3.6,11500,['pecho']],
-        ['osobuco','Osobuco','d',2.3,7000,['osobuco']]
+        ['palomita','Palomita','d',1.8,11000,['palomita']],
+        ['osobuco','Osobuco (brazuelo)','d',3.0,7000,['osobuco']],
+        ['carnaza','Carnaza común','d',4.5,10000,['carnaza']],
+        ['roastbeef','Roast beef','d',4.0,12000,['roastbeef']],
+        ['espinazo','Espinazo','d',1.8,5000,['espinazo']],
+        ['picada','Cogotera / recorte','d',2.7,10000,['cogote'],'se usa para la carne picada común']
       ].map(c => ({ k:c[0], name:c[1], z:c[2], pct:c[3], price:c[4], regs:c[5], note:c[6] || '' }));
       const CUT = Object.fromEntries(CUTS.map(c => [c.k, c]));
       // Reparto de lo no vendible (28 % con los valores por defecto): oreo 2,5 % (Valor Carne);
@@ -6031,7 +6031,7 @@
         svg.innerHTML = '<defs><clipPath id="' + clipId + '"><path d="' + OUTLINE + '"/></clipPath></defs>';
         const els = {};
         const tail = document.createElementNS(NS, 'path');
-        tail.setAttribute('d', TAIL); tail.setAttribute('class', 'mr-rg');
+        tail.setAttribute('d', TAIL); tail.setAttribute('class', 'mr-rg nx');
         svg.appendChild(tail); els.rabo = tail;
         const g = document.createElementNS(NS, 'g');
         g.setAttribute('clip-path', 'url(#' + clipId + ')');
