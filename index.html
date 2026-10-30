@@ -5749,9 +5749,9 @@
                 <th class="text-right py-2 px-2 font-semibold">% de la res</th>
                 <th class="text-right py-2 px-2 font-semibold" title="Sobre la carne aprovechada (sin hueso, grasa, merma ni descarte), que es el 100 %">% de la carne vendible</th>
                 <th class="text-right py-2 px-2 font-semibold">Peso estimado</th>
-                <th class="text-right py-2 px-2 font-semibold">Precio por kg</th>
+                <th class="text-right py-2 px-2 font-semibold">Precio de venta por kg</th>
                 <th class="text-right py-2 px-2 font-semibold">Costo por kg</th>
-                <th class="text-right py-2 px-2 font-semibold" title="(Precio de venta − costo) / costo">Ganancia %</th>
+                <th class="text-right py-2 px-2 font-semibold" title="Precio de venta − costo, sobre el costo">Ganancia (% y $ por kg)</th>
                 <th class="text-right py-2 px-2 font-semibold">Stock (kg)</th>
                 <th class="text-right py-2 px-2 font-semibold">Antigüedad</th>
               </tr></thead>
@@ -5961,7 +5961,8 @@
         const c = costOf(k);
         if (!(c > 0)) return '<span class="text-gray-300">—</span>';
         const m = (priceOf(k) - c) / c * 100;
-        return '<span style="color:' + (m >= 0 ? '#16a34a' : '#C8102E') + ';font-weight:600">' + fmt(m, 1) + '%</span>';
+        const col = m >= 0 ? '#16a34a' : '#C8102E', d = priceOf(k) - c;
+        return '<span style="color:' + col + ';font-weight:600">' + fmt(m, 1) + '%</span><span class="block text-[10px]" style="color:' + col + '">' + (d >= 0 ? '+' : '−') + money(Math.abs(d)) + '/kg</span>';
       }
       // Lotes por fecha de res de cada corte (state.lots[k] = [{ d: 'AAAA-MM-DD' | null, kg }]), el más viejo primero
       const todayISO = () => { const t = new Date(); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); };
