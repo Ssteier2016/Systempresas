@@ -1,7 +1,7 @@
 // sw.js - Service Worker para Gestión de Negocios Pro v3.9.17
 // Versión TOTAL: Incluye funciones experimentales, sincronización, actualizaciones por contenido y corrección de extensiones.
 
-const CACHE_NAME = 'business-app-v3.9.17';
+const CACHE_NAME = 'business-app-v3.9.18';
 const urlsToCache = [
   '/',
   '/index.html',
