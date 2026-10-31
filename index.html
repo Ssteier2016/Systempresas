@@ -5954,11 +5954,27 @@
         if (ipcvaPrice(k) != null) return ipcvaPrice(k);
         return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
       };
+      // Si la descarga falla (red lenta o sin conexión) se usa la última copia guardada en el dispositivo
       async function loadIndec() {
         try {
           const r = await fetch('precios-indec.json?t=' + Date.now(), { cache: 'no-store' });
-          if (r.ok) indec = await r.json();
+          if (r.ok) {
+            indec = await r.json();
+            try { localStorage.setItem('mrIndec', JSON.stringify(indec)); } catch (e) {}
+          }
         } catch (e) { console.warn('Media res: sin precios INDEC', e); }
+        if (!indec) { try { indec = JSON.parse(localStorage.getItem('mrIndec')); } catch (e) {} }
+      }
+      // Si los precios llegan con la pantalla ya abierta, se vuelve a dibujar con ellos
+      let indecTry = null;
+      function ensureIndec() {
+        if (indec || indecTry) return;
+        indecTry = loadIndec().then(() => {
+          indecTry = null;
+          if (!indec) return;
+          if (screen === 'stock') renderStock();
+          if (screen === 'ventas') renderVentas();
+        });
       }
       const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
       const fmtPeriodo = per => {
@@ -6472,6 +6488,7 @@
         $('mrVentas').classList.toggle('hidden', s !== 'ventas');
         $('mrBack').style.visibility = s === 'home' ? 'hidden' : 'visible';
         $('mrTitle').textContent = s === 'stock' ? 'Media Res · Stock' : s === 'ventas' ? 'Media Res · Ventas' : s === 'hist' ? 'Media Res · Historial' : 'Media Res';
+        if (s === 'stock' || s === 'ventas') ensureIndec();
         if (s === 'stock') { $('mrResDate').value = todayISO(); renderStock(); }
         if (s === 'hist') renderHist();
         if (s === 'ventas') renderVentas();
