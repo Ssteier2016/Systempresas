@@ -12,6 +12,15 @@
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Interfaz simplificada: solo Systempresas, STOCK, Historial y VENTAS */
+        .app-tab { display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px; font-weight:700; font-size:13px; color:#4b5563; white-space:nowrap; transition:background .15s; }
+        .app-tab:hover { background:#f3f4f6; }
+        .app-tab.on { background:#111827; color:#fff; }
+        @media (min-width:640px) { .app-tab { font-size:15px; padding:8px 16px; } }
+        body.simple-ui #mainContent { padding-top:56px; }
+        body.simple-ui #mainContent > nav,
+        body.simple-ui #sideMenu, body.simple-ui #sideMenuOverlay,
+        body.simple-ui #dashTiles, body.simple-ui #dashQuickBtns { display:none !important; }
         :root { 
             font-family: 'Inter', system-ui, sans-serif;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -690,7 +699,36 @@
         .payment-method-otro { background-color: #e5e7eb; color: #374151; }
     </style>
 </head>
-<body class="min-h-screen overflow-x-hidden">
+<body class="min-h-screen overflow-x-hidden simple-ui">
+    <div id="authSplash" class="fixed inset-0 z-[200] bg-white flex items-center justify-center">
+        <div class="text-center"><i class="fas fa-circle-notch fa-spin text-3xl text-gray-400"></i><p class="mt-3 text-gray-500 text-sm">Cargando…</p></div>
+    </div>
+    <div id="loginGate" class="fixed inset-0 z-[190] hidden bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h1 class="text-2xl font-bold text-gray-900 text-center">Systempresas</h1>
+            <p class="text-sm text-gray-500 text-center mt-1 mb-5">Iniciá sesión una sola vez. En este dispositivo vas a quedar conectado.</p>
+            <button id="gateGoogleBtn" class="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-3 font-semibold text-gray-700 hover:bg-gray-50 transition"><i class="fab fa-google text-red-500"></i> Continuar con Google</button>
+            <div class="flex items-center gap-3 my-4 text-xs text-gray-400"><span class="flex-1 border-t"></span>o con email<span class="flex-1 border-t"></span></div>
+            <div class="flex bg-gray-100 rounded-lg p-1 mb-3">
+                <button id="gateModeLogin" class="flex-1 text-xs py-1.5 rounded-lg font-semibold bg-white shadow text-gray-800">Iniciar sesión</button>
+                <button id="gateModeRegister" class="flex-1 text-xs py-1.5 rounded-lg font-semibold text-gray-400">Crear cuenta</button>
+            </div>
+            <input type="text" id="gateName" class="input-std mb-2 hidden" placeholder="Tu nombre">
+            <input type="email" id="gateEmail" class="input-std mb-2" placeholder="Email" autocomplete="email">
+            <input type="password" id="gatePass" class="input-std mb-2" placeholder="Contraseña" autocomplete="current-password">
+            <p id="gateError" class="text-xs text-red-600 mb-2 hidden"></p>
+            <button id="gateEmailBtn" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition">Iniciar sesión</button>
+        </div>
+    </div>
+
+    <!-- BARRA PRINCIPAL: solo Systempresas (dashboard), STOCK, Historial y VENTAS -->
+    <div id="appTabs" class="fixed top-0 inset-x-0 h-14 z-[80] bg-white border-b shadow-sm hidden items-center px-2 sm:px-4 gap-1 sm:gap-2">
+        <button class="app-tab on" data-tab="dash"><i class="fas fa-home"></i><span>Systempresas</span></button>
+        <button class="app-tab" data-tab="stock"><i class="fas fa-boxes"></i><span>STOCK</span></button>
+        <button class="app-tab" data-tab="hist"><i class="fas fa-history"></i><span>Historial</span></button>
+        <button class="app-tab" data-tab="ventas"><i class="fas fa-cash-register"></i><span>VENTAS</span></button>
+        <div id="appTabsRight" class="ml-auto flex items-center gap-3 text-gray-500"></div>
+    </div>
     <!-- CONTENEDOR DE TOASTS -->
     <div id="toastContainer"></div>
 
@@ -1117,14 +1155,14 @@
 
         <main class="max-w-7xl mx-auto px-4 py-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div><h1 class="text-2xl font-bold text-gray-900">Panel de Control</h1><p class="text-sm text-gray-500">Resumen de actividad en tiempo real</p></div>
+                <div><h1 class="text-2xl font-bold text-gray-900">Systempresas</h1><p class="text-sm text-gray-500">Resumen de actividad en tiempo real</p></div>
                 <div class="text-right bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex flex-col items-end min-w-[150px]">
                     <div id="currentDateDisplay" class="text-sm font-bold text-blue-600 capitalize">Cargando fecha...</div>
                     <div id="currentTimeDisplay" class="text-xs text-gray-400">--:--:--</div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+            <div id="dashTiles" class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
                 <button id="openInventarioBtn" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition text-center group border border-gray-100 cursor-pointer">
                     <div class="w-10 h-10 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fas fa-box"></i></div>
                     <div class="font-semibold text-sm text-gray-700">Inventario</div>
@@ -1157,7 +1195,7 @@
                 </button>
             </div>
 
-            <div class="flex gap-3 mb-8">
+            <div id="dashQuickBtns" class="flex gap-3 mb-8">
                 <button id="btnNewProduct" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl shadow-lg shadow-blue-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Producto</button>
                 <button id="btnNewSale" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl shadow-lg shadow-gray-300 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-plus"></i> Venta</button>
                 <button id="btnNewExpense" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl shadow-lg shadow-red-200 transition font-medium flex justify-center items-center gap-2 cursor-pointer active:scale-95"><i class="fas fa-minus"></i> Gasto</button>
@@ -1857,7 +1895,7 @@
     <div id="newClientModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-bold text-indigo-700">Nuevo Cliente</h2><button data-close="newClientModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><form id="clientForm" class="p-6 space-y-4"><input type="text" id="newClientName" class="input-std" placeholder="Nombre Completo" required><input type="tel" id="newClientWhatsapp" class="input-std" placeholder="WhatsApp"><input type="email" id="newClientEmail" class="input-std" placeholder="Email"><button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold shadow-md cursor-pointer">Guardar Cliente</button></form></div></div>
     <div id="clientsModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"><div class="p-6 border-b flex justify-between items-center bg-indigo-50 rounded-t-2xl"><h2 class="text-xl font-bold text-indigo-700">Base de Clientes</h2><button data-close="clientsModal" class="text-gray-400 text-xl cursor-pointer"><i class="fas fa-times"></i></button></div><div class="p-4 bg-white border-b flex flex-wrap gap-2 items-center"><input type="text" id="searchClientInput" placeholder="Buscar por nombre..." class="input-std w-40"><div class="border-l pl-2 flex gap-2 items-center"><select id="filterClientMonth" class="input-std w-32 text-sm"><option value="all">Mes: Todos</option><option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select><select id="filterClientYear" class="input-std w-24 text-sm"><option value="all">Año</option><option value="2025">2025</option><option value="2024">2024</option></select><button id="applyClientFilter" class="bg-indigo-600 text-white px-3 py-2 rounded-lg"><i class="fas fa-filter"></i></button></div><button id="btnAddClientDirect" class="bg-indigo-600 text-white px-4 rounded-lg ml-auto"><i class="fas fa-plus"></i></button></div><div class="flex-1 overflow-y-auto p-0"><table class="min-w-full divide-y divide-gray-200"><thead><tr><th class="table-header">Nombre</th><th class="table-header">Contacto</th><th class="table-header">Email</th><th class="table-header text-right">Historial</th><th class="table-header text-center">Acciones</th></tr></thead><tbody id="clientsTableBody" class="bg-white divide-y divide-gray-100"></tbody></table></div></div></div>
     <!-- MODAL PERFIL / LOGIN — múltiples métodos de autenticación -->
-    <div id="profileModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div id="profileModal" class="modal-overlay fixed inset-0 z-[95] hidden flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 max-h-[92vh] overflow-y-auto">
 
         <!-- ── VISTA LOGUEADO ── -->
@@ -1979,6 +2017,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -2967,7 +3006,13 @@
         setInterval(updateClock, 1000); updateClock();
 
         const initAuth = async () => {
+            // La sesión queda guardada en este dispositivo: se pide iniciar sesión una sola vez
+            try { await setPersistence(auth, browserLocalPersistence); } catch(e) { console.warn('Persistencia de sesión:', e); }
             onAuthStateChanged(auth, user => {
+                $('authSplash').classList.add('hidden');
+                $('loginGate').classList.toggle('hidden', !!user);
+                $('appTabs').classList.toggle('hidden', !user);
+                $('appTabs').classList.toggle('flex', !!user);
                 if(user) {
                     userId = user.uid;
                     $('connectionStatus').innerHTML = '<i class="fas fa-circle text-[8px] mr-1 text-green-500"></i> En Línea';
@@ -2995,6 +3040,61 @@
             });
         };
         initAuth();
+
+        // Barra principal: el perfil (cerrar sesión) y "Instalar app" van a la derecha
+        $('appTabsRight').append($('installAppBtn'), $('openProfileModalBtn'));
+
+        // Si Firebase no responde, no dejar la pantalla de carga para siempre
+        setTimeout(() => {
+            if (!$('authSplash').classList.contains('hidden')) {
+                $('authSplash').classList.add('hidden');
+                if (!auth.currentUser) $('loginGate').classList.remove('hidden');
+            }
+        }, 8000);
+
+        // ── Pantalla de inicio de sesión (se pide solo si no hay sesión guardada) ──
+        let gateMode = 'login';
+        const gateError = msg => { $('gateError').textContent = msg; $('gateError').classList.remove('hidden'); };
+        const setGateMode = mode => {
+            gateMode = mode;
+            const isLogin = mode === 'login';
+            $('gateName').classList.toggle('hidden', isLogin);
+            $('gateEmailBtn').textContent = isLogin ? 'Iniciar sesión' : 'Crear cuenta';
+            $('gateModeLogin').className = 'flex-1 text-xs py-1.5 rounded-lg font-semibold ' + (isLogin ? 'bg-white shadow text-gray-800' : 'text-gray-400');
+            $('gateModeRegister').className = 'flex-1 text-xs py-1.5 rounded-lg font-semibold ' + (!isLogin ? 'bg-white shadow text-gray-800' : 'text-gray-400');
+            $('gateError').classList.add('hidden');
+        };
+        $('gateModeLogin').onclick = () => setGateMode('login');
+        $('gateModeRegister').onclick = () => setGateMode('register');
+        $('gateGoogleBtn').onclick = () => {
+            $('gateError').classList.add('hidden');
+            signInWithPopup(auth, new GoogleAuthProvider()).catch(e => gateError('Error con Google: ' + e.message));
+        };
+        $('gateEmailBtn').onclick = async () => {
+            const email = $('gateEmail').value.trim(), pass = $('gatePass').value;
+            $('gateError').classList.add('hidden');
+            if (!email || !pass) { gateError('Completá email y contraseña.'); return; }
+            try {
+                if (gateMode === 'register') {
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    const name = $('gateName').value.trim();
+                    if (name) await updateProfile(cred.user, { displayName: name });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                }
+            } catch(e) {
+                const msgs = {
+                    'auth/email-already-in-use': 'Ese email ya está registrado.',
+                    'auth/invalid-email':        'Email inválido.',
+                    'auth/weak-password':        'Contraseña muy corta (mín. 6 caracteres).',
+                    'auth/user-not-found':       'No existe una cuenta con ese email.',
+                    'auth/wrong-password':       'Contraseña incorrecta.',
+                    'auth/invalid-credential':   'Email o contraseña incorrectos.',
+                };
+                gateError(msgs[e.code] || e.message);
+            }
+        };
+        $('gatePass').addEventListener('keydown', e => { if (e.key === 'Enter') $('gateEmailBtn').click(); });
 
         function updateProductListForSale() {
             const select = $('saleProduct');
@@ -5698,22 +5798,23 @@
       .mr-rg.nx{cursor:default;fill:#eceef1}
       .mr-lb{fill:#111827;stroke:#fff;stroke-width:4px;paint-order:stroke;stroke-linejoin:round;font-size:16px;font-weight:700;pointer-events:none;font-family:Inter,system-ui,sans-serif}
       .mr-lb.s{font-size:14px}
+      #mrStockBody td{padding-top:7px;padding-bottom:7px}
       .mr-row.on{background:#fee2e2}
       .mr-row.on td:first-child{color:#C8102E;font-weight:700}
       [data-theme="dark"] .mr-row.on{background:#4c1d24}
-      .mr-w{min-width:96px}
-      .mr-num{width:100%;max-width:90px;text-align:right;padding:4px 6px;border:1px solid #e5e7eb;border-radius:8px;background:transparent}
+      .mr-w{min-width:104px}
+      .mr-num{width:100%;max-width:110px;text-align:right;padding:4px 6px;border:1px solid #e5e7eb;border-radius:8px;background:transparent}
       [data-theme="dark"] .mr-num{border-color:#334155}
     </style>
-    <div id="mediaResModule" class="fixed inset-0 z-[70] hidden bg-white flex flex-col" style="height:100dvh">
-      <div class="flex items-center justify-between px-5 py-3 border-b flex-shrink-0">
+    <div id="mediaResModule" class="fixed inset-0 z-[70] hidden bg-white flex flex-col" style="top:56px;height:calc(100dvh - 56px)">
+      <div class="hidden items-center justify-between px-5 py-3 border-b flex-shrink-0">
         <button id="mrBack" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl invisible"><i class="fas fa-chevron-left"></i></button>
         <p id="mrTitle" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Media Res</p>
         <button id="mrClose" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl"><i class="fas fa-times"></i></button>
       </div>
 
       <!-- Elección -->
-      <div id="mrHome" class="flex-1 flex flex-col justify-center items-center px-6 gap-5">
+      <div id="mrHome" class="hidden flex-1 flex flex-col justify-center items-center px-6 gap-5">
         <h2 class="text-xl font-bold text-gray-500 text-center">¿Qué querés hacer?</h2>
         <button id="mrGoStock" class="w-full max-w-sm py-8 rounded-2xl bg-gray-900 text-white text-2xl font-bold shadow-lg active:scale-95 transition flex items-center justify-center gap-3"><i class="fas fa-boxes"></i> STOCK</button>
         <button id="mrGoHist" class="w-full max-w-sm py-6 rounded-2xl bg-white border-2 border-gray-900 text-gray-900 text-xl font-bold shadow active:scale-95 transition flex items-center justify-center gap-3"><i class="fas fa-history"></i> Historial</button>
@@ -5722,34 +5823,42 @@
 
       <!-- STOCK -->
       <div id="mrStock" class="hidden flex-1 overflow-y-auto">
-        <div class="max-w-4xl mx-auto px-4 py-4">
-          <div class="flex flex-wrap items-center gap-3 mb-3">
-            <button id="mrLoadRes" class="w-full sm:w-auto bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
-            <button id="mrSave" class="w-full sm:w-auto text-white px-4 py-2 rounded-xl font-semibold active:scale-95 transition" style="background:#C8102E"><i class="fas fa-save mr-1"></i> Guardar</button>
-            <span id="mrSaveInfo" class="text-xs text-gray-500"></span>
+        <div class="max-w-[1800px] mx-auto px-4 lg:px-6 py-4">
+          <div class="lg:grid lg:grid-cols-[minmax(340px,5fr)_7fr] lg:gap-8 lg:items-start mb-4">
+            <div class="mb-4 lg:mb-0 lg:sticky lg:top-2">
+              <div id="mrCowStock"></div>
+              <p id="mrStockInfo" class="text-base text-gray-600 mt-2 min-h-[24px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
+            </div>
+            <div class="text-[15px]">
+              <div class="flex flex-wrap items-center gap-3 mb-4">
+                <button id="mrLoadRes" class="w-full sm:w-auto bg-gray-900 hover:bg-gray-800 text-white px-5 py-3 rounded-xl font-semibold active:scale-95 transition"><i class="fas fa-plus mr-1"></i> Cargar media res al stock</button>
+                <button id="mrSave" class="w-full sm:w-auto text-white px-5 py-3 rounded-xl font-semibold active:scale-95 transition" style="background:#C8102E"><i class="fas fa-save mr-1"></i> Guardar</button>
+                <span id="mrSaveInfo" class="text-xs text-gray-500"></span>
+              </div>
+              <div class="rounded-2xl border border-gray-200 p-4 mb-4 space-y-3 text-gray-700">
+                <div class="flex flex-wrap items-center gap-3">
+                  <label for="mrResWeight" class="font-semibold">Peso de la media res (kg)</label>
+                  <input type="number" id="mrResWeight" min="1" step="1" class="mr-num" style="max-width:110px">
+                  <label for="mrResDate" class="font-semibold">Fecha de la res</label>
+                  <input type="date" id="mrResDate" class="mr-num" style="max-width:160px">
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                  <label for="mrPaidKg" class="font-semibold">Precio que pagaste por kg ($)</label>
+                  <input type="number" id="mrPaidKg" min="0" step="100" inputmode="decimal" class="mr-num" style="max-width:130px" placeholder="0">
+                  <label for="mrPaidTotal" class="font-semibold">o total de la media res ($)</label>
+                  <input type="number" id="mrPaidTotal" min="0" step="1000" inputmode="decimal" class="mr-num" style="max-width:160px" placeholder="0">
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                  <label for="mrDiscard" class="font-semibold">Descarte por golpes, carne oscura, manchones, granos, etc. (% de la res)</label>
+                  <input type="number" id="mrDiscard" min="0" max="100" step="0.1" inputmode="decimal" class="mr-num" style="max-width:100px">
+                </div>
+              </div>
+              <p id="mrCostInfo" class="text-base text-gray-800 mb-3 min-h-[24px] rounded-xl bg-gray-50 p-3"></p>
+              <p id="mrIndecInfo" class="text-xs text-blue-600"></p>
+            </div>
           </div>
-          <div id="mrCowStock"></div>
-          <div class="flex flex-wrap items-center gap-3 my-3 text-sm text-gray-600">
-            <label for="mrResWeight" class="font-semibold">Peso de la media res (kg)</label>
-            <input type="number" id="mrResWeight" min="1" step="1" class="mr-num" style="max-width:100px">
-            <label for="mrResDate" class="font-semibold">Fecha de la res</label>
-            <input type="date" id="mrResDate" class="mr-num" style="max-width:150px">
-          </div>
-          <div class="flex flex-wrap items-center gap-3 mb-3 text-sm text-gray-600">
-            <label for="mrPaidKg" class="font-semibold">Precio que pagaste por kg ($)</label>
-            <input type="number" id="mrPaidKg" min="0" step="100" inputmode="decimal" class="mr-num" style="max-width:120px" placeholder="0">
-            <label for="mrPaidTotal" class="font-semibold">o total de la media res ($)</label>
-            <input type="number" id="mrPaidTotal" min="0" step="1000" inputmode="decimal" class="mr-num" style="max-width:150px" placeholder="0">
-          </div>
-          <div class="flex flex-wrap items-center gap-3 mb-3 text-sm text-gray-600">
-            <label for="mrDiscard" class="font-semibold">Descarte por golpes, carne oscura, manchones, granos, etc. (% de la res)</label>
-            <input type="number" id="mrDiscard" min="0" max="100" step="0.1" inputmode="decimal" class="mr-num" style="max-width:90px">
-          </div>
-          <p id="mrCostInfo" class="text-sm text-gray-700 mb-3 min-h-[20px]"></p>
-          <p id="mrIndecInfo" class="text-xs text-blue-600 mb-1"></p>
-          <p id="mrStockInfo" class="text-sm text-gray-500 mb-2 min-h-[20px]">Pasá el mouse o tocá un corte para verlo en la vaca</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" style="min-width:1000px">
+            <table class="w-full text-[15px]" style="min-width:1000px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Corte</th>
                 <th class="text-right py-2 px-2 font-semibold">% de la res</th>
@@ -5776,10 +5885,10 @@
 
       <!-- HISTORIAL -->
       <div id="mrHistorial" class="hidden flex-1 overflow-y-auto">
-        <div class="max-w-4xl mx-auto px-4 py-4">
+        <div class="max-w-[1400px] mx-auto px-4 lg:px-6 py-4">
           <p class="text-sm text-gray-500 mb-3">Cada vez que cargás una media res al stock queda registrada acá con su fecha, lo que pagaste y el costo base por kg de carne aprovechada.</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" style="min-width:640px">
+            <table class="w-full text-base" style="min-width:640px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Fecha de la res</th>
                 <th class="text-right py-2 px-2 font-semibold">Peso</th>
@@ -5798,9 +5907,15 @@
 
       <!-- VENTAS -->
       <div id="mrVentas" class="hidden flex-1 overflow-y-auto">
-        <div class="max-w-4xl mx-auto px-4 py-4">
-          <div id="mrCowVentas"></div>
-          <div id="mrSelPanel" class="hidden mt-3 p-4 rounded-2xl border-2" style="border-color:#C8102E">
+        <div class="max-w-[1800px] mx-auto px-4 lg:px-6 py-4">
+          <div class="flex flex-col lg:grid lg:grid-cols-[minmax(340px,3fr)_2fr] lg:gap-8 lg:items-start">
+            <div class="contents lg:block">
+              <div id="mrCowVentas" class="order-1"></div>
+          <p id="mrVentasHint" class="order-3 text-base text-gray-600 my-3">Tocá un corte en la vaca o en la lista</p>
+          <div id="mrCutChips" class="order-4 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2"></div>
+            </div>
+            <div class="contents lg:block lg:sticky lg:top-2">
+          <div id="mrSelPanel" class="order-2 hidden mb-4 mt-3 lg:mt-0 p-4 rounded-2xl border-2" style="border-color:#C8102E">
             <div class="flex justify-between items-start gap-2">
               <div>
                 <p id="mrSelName" class="text-lg font-bold" style="color:#C8102E"></p>
@@ -5820,9 +5935,7 @@
             </div>
             <button id="mrAddItem" class="w-full mt-3 text-white py-3 rounded-xl font-bold active:scale-95 transition" style="background:#C8102E"><i class="fas fa-cart-plus mr-1"></i> Agregar</button>
           </div>
-          <p id="mrVentasHint" class="text-sm text-gray-500 my-3">Tocá un corte en la vaca o en la lista</p>
-          <div id="mrCutChips" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-          <div class="mt-5 border-t pt-4">
+          <div class="order-5 mt-5 lg:mt-0 border-t lg:border-t-0 pt-4 lg:pt-0 lg:rounded-2xl lg:border lg:p-4">
             <h3 class="font-bold text-gray-700 mb-2"><i class="fas fa-shopping-basket mr-1"></i> Pedido</h3>
             <div id="mrCart" class="space-y-2"></div>
             <div class="flex justify-between items-center mt-3 text-lg font-bold text-gray-800"><span>Total</span><span id="mrCartTotal">$0,00</span></div>
@@ -5830,6 +5943,8 @@
             <div id="mrPayBtns" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
             <input type="text" id="mrClient" class="input-std mt-3" placeholder="Cliente (opcional)">
             <button id="mrCheckout" class="w-full mt-3 mb-6 bg-gray-900 hover:bg-gray-800 text-white py-4 rounded-2xl text-lg font-bold active:scale-95 transition"><i class="fas fa-check mr-1"></i> Cobrar</button>
+          </div>
+            </div>
           </div>
         </div>
       </div>
@@ -5954,11 +6069,27 @@
         if (ipcvaPrice(k) != null) return ipcvaPrice(k);
         return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
       };
+      // Si la descarga falla (red lenta o sin conexión) se usa la última copia guardada en el dispositivo
       async function loadIndec() {
         try {
           const r = await fetch('precios-indec.json?t=' + Date.now(), { cache: 'no-store' });
-          if (r.ok) indec = await r.json();
+          if (r.ok) {
+            indec = await r.json();
+            try { localStorage.setItem('mrIndec', JSON.stringify(indec)); } catch (e) {}
+          }
         } catch (e) { console.warn('Media res: sin precios INDEC', e); }
+        if (!indec) { try { indec = JSON.parse(localStorage.getItem('mrIndec')); } catch (e) {} }
+      }
+      // Si los precios llegan con la pantalla ya abierta, se vuelve a dibujar con ellos
+      let indecTry = null;
+      function ensureIndec() {
+        if (indec || indecTry) return;
+        indecTry = loadIndec().then(() => {
+          indecTry = null;
+          if (!indec) return;
+          if (screen === 'stock') renderStock();
+          if (screen === 'ventas') renderVentas();
+        });
       }
       const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
       const fmtPeriodo = per => {
@@ -6083,7 +6214,7 @@
         const svg = document.createElementNS(NS, 'svg');
         svg.setAttribute('viewBox', '0 0 860 550');
         svg.setAttribute('width', '100%');
-        svg.style.maxHeight = '45vh';
+        svg.style.maxHeight = '62vh';
         svg.setAttribute('role', 'img');
         svg.setAttribute('aria-label', 'Vaca con los cortes argentinos');
         svg.innerHTML = '<defs><clipPath id="' + clipId + '"><path d="' + OUTLINE + '"/></clipPath></defs>';
@@ -6472,20 +6603,34 @@
         $('mrVentas').classList.toggle('hidden', s !== 'ventas');
         $('mrBack').style.visibility = s === 'home' ? 'hidden' : 'visible';
         $('mrTitle').textContent = s === 'stock' ? 'Media Res · Stock' : s === 'ventas' ? 'Media Res · Ventas' : s === 'hist' ? 'Media Res · Historial' : 'Media Res';
+        if (s === 'stock' || s === 'ventas') ensureIndec();
         if (s === 'stock') { $('mrResDate').value = todayISO(); renderStock(); }
         if (s === 'hist') renderHist();
         if (s === 'ventas') renderVentas();
       }
-      window.openMediaRes = async function() {
+      // Se carga una sola vez (así no se pisan cambios sin guardar) y recién ahí se dibuja la sección pedida
+      let loadedOnce = null;
+      window.openMediaRes = async function(section) {
         $('mediaResModule').classList.remove('hidden');
-        show('home');
-        await Promise.all([loadState(), loadIndec()]);
+        if (!loadedOnce) loadedOnce = Promise.all([loadState(), loadIndec()]).catch(e => { loadedOnce = null; throw e; });
+        await loadedOnce;
+        show(section || 'stock');
       };
+      window.closeMediaRes = () => $('mediaResModule').classList.add('hidden');
+
+      // Barra principal: Systempresas (dashboard), STOCK, Historial y VENTAS
+      function setTab(t) { document.querySelectorAll('.app-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); }
+      document.querySelectorAll('.app-tab').forEach(b => b.addEventListener('click', async () => {
+        const t = b.dataset.tab;
+        setTab(t);
+        if (t === 'dash') window.closeMediaRes();
+        else await window.openMediaRes(t);
+      }));
       $('mrGoStock').onclick = () => show('stock');
       $('mrGoHist').onclick = () => show('hist');
       $('mrGoVentas').onclick = () => show('ventas');
       $('mrBack').onclick = () => show('home');
-      $('mrClose').onclick = () => $('mediaResModule').classList.add('hidden');
+      $('mrClose').onclick = () => { window.closeMediaRes(); setTab('dash'); };
       const openBtn = $('openMediaResBtn');
       if (openBtn) openBtn.addEventListener('click', () => window.openMediaRes());
     })();
