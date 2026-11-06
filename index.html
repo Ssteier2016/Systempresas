@@ -5888,7 +5888,7 @@
         <div class="max-w-[1400px] mx-auto px-4 lg:px-6 py-4">
           <p class="text-sm text-gray-500 mb-3">Cada vez que cargás una media res al stock queda registrada acá con su fecha, lo que pagaste y el costo base por kg de carne aprovechada.</p>
           <div class="overflow-x-auto">
-            <table class="w-full text-base" style="min-width:640px">
+            <table class="w-full text-base" style="min-width:780px">
               <thead><tr class="text-gray-500 border-b">
                 <th class="text-left py-2 px-2 font-semibold">Fecha de la res</th>
                 <th class="text-right py-2 px-2 font-semibold">Peso</th>
@@ -5896,12 +5896,14 @@
                 <th class="text-right py-2 px-2 font-semibold">Total pagado</th>
                 <th class="text-right py-2 px-2 font-semibold">Kg aprovechados</th>
                 <th class="text-right py-2 px-2 font-semibold">Costo base por kg</th>
+                <th class="text-right py-2 px-2 font-semibold" title="Lo que sacás si vendés toda la carne aprovechada a tus precios, menos lo que pagaste por la res. Hueso, grasa y merma no cuentan.">Ganancia estimada ($ y %)</th>
                 <th></th>
               </tr></thead>
               <tbody id="mrHistBody"></tbody>
             </table>
           </div>
           <p id="mrHistEmpty" class="text-sm text-gray-400 mt-4 hidden">Todavía no cargaste ninguna media res.</p>
+          <p class="text-xs text-gray-400 mt-3">Ganancia estimada = venta de toda la carne aprovechada a tus precios − lo que pagaste por la res (el hueso, la grasa y la merma valen $0). En las cargas hechas antes de esta columna (*) se calcula con los precios de hoy.</p>
         </div>
       </div>
 
@@ -6440,7 +6442,7 @@
         // Historial: queda registrada la carga con lo pagado y el costo base de esa res
         const gross = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100, 0);
         const usable = gross - Math.min(gross, w * (+state.discardPct || 0) / 100), paid = (+state.paidKg || 0) * w;
-        state.history.push({ d, ts: new Date().toISOString(), w, paidKg: +state.paidKg || 0, paid, usable: +usable.toFixed(2), base: paid > 0 && usable > 0 ? +(paid / usable).toFixed(2) : 0 });
+        state.history.push({ d, ts: new Date().toISOString(), w, paidKg: +state.paidKg || 0, paid, usable: +usable.toFixed(2), base: paid > 0 && usable > 0 ? +(paid / usable).toFixed(2) : 0, sale: Math.round(estSale(w)) });
         await saveState(true);
         renderStock();
         window.showToast && window.showToast('Media res cargada al stock ✓', 'success');
@@ -6581,6 +6583,19 @@
       // ── Navegación ──
       let screen = 'home';
       // ── HISTORIAL ──
+      // Venta estimada de una media res de `w` kg: carne aprovechada (sin descarte) a los precios de venta; hueso, grasa y merma valen $0
+      function estSale(w) {
+        const gross = CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100, 0);
+        const keep = gross > 0 ? (gross - Math.min(gross, w * (+state.discardPct || 0) / 100)) / gross : 0;
+        return CUTS.reduce((a, c) => a + w * pctOf(c.k) / 100 * keep * priceOf(c.k), 0);
+      }
+      function profitTag(h) {
+        if (!(h.paid > 0)) return '<span class="text-gray-300">—</span>';
+        const saved = h.sale != null, sale = saved ? h.sale : estSale(h.w), profit = sale - h.paid, pct = profit / h.paid * 100;
+        const col = profit >= 0 ? '#16a34a' : '#C8102E', sg = profit >= 0 ? '+' : '−';
+        return '<span style="color:' + col + ';font-weight:700" title="Venta estimada: ' + money(sale) + (saved ? '' : ' (calculada con los precios de hoy)') + '">' + sg + money(Math.abs(profit)) + (saved ? '' : '*') + '</span>' +
+          '<span class="block text-xs" style="color:' + col + '">' + sg + fmt(Math.abs(pct), 1) + '%</span>';
+      }
       function renderHist() {
         const tb = $('mrHistBody');
         tb.innerHTML = '';
@@ -6596,6 +6611,7 @@
             '<td class="text-right px-2">' + (h.paid ? money(h.paid) : '—') + '</td>' +
             '<td class="text-right px-2">' + fmt(h.usable, 1) + ' kg</td>' +
             '<td class="text-right px-2 font-semibold" style="color:#C8102E">' + (h.base ? money(h.base) : '—') + '</td>' +
+            '<td class="text-right px-2">' + profitTag(h) + '</td>' +
             '<td class="text-right px-2"><button class="text-gray-400 hover:text-red-600 px-2" aria-label="Borrar del historial" title="Borrar del historial (no cambia el stock)"><i class="fas fa-trash"></i></button></td>';
           tr.querySelector('button').onclick = () => {
             if (!confirm('¿Borrar esta carga del historial? El stock no cambia.')) return;
