@@ -6040,12 +6040,20 @@
         { k:'grasa', name:'Grasa', share:11.0, price:2000, note:'recortada en el emprolijado' },
         { k:'merma', name:'Merma', share:2.5, note:'oreo (pérdida de agua al enfriar) y recortes' }
       ];
+      // Precios de venta al público (por kg) indicados por el dueño, por corte
+      const SEED_PRICES = {
+        paleta:18500, roastbeef:18500, palomita:18900, tortuguita:18900, carnaza:15900,
+        osobuco:10900, osobucot:10900, espinazo:3500, asado:16900, vacio:18900, matambre:17900,
+        entrana:23900, falda:12900, tapaasado:18500, picada:12900, bifeang:17500, bifeanc:17500,
+        lomo:23900, cuadril:21900, colita:21900, nalga:21900, tapanalga:18500, bola:19500,
+        cuadrada:19500, peceto:23900
+      };
       // Corte que se elige al tocar cada zona del dibujo
       const REGION_CUT = {};
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
 
       // Estado guardado en Firestore: settings/mediaRes
-      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5, history: [], myPrices: {} };
+      let state = { v: 2, resWeight: 119, pct: {}, prices: {}, costs: {}, stock: {}, lots: {}, paidKg: 0, discardPct: 1.5, history: [], myPrices: {}, priceSeed: 0 };
       // Lo que se puede vender en VENTAS: los cortes más hueso y grasa
       const SELL = Object.assign({}, CUT);
       WASTE.filter(x => x.price != null).forEach(x => { SELL[x.k] = { k: x.k, name: x.name, regs: [] }; });
@@ -6182,9 +6190,15 @@
             const d = snap.data();
             // v2: el peso pasó a ser de media res (antes 230 kg de res completa por defecto)
             const w = !d.v && (!d.resWeight || d.resWeight === 230) ? 119 : (d.resWeight || 119);
-            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5, history: Array.isArray(d.history) ? d.history : [], myPrices: Object.assign({}, d.prices || {}, d.myPrices || {}) };
+            state = { v: 2, resWeight: w, pct: d.pct || {}, prices: {}, costs: d.costs || {}, stock: d.stock || {}, lots: d.lots || {}, paidKg: +d.paidKg || 0, discardPct: d.discardPct != null ? +d.discardPct : 1.5, history: Array.isArray(d.history) ? d.history : [], myPrices: Object.assign({}, d.prices || {}, d.myPrices || {}), priceSeed: d.priceSeed ? 1 : 0 };
             // Stock cargado antes de registrar fechas: queda "sin fecha"
             Object.keys(state.stock).forEach(k => syncLots(k, null));
+          }
+          // Lista de precios de venta del local: se carga una sola vez en "Precio al que vendo" (después se edita a gusto)
+          if (!state.priceSeed) {
+            Object.assign(state.myPrices, SEED_PRICES);
+            state.priceSeed = 1;
+            saveState();
           }
         } catch (e) { console.error('Media res: error al cargar', e); }
       }
