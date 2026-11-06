@@ -5966,8 +5966,7 @@
         cuadril:'170,40 240,40 240,170 160,175 160,125',
         colita:'160,175 240,170 250,215 175,225',
         peceto:'40,150 90,150 100,330 40,330',
-        aranita:'90,150 160,125 160,175 175,225 140,200 100,205',
-        nalga:'100,205 140,200 175,225 170,300 98,300',
+        nalga:'90,150 160,125 160,175 175,225 170,300 98,300',
         bola:'175,225 250,215 262,300 230,345 190,380 170,300',
         cuadrada:'98,300 170,300 190,380 175,425 40,425 40,330 100,330',
         tortuguita:'40,425 175,425 230,478 40,478',
@@ -5992,7 +5991,7 @@
       const ELLIPSES = { entrana:[368,245,13,40] };
       const LABELS = [
         ['tapanalga',118,100,['Tapa de','nalga'],1],['cuadril',200,120,['Cuadril']],['colita',205,198,['Colita de','cuadril'],1],
-        ['peceto',68,240,['Peceto'],0,-90],['aranita',128,172,['Arañita'],1],['nalga',134,255,['Nalga']],['bola',213,285,['Bola de','lomo'],1],
+        ['peceto',68,240,['Peceto'],0,-90],['nalga',132,225,['Nalga']],['bola',213,285,['Bola de','lomo'],1],
         ['cuadrada',118,370,['Cuadrada']],['tortuguita',118,452,['Tortuguita'],1],['osobucot',118,520,['Osobuco'],1],
         ['bifeang',302,124,['Bife','angosto']],['lomo',302,170,['Lomo'],1],['vacio',305,262,['Vacío']],
         ['bifeanc',417,126,['Bife','ancho']],['tapaasado',417,168,['Tapa de asado'],1],['asado',425,245,['Asado']],
@@ -6013,7 +6012,6 @@
         ['bola','Bola de lomo','t',4.4,13500,['bola']],
         ['colita','Colita de cuadril','t',0.9,16000,['colita']],
         ['tortuguita','Tortuguita','t',1.5,8000,['tortuguita']],
-        ['aranita','Arañita','t',0.4,15000,['aranita']],
         ['osobucot','Osobuco','t',1.5,8000,['osobucot'],'pata trasera'],
         ['lomo','Lomo','m',2.1,20000,['lomo']],
         ['bifeang','Bife angosto','m',4.6,16000,['bifeang']],
@@ -6040,6 +6038,14 @@
         { k:'grasa', name:'Grasa', share:11.0, price:2000, note:'recortada en el emprolijado' },
         { k:'merma', name:'Merma', share:2.5, note:'oreo (pérdida de agua al enfriar) y recortes' }
       ];
+      // Precios de venta al público (por kg) por defecto, indicados por el dueño; cada uno se puede cambiar en "Precio al que vendo"
+      const DEFAULT_PRICES = {
+        paleta:18500, roastbeef:18500, palomita:18900, tortuguita:18900, carnaza:15900,
+        osobuco:10900, osobucot:10900, espinazo:3500, asado:16900, vacio:18900, matambre:17900,
+        entrana:23900, falda:12900, tapaasado:18500, picada:12900, bifeang:17500, bifeanc:17500,
+        lomo:23900, cuadril:21900, colita:21900, nalga:21900, tapanalga:18500, bola:19500,
+        cuadrada:19500, peceto:23900
+      };
       // Corte que se elige al tocar cada zona del dibujo
       const REGION_CUT = {};
       CUTS.forEach(c => { if (c.regs.length === 1 && !REGION_CUT[c.regs[0]]) REGION_CUT[c.regs[0]] = c.k; });
@@ -6065,6 +6071,7 @@
       // Precio al que el usuario vende de verdad ("Precio al que vendo"): si lo cargó, manda en Ventas, en la ganancia y en los valores
       const priceOf = k => {
         if (state.myPrices[k] != null) return +state.myPrices[k];
+        if (DEFAULT_PRICES[k] != null) return DEFAULT_PRICES[k];
         if (indecPrice(k) != null) return indecPrice(k);
         if (ipcvaPrice(k) != null) return ipcvaPrice(k);
         return CUT[k] ? CUT[k].price : (WASTE.find(x => x.k === k) || {}).price || 0;
@@ -6106,7 +6113,7 @@
           if (inp.dataset.f === 'stock') syncLots(k, todayISO());
           calcStock(); saveState();
         });
-        if (inp.dataset.f === 'costs') inp.addEventListener('blur', calcStock);
+        if (inp.dataset.f === 'costs' || inp.dataset.f === 'myPrices') inp.addEventListener('blur', calcStock);
       }
       function srcTag(k) {
         const src = priceSrc(k);
@@ -6119,6 +6126,7 @@
       // Costo por kg: el que cargó el usuario o, si no, el automático (la res se reparte según el valor de cada corte)
       const autoCost = {};
       const isManualCost = k => state.costs[k] != null;
+      const shownMyPrice = k => state.myPrices[k] != null ? state.myPrices[k] : (DEFAULT_PRICES[k] != null ? DEFAULT_PRICES[k] : '');
       const costOf = k => isManualCost(k) ? +state.costs[k] : (autoCost[k] || 0);
       // Ganancia sobre el costo: (venta - costo) / costo, en vivo; sin costo no se calcula
       function marginTag(k) {
@@ -6300,7 +6308,7 @@
               '<td class="text-right px-2 text-gray-600" data-vend></td>' +
               '<td class="text-right px-2 text-gray-600" data-kg></td>' +
               '<td class="text-right px-2 text-gray-600" data-ref></td>' +
-              '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="myPrices" min="0" step="100" value="' + (state.myPrices[c.k] != null ? state.myPrices[c.k] : '') + '" placeholder="mi precio" aria-label="Precio al que vendo ' + c.name + ' por kg"></td>' +
+              '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="myPrices" min="0" step="100" value="' + shownMyPrice(c.k) + '" placeholder="mi precio" aria-label="Precio al que vendo ' + c.name + ' por kg"></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num mr-w" data-f="costs" min="0" step="100" value="' + (state.costs[c.k] != null ? state.costs[c.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + c.name + '"><span class="block text-[10px] text-gray-400" data-costsrc></span></td>' +
               '<td class="text-right px-2 text-xs" data-margin></td>' +
               '<td class="text-right px-2"><input type="number" class="mr-num" data-f="stock" min="0" step="0.1" value="' + +stockOf(c.k).toFixed(2) + '" aria-label="Stock de ' + c.name + '"></td>' +
@@ -6322,7 +6330,7 @@
           tr.className = 'border-b border-gray-100 text-gray-600';
           tr.innerHTML = '<td class="py-1 px-2">' + x.name + ' <span class="text-[11px] text-gray-400">' + x.note + '</span></td><td class="text-right px-2" data-wpct="' + x.k + '"></td><td></td><td class="text-right px-2" data-wkg="' + x.k + '"></td>' +
             '<td class="text-right px-2 text-gray-600">' + (x.price != null ? money(refPriceOf(x.k)) : '') + '</td>' +
-            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + (state.myPrices[x.k] != null ? state.myPrices[x.k] : '') + '" placeholder="mi precio" aria-label="Precio al que vendo ' + x.name + ' por kg" data-f="myPrices">' : '') + '</td>' +
+            '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + shownMyPrice(x.k) + '" placeholder="mi precio" aria-label="Precio al que vendo ' + x.name + ' por kg" data-f="myPrices">' : '') + '</td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num mr-w" min="0" step="100" value="' + (state.costs[x.k] != null ? state.costs[x.k] : '') + '" placeholder="costo" aria-label="Costo por kg de ' + x.name + '" data-f="costs">' : '') + '</td>' +
             '<td class="text-right px-2 text-xs" data-margin="' + x.k + '"></td>' +
             '<td class="text-right px-2">' + (x.price != null ? '<input type="number" class="mr-num" min="0" step="0.1" value="' + +stockOf(x.k).toFixed(2) + '" data-f="stock" aria-label="Stock de ' + x.name + '">' : '') + '</td>' +
@@ -6352,6 +6360,8 @@
           stockRows[c.k].querySelector('[data-margin]').innerHTML = marginTag(c.k);
           stockRows[c.k].querySelector('[data-vend]').textContent = grossKg > 0 ? fmt(p / pctSum * 100, 1) + '%' : '';
           zs.v[c.z] += pctSum > 0 ? p / pctSum * 100 : 0;
+          const mi = stockRows[c.k].querySelector('[data-f="myPrices"]');
+          if (document.activeElement !== mi) { mi.value = shownMyPrice(c.k); mi.style.color = state.myPrices[c.k] != null || DEFAULT_PRICES[c.k] == null ? '' : '#6b7280'; }
           const ci = stockRows[c.k].querySelector('[data-f="costs"]');
           if (document.activeElement !== ci) { ci.value = isManualCost(c.k) ? state.costs[c.k] : (autoCost[c.k] > 0 ? Math.round(autoCost[c.k]) : ''); ci.style.color = isManualCost(c.k) ? '' : '#9ca3af'; }
           // Diferencia del costo manual contra el automático, en $ por kg y en $ sobre los kg aprovechados del corte
