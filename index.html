@@ -5854,6 +5854,7 @@
                 </div>
               </div>
               <p id="mrCostInfo" class="text-base text-gray-800 mb-3 min-h-[24px] rounded-xl bg-gray-50 p-3"></p>
+              <p id="mrProfitInfo" class="hidden text-base mb-3 rounded-xl border-2 p-3"></p>
               <p id="mrIndecInfo" class="text-xs text-blue-600"></p>
             </div>
           </div>
@@ -6410,6 +6411,15 @@
           ? 'La media res te costó <b>' + money(paid) + '</b> · carne aprovechada: <b>' + fmt(usable, 1) + ' kg</b> (sin hueso, grasa, merma ni ' + fmt(disc, 1) + ' kg de descarte) · <b style="color:#C8102E">costo base por kg: ' + money(paid / usable) + '</b>. Cada corte se reparte según su precio de referencia (editable a mano en "Costo por kg").' +
             (manualDiff ? ' Costos manuales: <b style="color:' + (manualDiff > 0 ? '#C8102E' : '#16a34a') + '">' + (manualDiff > 0 ? '+' : '−') + money(Math.abs(manualDiff)) + '</b> sobre lo que pagaste por la res.' : '')
           : 'Cargá lo que pagaste por kg (o el total) y vas a ver cuánto te sale el kg de carne aprovechada.';
+        // Ganancia estimada si se vende toda la carne aprovechada a los precios de "Precio al que vendo" (hueso, grasa y merma valen $0)
+        const pf = $('mrProfitInfo');
+        if (paid > 0 && usable > 0) {
+          const sale = estSale(w), profit = sale - paid, ppct = profit / paid * 100;
+          const col = profit >= 0 ? '#16a34a' : '#C8102E', sg = profit >= 0 ? '+' : '−';
+          pf.style.borderColor = col;
+          pf.innerHTML = 'Si vendés toda la media res a tus precios: venta estimada <b>' + money(sale) + '</b> − lo que pagaste <b>' + money(paid) + '</b> = ganancia estimada <b style="color:' + col + ';font-size:1.15em">' + sg + money(Math.abs(profit)) + ' (' + sg + fmt(Math.abs(ppct), 1) + '%)</b>';
+          pf.classList.remove('hidden');
+        } else pf.classList.add('hidden');
       }
       $('mrResWeight').addEventListener('input', () => {
         state.resWeight = Math.max(0, parseFloat($('mrResWeight').value) || 0);
