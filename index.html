@@ -6417,7 +6417,9 @@
           const sale = estSale(w), profit = sale - paid, ppct = profit / paid * 100;
           const col = profit >= 0 ? '#16a34a' : '#C8102E', sg = profit >= 0 ? '+' : '−';
           pf.style.borderColor = col;
-          pf.innerHTML = 'Si vendés toda la media res a tus precios: venta estimada <b>' + money(sale) + '</b> − lo que pagaste <b>' + money(paid) + '</b> = ganancia estimada <b style="color:' + col + ';font-size:1.15em">' + sg + money(Math.abs(profit)) + ' (' + sg + fmt(Math.abs(ppct), 1) + '%)</b>';
+          pf.style.background = profit >= 0 ? '#f0fdf4' : '#fef2f2';
+          pf.innerHTML = '<span class="block text-sm text-gray-600">Si vendés toda la media res a tus precios: venta estimada <b>' + money(sale) + '</b> − lo que pagaste <b>' + money(paid) + '</b></span>' +
+            '<span class="block font-bold" style="color:' + col + ';font-size:1.35em">Margen de ganancia: ' + sg + money(Math.abs(profit)) + ' (' + sg + fmt(Math.abs(ppct), 1) + '%)</span>';
           pf.classList.remove('hidden');
         } else pf.classList.add('hidden');
       }
