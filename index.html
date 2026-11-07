@@ -13,10 +13,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Interfaz simplificada: solo Systempresas, STOCK, Historial y VENTAS */
-        .app-tab { display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px; font-weight:700; font-size:13px; color:#4b5563; white-space:nowrap; transition:background .15s; }
-        .app-tab:hover { background:#f3f4f6; }
-        .app-tab.on { background:#111827; color:#fff; }
-        @media (min-width:640px) { .app-tab { font-size:15px; padding:8px 16px; } }
+        .menu-btn { display:flex; align-items:center; justify-content:center; gap:14px; width:100%; padding:28px 16px; border-radius:20px; color:#fff; font-size:24px; font-weight:800; box-shadow:0 6px 16px rgba(0,0,0,.15); transition:transform .1s; }
+        .menu-btn:active { transform:scale(.97); }
+        .menu-btn i { font-size:26px; }
         body.simple-ui #mainContent { padding-top:56px; }
         body.simple-ui #mainContent > nav,
         body.simple-ui #sideMenu, body.simple-ui #sideMenuOverlay,
@@ -722,12 +721,19 @@
     </div>
 
     <!-- BARRA PRINCIPAL: solo Systempresas (dashboard), STOCK, Historial y VENTAS -->
-    <div id="appTabs" class="fixed top-0 inset-x-0 h-14 z-[80] bg-white border-b shadow-sm hidden items-center px-2 sm:px-4 gap-1 sm:gap-2">
-        <button class="app-tab on" data-tab="dash"><i class="fas fa-home"></i><span>Systempresas</span></button>
-        <button class="app-tab" data-tab="stock"><i class="fas fa-boxes"></i><span>STOCK</span></button>
-        <button class="app-tab" data-tab="hist"><i class="fas fa-history"></i><span>Historial</span></button>
-        <button class="app-tab" data-tab="ventas"><i class="fas fa-cash-register"></i><span>VENTAS</span></button>
+    <div id="appTabs" class="fixed top-0 inset-x-0 h-14 z-[80] bg-white border-b shadow-sm hidden items-center px-3 sm:px-4 gap-2">
+        <button id="appBack" class="hidden items-center gap-2 px-3 py-2 rounded-xl font-bold text-gray-700 hover:bg-gray-100 transition"><i class="fas fa-chevron-left"></i> Menú</button>
+        <span id="appTitle" class="text-lg font-bold text-gray-900">Systempresas</span>
         <div id="appTabsRight" class="ml-auto flex items-center gap-3 text-gray-500"></div>
+    </div>
+    <!-- MENÚ PRINCIPAL: los cuatro accesos, uno debajo del otro -->
+    <div id="appMenu" class="fixed inset-x-0 top-14 bottom-0 z-[75] hidden bg-gray-50 overflow-y-auto">
+        <div class="max-w-md mx-auto px-5 py-8 flex flex-col gap-4">
+            <button class="menu-btn" data-go="dash" style="background:#111827"><i class="fas fa-home"></i> Systempresas</button>
+            <button class="menu-btn" data-go="stock" style="background:#111827"><i class="fas fa-boxes"></i> STOCK</button>
+            <button class="menu-btn" data-go="hist" style="background:#374151"><i class="fas fa-history"></i> Historial</button>
+            <button class="menu-btn" data-go="ventas" style="background:#C8102E"><i class="fas fa-cash-register"></i> VENTAS</button>
+        </div>
     </div>
     <!-- CONTENEDOR DE TOASTS -->
     <div id="toastContainer"></div>
@@ -3013,6 +3019,7 @@
                 $('loginGate').classList.toggle('hidden', !!user);
                 $('appTabs').classList.toggle('hidden', !user);
                 $('appTabs').classList.toggle('flex', !!user);
+                $('appMenu').classList.toggle('hidden', !user);
                 if(user) {
                     userId = user.uid;
                     $('connectionStatus').innerHTML = '<i class="fas fa-circle text-[8px] mr-1 text-green-500"></i> En Línea';
@@ -6656,11 +6663,19 @@
       };
       window.closeMediaRes = () => $('mediaResModule').classList.add('hidden');
 
-      // Barra principal: Systempresas (dashboard), STOCK, Historial y VENTAS
-      function setTab(t) { document.querySelectorAll('.app-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); }
-      document.querySelectorAll('.app-tab').forEach(b => b.addEventListener('click', async () => {
-        const t = b.dataset.tab;
-        setTab(t);
+      // Menú principal (cuatro botones en columna) y barra con "Menú" para volver
+      const TITLES = { dash: 'Systempresas', stock: 'STOCK', hist: 'Historial', ventas: 'VENTAS' };
+      function setNav(t) {
+        $('appMenu').classList.toggle('hidden', t !== 'menu');
+        $('appBack').classList.toggle('hidden', t === 'menu');
+        $('appBack').classList.toggle('flex', t !== 'menu');
+        $('appTitle').textContent = t === 'menu' ? 'Systempresas' : TITLES[t];
+      }
+      window.showAppMenu = () => { window.closeMediaRes(); setNav('menu'); };
+      $('appBack').addEventListener('click', () => window.showAppMenu());
+      document.querySelectorAll('.menu-btn').forEach(b => b.addEventListener('click', async () => {
+        const t = b.dataset.go;
+        setNav(t);
         if (t === 'dash') window.closeMediaRes();
         else await window.openMediaRes(t);
       }));
@@ -6668,7 +6683,7 @@
       $('mrGoHist').onclick = () => show('hist');
       $('mrGoVentas').onclick = () => show('ventas');
       $('mrBack').onclick = () => show('home');
-      $('mrClose').onclick = () => { window.closeMediaRes(); setTab('dash'); };
+      $('mrClose').onclick = () => window.showAppMenu();
       const openBtn = $('openMediaResBtn');
       if (openBtn) openBtn.addEventListener('click', () => window.openMediaRes());
     })();
