@@ -1,13 +1,13 @@
 {
   "fuente": "INDEC - Precios promedio al consumidor",
   "region": "GBA",
-  "periodo": "2026-09",
+  "periodo": "2026-10",
   "precios": {
-    "asado": 16836.34,
-    "picada": 10713.74,
-    "paleta": 17278.8,
-    "cuadril": 21304.73,
-    "nalga": 21914.04
+    "asado": 16957.55,
+    "picada": 10778.88,
+    "paleta": 17156.95,
+    "cuadril": 21298.27,
+    "nalga": 21831.87
   },
   "ipcva": {
     "fuente": "IPCVA - Precios al consumidor",
@@ -38,5 +38,5 @@
       "tortuguita": 17235.0
     }
   },
-  "actualizado": "2026-10-16"
+  "actualizado": "2026-11-15"
 }
